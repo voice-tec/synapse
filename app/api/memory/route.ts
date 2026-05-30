@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 
+function extractJSON(text){
+  if(!text) throw new Error('Risposta vuota dal modello');
+  let t = text.replace(/```json|```/g, '').trim();
+  // Find first { and last } to isolate JSON object
+  const start = t.indexOf('{');
+  const end = t.lastIndexOf('}');
+  if(start !== -1 && end !== -1 && end > start){ t = t.slice(start, end+1); }
+  return JSON.parse(t);
+}
+
+
 const SYS = `Sei il motore di analisi di Synapse. Analizza queste task finanziarie e identifica i CLUSTER SEMANTICI DISTINTI — gruppi di domande che esplorano tesi diverse.
 Per ogni cluster con confidenza >= 65, genera una tesi emergente.
 Rispondi SOLO con JSON valido:
@@ -36,7 +47,7 @@ export async function POST(req: NextRequest) {
         'anthropic-beta': 'prompt-caching-2024-07-31',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 800,
         system: [{ type: 'text', text: SYS, cache_control: { type: 'ephemeral' } }],
         messages: [{ role: 'user', content: `Analizza queste ${taskCount} task:\n${summary}` }],
@@ -44,9 +55,10 @@ export async function POST(req: NextRequest) {
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error.message);
-    const parsed = JSON.parse((data.content?.[0]?.text || '').replace(/```json|```/g, '').trim());
+    const rawText = (data.content || []).filter((b)=>b.type==='text').map((b)=>b.text).join('');
+    const parsed = extractJSON(rawText);
     return NextResponse.json({ result: parsed });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message, detail: String(err) }, { status: 500 });
   }
 }
