@@ -752,7 +752,7 @@ async function checkMemoryNode(){
   if(!needsRefresh&&TASKS.length>5&&(TASKS.length-5)%3!==0)return;
   memCheckPending=true;
   try{
-    const summary=TASKS.map((t,i)=>\`[\${i+1}] query:"\${t.raw_query}" | hypothesis:"\${t.fingerprint?.hypothesis||''}" | concepts:\${(t.fingerprint?.concepts||[]).join(',')} | sector:\${t.fingerprint?.sector||''} | type:\${t.intent?.analysis_type||''}\`).join('\\n');
+    const summary=TASKS.map((t,i)=>\`[\${i+1}] query:"\${t.raw_query}" | hypothesis:"\${t.fingerprint?.hypothesis||''}" | concepts:\${(t.fingerprint?.concepts||[]).join(',')} | sector:\${t.fingerprint?.sector||''} | type:\${t.intent?.analysis_type||''}\`).join('\n');
 
     const res=await fetch('/api/memory',{
       method:'POST',
@@ -843,9 +843,16 @@ async function loadSuggestedQuestions(task){
 
   try{
     // Build context: this task + its connections + memory node if exists
-    const connContext=task.connections.map(c=>\`- "\${c.query}" (\${c.type.replace(/_/g,' ')})\`).join('\\n')||'nessuna';
-    const memContext=MEMORY_NODES.length?\`\\nTesi emergenti: \${MEMORY_NODES.map(mn=>mn.thesis).join('; ')}\`:'';
-    const graphContext=TASKS.length>1?\`\\nAltre task nel grafo: \${TASKS.filter(t=>t.id!==task.id).map(t=>\`"\${t.raw_query}"\`).slice(0,6).join(', ')}\`:'';
+    const connContext=task.connections.map(c=>\`- "\${c.query}" (\${c.type.replace(/_/g,' ')})\`).join('\n')||'nessuna';
+    const memContext=MEMORY_NODES.length?\`\nTesi emergenti: \${MEMORY_NODES.map(mn=>mn.thesis).join('; ')}\`:'';
+    const graphContext=TASKS.length>1?\`\nAltre task nel grafo: \${TASKS.filter(t=>t.id!==task.id).map(t=>\`"\${t.raw_query}"\`).slice(0,6).join(', ')}\`:'';
+
+    const userMsg=\`Task analizzata: "\${task.raw_query}"
+Ipotesi implicita: "\${task.fingerprint?.hypothesis||''}"
+Assets: \${(task.intent?.assets||[]).join(', ')}
+Tipo: \${task.intent?.analysis_type||''}
+Connessioni esistenti:
+\${connContext}\${memContext}\${graphContext}\`;
 
     const res=await fetch('/api/suggest',{
       method:'POST',
@@ -961,7 +968,7 @@ async function runTask(){
 
   const taskId='t'+Date.now();
   try{
-    const prevCtx=TASKS.length>0?\`\\n\\nPRIOR TASKS:\\n\${TASKS.map((t,i)=>\`[\${i+1}] "\${t.raw_query}" | type:\${t.intent?.analysis_type} | assets:\${(t.intent?.assets||[]).join(',')} | hypothesis:"\${t.fingerprint?.hypothesis}"\`).join('\\n')}\`:'';
+    const prevCtx=TASKS.length>0?\`\n\nPRIOR TASKS:\n\${TASKS.map((t,i)=>\`[\${i+1}] "\${t.raw_query}" | type:\${t.intent?.analysis_type} | assets:\${(t.intent?.assets||[]).join(',')} | hypothesis:"\${t.fingerprint?.hypothesis}"\`).join('\n')}\`:'';
     // Static system prompt — cacheable (never changes)
     const res = await fetch('/api/analyze', {
       method: 'POST',
@@ -1010,8 +1017,8 @@ function computeConns(newT,existing){
   const res=[];
   for(const old of existing){
     let score=0,type='complementary_data';
-    const h1=(newT.fingerprint?.hypothesis||'').toLowerCase().split(/\\s+/).filter(w=>w.length>4);
-    const h2=(old.fingerprint?.hypothesis||'').toLowerCase().split(/\\s+/).filter(w=>w.length>4);
+    const h1=(newT.fingerprint?.hypothesis||'').toLowerCase().split(/\s+/).filter(w=>w.length>4);
+    const h2=(old.fingerprint?.hypothesis||'').toLowerCase().split(/\s+/).filter(w=>w.length>4);
     const ho=h1.filter(w=>h2.includes(w)).length;
     if(ho>=2){score+=0.45;type='same_hypothesis';}
     const a1=(newT.intent?.assets||[]).map(a=>a.toLowerCase());
