@@ -237,7 +237,9 @@ const NODES = [];
 const EDGES = [];
 let selNode = null, hovNode = null, isLoading = false;
 let loadInterval = null;
-let MEMORY_NODES = []; // array of {id, thesis, confidence, history:[{thesis,confidence,date}], source_ids, suggested_question, x, y}
+let MEMORY_NODES = []; // array of {id, thesis, confidence, history, source_ids, suggested_question, x, y}
+let ACTION_NODES = []; // array of {id, clusterId, title, summary, categories, caveat, x, y, color, sourceMemId}
+const ACTION_COLOR = '#34d399';
 let memCheckPending = false;
 
 // Distinct colors per memory cluster
@@ -519,6 +521,52 @@ function loop() {
     }
   }
 
+  // Draw action nodes (squares) — the "portfolio of the thesis"
+  for(const an of ACTION_NODES){
+    const color=an.color||'#34d399';
+    const isSel=selNode===an.id, isHov=hovNode===an.id;
+    const s=(isSel||isHov)?30:24; // half-side
+    const pulse=0.6+0.4*Math.sin(Date.now()/1000+(an.phaseOffset||0));
+
+    // Dashed link to source memory node
+    const srcMem=MEMORY_NODES.find(m=>m.id===an.sourceMemId);
+    if(srcMem){
+      ctx.beginPath();ctx.setLineDash([3,3]);
+      ctx.moveTo(an.x,an.y);ctx.lineTo(srcMem.x,srcMem.y);
+      ctx.strokeStyle=color;ctx.lineWidth=1;ctx.globalAlpha=0.3;ctx.stroke();
+      ctx.setLineDash([]);ctx.globalAlpha=1;
+    }
+
+    // Glow
+    ctx.fillStyle=color;ctx.globalAlpha=0.05*pulse;
+    ctx.fillRect(an.x-s-8,an.y-s-8,(s+8)*2,(s+8)*2);ctx.globalAlpha=1;
+
+    // Square
+    ctx.fillStyle='#0a1a14';
+    ctx.fillRect(an.x-s,an.y-s,s*2,s*2);
+    ctx.strokeStyle=color;ctx.lineWidth=isSel?2.5:1.5;ctx.globalAlpha=isSel?1:0.8;
+    ctx.strokeRect(an.x-s,an.y-s,s*2,s*2);ctx.globalAlpha=1;
+
+    // Icon (portfolio symbol)
+    ctx.fillStyle=color;ctx.font=\`\${isSel?16:13}px DM Mono\`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('▤',an.x,an.y);
+
+    // Label
+    ctx.fillStyle=isSel?'#fff':isHov?'#9fe8cb':'#4a8a72';
+    ctx.font=\`\${isSel?11:10}px DM Mono\`;ctx.textAlign='center';ctx.textBaseline='top';
+    const al=an.title||'portafoglio';
+    const aLines=wrapText(al.length>28?al.slice(0,28)+'…':al,24);
+    aLines.forEach((l,i)=>ctx.fillText(l,an.x,an.y+s+8+i*13));
+    ctx.fillStyle=color;ctx.font='9px DM Mono';
+    ctx.fillText('▤ portafoglio tesi',an.x,an.y+s+8+aLines.length*13+2);
+
+    if(isHov&&!isSel){
+      ctx.fillStyle=color;ctx.font='9px DM Mono';ctx.globalAlpha=0.7;
+      ctx.fillText('clicca per aprire',an.x,an.y+s+8+aLines.length*13+16);ctx.globalAlpha=1;
+    }
+  }
+
   requestAnimationFrame(loop);
 }
 
@@ -526,12 +574,15 @@ canvas.addEventListener('mousemove',e=>{
   const r=canvas.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
   const hit=NODES.find(n=>{const dx=n.x-mx,dy=n.y-my;return Math.sqrt(dx*dx+dy*dy)<32});
   const memHit=MEMORY_NODES.find(mn=>{const dx=mn.x-mx,dy=mn.y-my;return Math.sqrt(dx*dx+dy*dy)<38});
-  hovNode=memHit?memHit.id:hit?hit.id:null;
-  canvas.style.cursor=(hit||memHit)?'pointer':'default';
+  const actHit=ACTION_NODES.find(an=>Math.abs(an.x-mx)<32&&Math.abs(an.y-my)<32);
+  hovNode=actHit?actHit.id:memHit?memHit.id:hit?hit.id:null;
+  canvas.style.cursor=(hit||memHit||actHit)?'pointer':'default';
 });
 
 canvas.addEventListener('click',e=>{
   const r=canvas.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
+  const actHit=ACTION_NODES.find(an=>Math.abs(an.x-mx)<32&&Math.abs(an.y-my)<32);
+  if(actHit){selNode=actHit.id;openActionDrawer(actHit);return;}
   const memHit=MEMORY_NODES.find(mn=>{const dx=mn.x-mx,dy=mn.y-my;return Math.sqrt(dx*dx+dy*dy)<38});
   if(memHit){selNode=memHit.id;openMemoryDrawer(memHit);return;}
   const hit=NODES.find(n=>{const dx=n.x-mx,dy=n.y-my;return Math.sqrt(dx*dx+dy*dy)<32});
@@ -654,6 +705,50 @@ function renderDrawerBody(task){
   setTimeout(()=>loadSuggestedQuestions(task), 200);
 }
 
+function openActionDrawer(an){
+  if(!an)return;
+  const color=an.color||'#34d399';
+  const body=document.getElementById('dr-body');
+  const badge=document.getElementById('dr-badge');
+  badge.textContent='portafoglio tesi';
+  badge.style.background=color+'22';badge.style.color=color;
+  document.getElementById('dr-query').innerHTML=\`<span style="font-size:13px;display:block;margin-bottom:4px;opacity:.6">▤ nodo azione</span>\${an.title||'Portafoglio della tesi'}\`;
+
+  const cats=(an.categories||[]).map(c=>\`
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:4px">
+        <span style="font-size:13px;color:var(--text);font-weight:500">\${c.name}</span>
+        \${c.weight_hint?\`<span style="font-size:10px;color:\${color};white-space:nowrap">\${c.weight_hint}</span>\`:''}
+      </div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:10px">\${c.rationale||''}</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        \${(c.examples||[]).map(ex=>\`
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg4);border-radius:8px">
+            \${ex.ticker?\`<span style="font-size:10px;font-family:'DM Mono';color:\${color};background:\${color}22;padding:2px 7px;border-radius:4px;white-space:nowrap">\${ex.ticker}</span>\`:''}
+            <span style="font-size:12px;color:var(--text2)">\${ex.name}</span>
+            \${ex.note?\`<span style="font-size:10px;color:var(--text3);margin-left:auto">\${ex.note}</span>\`:''}
+          </div>\`).join('')}
+      </div>
+    </div>\`).join('');
+
+  body.innerHTML=\`
+    <div>
+      <div class="section-lbl">logica del portafoglio</div>
+      <div style="background:var(--bg3);border-left:2px solid \${color};border-radius:0 12px 12px 0;padding:14px 18px;font-family:'Fraunces',serif;font-size:14px;font-weight:300;color:var(--text);line-height:1.6">\${an.summary||''}</div>
+    </div>
+    <div>
+      <div class="section-lbl">categorie e strumenti</div>
+      \${cats}
+    </div>
+    <div style="background:#1a1505;border:1px solid #3a2800;border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start">
+      <span style="color:#f0a030;font-size:14px;flex-shrink:0">⚠</span>
+      <span style="font-size:10px;color:#9a8a6a;line-height:1.5">\${an.caveat||'Contenuto puramente educativo e illustrativo. Non costituisce consulenza finanziaria né raccomandazione personalizzata. Valuta sempre in autonomia e, se necessario, consulta un professionista abilitato.'}</span>
+    </div>\`;
+
+  document.getElementById('backdrop').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+
 function openMemoryDrawer(mn){
   if(!mn)return;
   const color=mn.color||'#a78bfa';
@@ -746,6 +841,40 @@ function setQAndClose(q){
   setTimeout(()=>{document.getElementById('qi').value=q;document.getElementById('qi').focus();},400);
 }
 
+
+async function genActionForThesis(mn){
+  // Only if confidence >= 75 and no action node yet for this cluster
+  if(mn.confidence < 75) return;
+  if(ACTION_NODES.find(a=>a.clusterId===mn.clusterId)) return;
+  try{
+    const res=await fetch('/api/portfolio',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({thesis:mn.thesis, pattern:mn.pattern})
+    });
+    const json=await res.json();
+    if(json.error||!json.result) return;
+    const p=json.result;
+
+    // Position the action node near its memory node but offset
+    const _dpr=window.devicePixelRatio||1;
+    const W=canvas.width/_dpr,H=canvas.height/_dpr,graphH=H-110;
+    let ax=Math.min(Math.max(mn.x+90,120),W-120);
+    let ay=Math.min(Math.max(mn.y+90,100),graphH-80);
+
+    const action={
+      id:'act_'+mn.clusterId+'_'+Date.now(),
+      clusterId:mn.clusterId,
+      sourceMemId:mn.id,
+      title:p.title, summary:p.summary, categories:p.categories||[], caveat:p.caveat,
+      x:ax, y:ay, color:ACTION_COLOR, phaseOffset:Math.random()*Math.PI*2
+    };
+    ACTION_NODES.push(action);
+    persistAction(action);
+  }catch(e){ console.warn('genAction failed', e); }
+}
+async function persistAction(a){ if(window.__synSaveAction) await window.__synSaveAction(a); }
+
 async function checkMemoryNode(){
   if(TASKS.length<5||memCheckPending)return;
   const needsRefresh=MEMORY_NODES.some(mn=>mn.suggested_question===null);
@@ -789,6 +918,7 @@ async function checkMemoryNode(){
         existing.source_ids=sourceIds;
         if(existing.suggested_question===null) existing.suggested_question=cluster.suggested_question;
         persistThesis(existing);
+        genActionForThesis(existing);
       } else {
         // New cluster — find empty position
         let bestX=W/2,bestY=graphH/2,bestDist=0;
@@ -818,6 +948,7 @@ async function checkMemoryNode(){
         };
         MEMORY_NODES.push(newNode);
         persistThesis(newNode);
+        genActionForThesis(newNode);
 
         // Notify
         const notif=document.getElementById('mem-notif');
@@ -1203,11 +1334,27 @@ export default function SynapsePage() {
         } catch (e) { console.warn('save thesis failed', e); }
       };
 
+      (window as any).__synSaveAction = async (a: any) => {
+        try {
+          // find thesis_id by cluster
+          const { data: th } = await supabase.from('theses').select('id').eq('user_id', user.id).eq('cluster_id', a.clusterId).maybeSingle();
+          const { data: existing } = await supabase.from('actions').select('id').eq('user_id', user.id).eq('cluster_id', a.clusterId).maybeSingle();
+          const payload = {
+            user_id: user.id, thesis_id: th?.id || null, cluster_id: a.clusterId,
+            title: a.title, summary: a.summary, categories: a.categories, caveat: a.caveat,
+            pos_x: a.x, pos_y: a.y,
+          };
+          if (existing) await supabase.from('actions').update(payload).eq('id', existing.id);
+          else await supabase.from('actions').insert(payload);
+        } catch (e) { console.warn('save action failed', e); }
+      };
+
       // ── Load existing graph from DB ──
       const { data: tasks } = await supabase.from('tasks').select('*').order('created_at');
       const { data: conns } = await supabase.from('connections').select('*');
       const { data: theses } = await supabase.from('theses').select('*');
-      (window as any).__SYN_PRELOAD = { tasks: tasks || [], conns: conns || [], theses: theses || [] };
+      const { data: actions } = await supabase.from('actions').select('*');
+      (window as any).__SYN_PRELOAD = { tasks: tasks || [], conns: conns || [], theses: theses || [], actions: actions || [] };
 
       // Load usage
       const { data: profile } = await supabase.from('profiles').select('plan, tasks_this_month').eq('id', user.id).single();
@@ -1236,6 +1383,10 @@ export default function SynapsePage() {
               pre.theses.forEach((th,i)=>{
                 MEMORY_NODES.push({id:th.id,clusterId:th.cluster_id,thesis:th.thesis,confidence:th.confidence,explanation:th.explanation,pattern:th.pattern,suggested_question:th.suggested_question,source_ids:th.source_task_ids||[],history:th.history||[],color:th.color||'#a78bfa',phaseOffset:Math.random()*Math.PI*2,x:th.pos_x||W/2,y:th.pos_y||graphH/2});
               });
+              (pre.actions||[]).forEach((ac)=>{
+                const srcMem=MEMORY_NODES.find(m=>m.clusterId===ac.cluster_id);
+                ACTION_NODES.push({id:ac.id,clusterId:ac.cluster_id,sourceMemId:srcMem?srcMem.id:null,title:ac.title,summary:ac.summary,categories:ac.categories||[],caveat:ac.caveat,x:ac.pos_x||W/2,y:ac.pos_y||graphH/2,color:'#34d399',phaseOffset:Math.random()*Math.PI*2});
+              });
               updateStats();
             }
             // Wire inline onclick elements explicitly (innerHTML onclick may not fire)
@@ -1244,7 +1395,7 @@ export default function SynapsePage() {
             const dh=document.querySelector('.drawer-handle'); if(dh) dh.addEventListener('click',()=>closeDrawer());
             const dc=document.querySelector('.drawer-close'); if(dc) dc.addEventListener('click',()=>closeDrawer());
             const qi=document.getElementById('qi'); if(qi) qi.addEventListener('keydown',(e)=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();runTask();} });
-            window.NODES=NODES; window.EDGES=EDGES; window.TASKS=TASKS; window.MEMORY_NODES=MEMORY_NODES;
+            window.NODES=NODES; window.EDGES=EDGES; window.TASKS=TASKS; window.MEMORY_NODES=MEMORY_NODES; window.ACTION_NODES=ACTION_NODES;
             updateUsageLabel();
             // Wire logout
             const lb=document.getElementById('logout-btn');
