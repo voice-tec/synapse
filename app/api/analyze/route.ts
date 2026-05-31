@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 
+function extractJSON(text: string){
+  if(!text) throw new Error('Risposta vuota dal modello');
+  let t = text.replace(/```json/gi,'').replace(/```/g,'').trim();
+  try { return JSON.parse(t); } catch(e){}
+  const s = t.indexOf('{'), e = t.lastIndexOf('}');
+  if(s!==-1 && e!==-1 && e>s){
+    try { return JSON.parse(t.slice(s, e+1)); } catch(err){}
+  }
+  const as = t.indexOf('['), ae = t.lastIndexOf(']');
+  if(as!==-1 && ae!==-1 && ae>as){
+    try { return JSON.parse(t.slice(as, ae+1)); } catch(err){}
+  }
+  throw new Error('JSON non parsabile: ' + t.slice(0,120));
+}
+
 // Limiti per piano
 const PLAN_LIMITS: Record<string, number> = {
   free: 10,    // 10 task al mese
@@ -141,7 +156,7 @@ export async function POST(req: NextRequest) {
       finalText = data.content.filter((b: any) => b.type === 'text').map((b: any) => b.text).join('');
     }
 
-    const parsed = JSON.parse(finalText.replace(/```json|```/g, '').trim());
+    const parsed = extractJSON(finalText);
 
     // Incrementa contatore utilizzo
     await supabase
