@@ -8,9 +8,16 @@ function extractJSON(text: string){
   if(s!==-1 && e!==-1 && e>s){
     try { return JSON.parse(t.slice(s, e+1)); } catch(err){}
   }
-  const as = t.indexOf('['), ae = t.lastIndexOf(']');
-  if(as!==-1 && ae!==-1 && ae>as){
-    try { return JSON.parse(t.slice(as, ae+1)); } catch(err){}
+  if(s!==-1){
+    let frag = t.slice(s);
+    try {
+      frag = frag.replace(/,\s*"[^"]*$/,'').replace(/:\s*"[^"]*$/,':null').replace(/,\s*$/,'');
+      const opens=(frag.match(/\{/g)||[]).length, closes=(frag.match(/\}/g)||[]).length;
+      const opensA=(frag.match(/\[/g)||[]).length, closesA=(frag.match(/\]/g)||[]).length;
+      frag += ']'.repeat(Math.max(0,opensA-closesA));
+      frag += '}'.repeat(Math.max(0,opens-closes));
+      return JSON.parse(frag);
+    } catch(err){}
   }
   throw new Error('JSON non parsabile: ' + t.slice(0,120));
 }
@@ -64,7 +71,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1500,
+        max_tokens: 3000,
         system: systemPayload,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         tool_choice: { type: 'auto' },
@@ -96,7 +103,7 @@ export async function POST(req: NextRequest) {
           },
           body: JSON.stringify({
             model: 'claude-sonnet-4-6',
-            max_tokens: 1500,
+            max_tokens: 3000,
             system: systemPayload,
             tools: [{ type: 'web_search_20250305', name: 'web_search' }],
             messages,
