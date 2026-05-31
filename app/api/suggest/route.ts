@@ -4,18 +4,21 @@ import { createClient } from '@/lib/supabase-server';
 function extractJSON(text){
   if(!text) throw new Error('Risposta vuota dal modello');
   let t = text.replace(/```json/gi,'').replace(/```/g,'').trim();
-  // Try direct parse first
   try { return JSON.parse(t); } catch(e){}
-  // Isolate first { to last } (object)
   const s = t.indexOf('{'), e = t.lastIndexOf('}');
   if(s!==-1 && e!==-1 && e>s){
-    const slice = t.slice(s, e+1);
-    try { return JSON.parse(slice); } catch(err){}
+    try { return JSON.parse(t.slice(s, e+1)); } catch(err){}
   }
-  // Last resort: isolate first [ to last ] (array) and wrap
-  const as = t.indexOf('['), ae = t.lastIndexOf(']');
-  if(as!==-1 && ae!==-1 && ae>as){
-    try { return JSON.parse(t.slice(as, ae+1)); } catch(err){}
+  if(s!==-1){
+    let frag = t.slice(s);
+    try {
+      frag = frag.replace(/,\s*"[^"]*$/,'').replace(/:\s*"[^"]*$/,':null').replace(/,\s*$/,'');
+      const opens=(frag.match(/\{/g)||[]).length, closes=(frag.match(/\}/g)||[]).length;
+      const opensA=(frag.match(/\[/g)||[]).length, closesA=(frag.match(/\]/g)||[]).length;
+      frag += ']'.repeat(Math.max(0,opensA-closesA));
+      frag += '}'.repeat(Math.max(0,opens-closes));
+      return JSON.parse(frag);
+    } catch(err){}
   }
   throw new Error('JSON non parsabile: ' + t.slice(0,120));
 }
@@ -46,7 +49,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5',
-        max_tokens: 400,
+        max_tokens: 1024,
         system: [{ type: 'text', text: SYS, cache_control: { type: 'ephemeral' } }],
         messages: [{ role: 'user', content: userMsg }],
       }),
