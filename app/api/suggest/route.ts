@@ -3,12 +3,21 @@ import { createClient } from '@/lib/supabase-server';
 
 function extractJSON(text){
   if(!text) throw new Error('Risposta vuota dal modello');
-  let t = text.replace(/```json|```/g, '').trim();
-  // Find first { and last } to isolate JSON object
-  const start = t.indexOf('{');
-  const end = t.lastIndexOf('}');
-  if(start !== -1 && end !== -1 && end > start){ t = t.slice(start, end+1); }
-  return JSON.parse(t);
+  let t = text.replace(/```json/gi,'').replace(/```/g,'').trim();
+  // Try direct parse first
+  try { return JSON.parse(t); } catch(e){}
+  // Isolate first { to last } (object)
+  const s = t.indexOf('{'), e = t.lastIndexOf('}');
+  if(s!==-1 && e!==-1 && e>s){
+    const slice = t.slice(s, e+1);
+    try { return JSON.parse(slice); } catch(err){}
+  }
+  // Last resort: isolate first [ to last ] (array) and wrap
+  const as = t.indexOf('['), ae = t.lastIndexOf(']');
+  if(as!==-1 && ae!==-1 && ae>as){
+    try { return JSON.parse(t.slice(as, ae+1)); } catch(err){}
+  }
+  throw new Error('JSON non parsabile: ' + t.slice(0,120));
 }
 
 
@@ -36,7 +45,7 @@ export async function POST(req: NextRequest) {
         'anthropic-beta': 'prompt-caching-2024-07-31',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-haiku-4-5',
         max_tokens: 400,
         system: [{ type: 'text', text: SYS, cache_control: { type: 'ephemeral' } }],
         messages: [{ role: 'user', content: userMsg }],
