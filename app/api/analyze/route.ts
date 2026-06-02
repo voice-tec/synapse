@@ -97,10 +97,13 @@ export async function POST(req: NextRequest) {
 
   const { query, priorContext } = await req.json();
 
+  // Cache ONLY the fixed system prompt (it never changes → cache pays off).
+  // priorContext changes every question, so caching it just pays write
+  // surcharges with no read benefit — send it as a normal (uncached) block.
   const systemPayload = priorContext
     ? [
         { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
-        { type: 'text', text: priorContext, cache_control: { type: 'ephemeral' } },
+        { type: 'text', text: priorContext },
       ]
     : [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }];
 
