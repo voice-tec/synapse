@@ -35,17 +35,24 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 24 }}>
+    <div style={{ minHeight: '100dvh', background: '#08080a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 24, padding: 20 }}>
+      <style>{`
+        input:-webkit-autofill, input:-webkit-autofill:focus {
+          -webkit-text-fill-color: #dddde8 !important;
+          -webkit-box-shadow: 0 0 0 1000px #141418 inset !important;
+          caret-color: #dddde8;
+        }
+      `}</style>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <svg width="28" height="36" viewBox="0 0 22 28" fill="none">
-          <path d="M17 6.5C17 4.5 15 3 11 3C7 3 5 4.8 5 7C5 9.2 7.5 10.2 11 11C14.5 11.8 17 13 17 15.5C17 18 14.5 19.5 11 19.5C7.5 19.5 5 18 5 16" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
-          <circle cx="17" cy="6.5" r="2.2" fill="white" />
-          <circle cx="5" cy="16" r="2.2" fill="white" />
+        <svg width="26" height="32" viewBox="0 0 24 30" fill="none">
+          <path d="M18 8C18 5.2 15.4 3.5 12 3.5C8.6 3.5 6 5.2 6 8C6 10.8 8.6 12 12 13C15.4 14 18 15.4 18 18.2C18 21 15.4 22.5 12 22.5C8.6 22.5 6 20.8 6 18.2" stroke="white" strokeWidth="1.7" strokeLinecap="round" />
+          <circle cx="18" cy="8" r="2.6" fill="white" />
+          <circle cx="6" cy="18.2" r="2.6" fill="white" />
         </svg>
-        <span style={{ fontFamily: 'Fraunces, serif', fontSize: 24, fontWeight: 300 }}>Synapse</span>
+        <span style={{ fontFamily: 'Fraunces, serif', fontSize: 24, fontWeight: 300, color: '#fff' }}>Symnaps</span>
       </div>
 
-      <div style={{ background: '#0e0e12', border: '1px solid #2a2a36', borderRadius: 18, padding: 28, width: 340, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ background: '#0e0e12', border: '1px solid #2a2a36', borderRadius: 18, padding: 28, width: '100%', maxWidth: 340, display: 'flex', flexDirection: 'column', gap: 12 }}>
         <input
           type="email" placeholder="email" value={email}
           onChange={(e) => setEmail(e.target.value)}
