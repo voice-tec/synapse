@@ -97,6 +97,15 @@ export async function POST(req: NextRequest) {
 
   const { query, priorContext } = await req.json();
 
+  // Quality stays as before: ALWAYS Sonnet + web search available.
+  // The only cost control is capping web search to 1 use per question
+  // (it used to fire 2-3 times and re-read huge page content — that was the
+  // real cost driver, not the model). max_tokens trimmed to 3000 (real
+  // answers were already under that, so no quality loss).
+  const model = 'claude-sonnet-4-6';
+  const webTools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }];
+  const MAX_TOKENS = 3000;
+
   // No prompt caching: with intermittent beta usage the cache is rewritten
   // before it's reused, so the write surcharge costs more than it saves.
   const systemPayload = priorContext
@@ -106,24 +115,25 @@ export async function POST(req: NextRequest) {
       ]
     : [{ type: 'text', text: SYSTEM_PROMPT }];
 
+  const baseBody: any = {
+    model,
+    max_tokens: MAX_TOKENS,
+    system: systemPayload,
+    tools: webTools,
+    tool_choice: { type: 'auto' },
+    messages: [{ role: 'user', content: query }],
+  };
+
   try {
-    // Prima chiamata — web search disponibile, Claude decide
+    // Prima chiamata
     let res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY!,
         'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'prompt-caching-2024-07-31',
       },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 4000,
-        system: systemPayload,
-        tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }],
-        tool_choice: { type: 'auto' },
-        messages: [{ role: 'user', content: query }],
-      }),
+      body: JSON.stringify(baseBody),
     });
 
     let data = await res.json();
@@ -152,13 +162,12 @@ export async function POST(req: NextRequest) {
             'Content-Type': 'application/json',
             'x-api-key': process.env.ANTHROPIC_API_KEY!,
             'anthropic-version': '2023-06-01',
-            'anthropic-beta': 'prompt-caching-2024-07-31',
           },
           body: JSON.stringify({
-            model: 'claude-sonnet-4-6',
-            max_tokens: 4000,
+            model,
+            max_tokens: MAX_TOKENS,
             system: systemPayload,
-            tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }],
+            tools: webTools,
             messages,
           }),
         });
