@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
 
   const { thesis, pattern } = await req.json();
 
-  const systemPayload = [{ type: 'text', text: SYS, cache_control: { type: 'ephemeral' } }];
+  const systemPayload = [{ type: 'text', text: SYS }];
 
   try {
     let res = await fetch('https://api.anthropic.com/v1/messages', {

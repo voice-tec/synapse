@@ -97,15 +97,14 @@ export async function POST(req: NextRequest) {
 
   const { query, priorContext } = await req.json();
 
-  // Cache ONLY the fixed system prompt (it never changes → cache pays off).
-  // priorContext changes every question, so caching it just pays write
-  // surcharges with no read benefit — send it as a normal (uncached) block.
+  // No prompt caching: with intermittent beta usage the cache is rewritten
+  // before it's reused, so the write surcharge costs more than it saves.
   const systemPayload = priorContext
     ? [
-        { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
+        { type: 'text', text: SYSTEM_PROMPT },
         { type: 'text', text: priorContext },
       ]
-    : [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }];
+    : [{ type: 'text', text: SYSTEM_PROMPT }];
 
   try {
     // Prima chiamata — web search disponibile, Claude decide
@@ -121,7 +120,7 @@ export async function POST(req: NextRequest) {
         model: 'claude-sonnet-4-6',
         max_tokens: 4000,
         system: systemPayload,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }],
         tool_choice: { type: 'auto' },
         messages: [{ role: 'user', content: query }],
       }),
@@ -159,7 +158,7 @@ export async function POST(req: NextRequest) {
             model: 'claude-sonnet-4-6',
             max_tokens: 4000,
             system: systemPayload,
-            tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+            tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }],
             messages,
           }),
         });

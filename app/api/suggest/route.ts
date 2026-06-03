@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model: 'claude-haiku-4-5',
         max_tokens: 1024,
-        system: [{ type: 'text', text: SYS, cache_control: { type: 'ephemeral' } }],
+        system: [{ type: 'text', text: SYS }],
         messages: [{ role: 'user', content: userMsg }],
       }),
     });

@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 2000,
-        system: [{ type: 'text', text: SYS, cache_control: { type: 'ephemeral' } }],
+        system: [{ type: 'text', text: SYS }],
         messages: [{ role: 'user', content: `Analizza queste ${taskCount} task:\n${summary}` }],
       }),
     });
