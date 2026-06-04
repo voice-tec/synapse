@@ -19,8 +19,13 @@ export default function LoginPage() {
       if (mode === 'signup') {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        setMsg('Account creato! Controlla la mail per confermare, poi accedi.');
-        setMode('login');
+        // Email confirmation is OFF in Supabase, so the account is active
+        // immediately. Sign in right away and go to the app — no "check your
+        // email" step needed.
+        const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInErr) throw signInErr;
+        router.push('/');
+        router.refresh();
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
