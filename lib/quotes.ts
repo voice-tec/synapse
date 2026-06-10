@@ -1,13 +1,49 @@
-// Prezzi di mercato via API Yahoo Finance non ufficiale — gratuita, senza chiave.
-// Sostituisce la web search di Claude per il calcolo performance: costo zero.
-// Best effort: se un ticker non si risolve o l'endpoint non risponde, torna null
-// e lo strumento viene semplicemente omesso dal paniere.
+// Prezzi di mercato per grafici e performance — zero AI.
+// Fonte primaria: Twelve Data (se TWELVEDATA_API_KEY è impostata — free tier
+// 800 req/giorno, copertura ETF/borse EU molto migliore). Fallback: Yahoo
+// Finance non ufficiale (gratuita, senza chiave, meno affidabile).
+// Best effort: ticker non risolto o endpoint muto → null, lo strumento
+// viene omesso senza rompere niente.
 
 const UA_HEADERS = { 'User-Agent': 'Mozilla/5.0 (compatible; SynapseApp/1.0)' };
+const TD_KEY = process.env.TWELVEDATA_API_KEY;
 
-// Yahoo vuole simboli con suffisso di borsa (es. SGLN → SGLN.L):
-// l'endpoint di ricerca risolve il ticker "nudo" nel simbolo migliore.
-async function resolveSymbol(ticker: string): Promise<string | null> {
+const itDate = (d: string | number) =>
+  new Date(d).toLocaleDateString('it', { day: 'numeric', month: 'short' });
+
+// ── Twelve Data ──
+async function tdSeries(ticker: string, fromIso: string): Promise<{ dates: string[]; closes: number[] } | null> {
+  if (!TD_KEY) return null;
+  try {
+    const sr = await fetch(
+      `https://api.twelvedata.com/symbol_search?symbol=${encodeURIComponent(ticker)}&apikey=${TD_KEY}`
+    );
+    const sj = await sr.json();
+    const hit = sj.data?.[0];
+    if (!hit?.symbol) return null;
+
+    const params =
+      `symbol=${encodeURIComponent(hit.symbol)}` +
+      (hit.mic_code ? `&mic_code=${hit.mic_code}` : '') +
+      `&interval=1day&start_date=${fromIso.slice(0, 10)}&outputsize=5000&apikey=${TD_KEY}`;
+    const r = await fetch(`https://api.twelvedata.com/time_series?${params}`);
+    const j = await r.json();
+    if (j.status === 'error' || !j.values?.length) return null;
+
+    const dates: string[] = [];
+    const closes: number[] = [];
+    for (const v of [...j.values].reverse()) { // TD restituisce dal più recente
+      const f = parseFloat(v.close);
+      if (!isNaN(f)) { closes.push(f); dates.push(itDate(v.datetime)); }
+    }
+    return closes.length >= 2 ? { dates, closes } : null;
+  } catch {
+    return null;
+  }
+}
+
+// ── Yahoo (fallback) ──
+async function yahooResolve(ticker: string): Promise<string | null> {
   try {
     const res = await fetch(
       `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(ticker)}&quotesCount=1&newsCount=0`,
@@ -20,40 +56,10 @@ async function resolveSymbol(ticker: string): Promise<string | null> {
   }
 }
 
-// Performance % dal giorno `fromIso` a oggi (primo close vs ultimo close).
-export async function fetchTickerPerformance(ticker: string, fromIso: string): Promise<number | null> {
+async function yahooSeries(ticker: string, fromIso: string): Promise<{ dates: string[]; closes: number[] } | null> {
   try {
-    const symbol = await resolveSymbol(ticker);
+    const symbol = await yahooResolve(ticker);
     if (!symbol) return null;
-
-    const p1 = Math.floor(new Date(fromIso).getTime() / 1000);
-    const p2 = Math.floor(Date.now() / 1000);
-    if (!p1 || p2 - p1 < 24 * 3600) return null; // serve almeno un giorno di storia
-
-    const res = await fetch(
-      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${p1}&period2=${p2}&interval=1d`,
-      { headers: UA_HEADERS }
-    );
-    const json = await res.json();
-    const closes = json.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter((c: any) => c != null);
-    if (!closes || closes.length < 2) return null;
-
-    return (closes[closes.length - 1] / closes[0] - 1) * 100;
-  } catch {
-    return null;
-  }
-}
-
-export function formatPerf(pct: number): string {
-  return (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
-}
-
-// Serie storica giornaliera (date formattate it + close) per i grafici reali.
-export async function fetchSeries(ticker: string, fromIso: string): Promise<{ dates: string[]; closes: number[] } | null> {
-  try {
-    const symbol = await resolveSymbol(ticker);
-    if (!symbol) return null;
-
     const p1 = Math.floor(new Date(fromIso).getTime() / 1000);
     const p2 = Math.floor(Date.now() / 1000);
     const res = await fetch(
@@ -67,15 +73,28 @@ export async function fetchSeries(ticker: string, fromIso: string): Promise<{ da
     const dates: string[] = [];
     const closes: number[] = [];
     ts.forEach((t, i) => {
-      if (raw[i] != null) {
-        dates.push(new Date(t * 1000).toLocaleDateString('it', { day: 'numeric', month: 'short' }));
-        closes.push(raw[i] as number);
-      }
+      if (raw[i] != null) { dates.push(itDate(t * 1000)); closes.push(raw[i] as number); }
     });
     return closes.length >= 2 ? { dates, closes } : null;
   } catch {
     return null;
   }
+}
+
+// ── API pubblica ──
+export async function fetchSeries(ticker: string, fromIso: string) {
+  if (!fromIso || Date.now() - new Date(fromIso).getTime() < 24 * 3600 * 1000) return null;
+  return (await tdSeries(ticker, fromIso)) || (await yahooSeries(ticker, fromIso));
+}
+
+export async function fetchTickerPerformance(ticker: string, fromIso: string): Promise<number | null> {
+  const s = await fetchSeries(ticker, fromIso);
+  if (!s) return null;
+  return (s.closes[s.closes.length - 1] / s.closes[0] - 1) * 100;
+}
+
+export function formatPerf(pct: number): string {
+  return (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
 }
 
 const TIMEFRAME_DAYS: Record<string, number> = { '1m': 30, '3m': 91, '6m': 182, '1y': 365, '5y': 1825 };
@@ -101,7 +120,7 @@ export async function enrichChartWithRealData(chart: any) {
         chart.values = idxs.map((i) => Number((((s.closes[i] / base) - 1) * 100).toFixed(1)));
         chart.labels = idxs.map((i) => s.dates[i]);
         chart.suffix = '%';
-        chart.label = `${chart.label || ''} · ${tickers[0]}, dati reali`.trim();
+        chart.label = `${chart.label || `Andamento ${tickers[0]}`} · ${tickers[0]} ${chart.timeframe || ''}, var. % reale`.trim();
         return chart;
       }
     } else {
@@ -114,12 +133,16 @@ export async function enrichChartWithRealData(chart: any) {
         chart.values = items.map((it) => Number(it.pct.toFixed(1)));
         chart.labels = items.map((it) => it.tk);
         chart.suffix = '%';
-        chart.label = `${chart.label || ''} · dati reali ${chart.timeframe || ''}`.trim();
+        chart.label = `${chart.label || 'Performance a confronto'} · perf. % reale ${chart.timeframe || ''}`.trim();
         return chart;
       }
     }
   }
 
-  if (chart.label) chart.label += ' · stima';
+  // Niente dati reali: restano i valori stimati dal modello (sempre presenti
+  // da prompt), etichettati onestamente come stima
+  if ((chart.values || []).length) {
+    chart.label = `${chart.label || 'Stima illustrativa'} · stima`;
+  }
   return chart;
 }

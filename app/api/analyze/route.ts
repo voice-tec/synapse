@@ -32,12 +32,12 @@ Return ONLY a valid JSON object, no extra text, no markdown.
   "output":{
     "insight":"3-4 sentence analysis in Italian, concrete and data-grounded",
     "chart":{
-      "label":"chart title in Italian (clear, what the chart shows)",
+      "label":"chart title in Italian. MUST state exactly what is shown AND the period, e.g. 'Oro vs S&P 500, ultimi 6 mesi' — never vague titles like 'Confronto asset'",
       "type":"bar for comparisons between categories/sectors/assets; line only for evolution over time",
-      "tickers":["up to 4 REAL traded tickers (ETFs/stocks/indices, e.g. GLD, SPY, ^GSPC) that best illustrate the point — the server will fetch REAL market data for them. Empty array [] only if the concept is not directly quotable"],
-      "timeframe":"lookback window for the chart, one of: 1m|3m|6m|1y|5y",
-      "values":[4-7 realistic numbers — FALLBACK ONLY, used when tickers is empty],
-      "labels":["ONE or TWO words each, max 10 chars — fallback only, paired with values"],
+      "tickers":["up to 4 REAL traded tickers (ETFs/stocks/indices, e.g. GLD, SPY, ^GSPC). The server fetches REAL market data for them. RULES: pick tickers SPECIFIC to THIS question, not generic theme proxies; the chart must prove the main claim of YOUR insight; if a similar comparison already appears in the prior context, choose a DIFFERENT angle (other assets, other metric, other timeframe). Empty array [] if the concept is not directly quotable"],
+      "timeframe":"lookback window matching the question, one of: 1m|3m|6m|1y|5y",
+      "values":[4-7 realistic numbers — ALWAYS provide them (also when tickers is set: they are the fallback if market data is unavailable)],
+      "labels":["ONE or TWO words each, max 10 chars — ALWAYS provide, paired with values"],
       "suffix":"optional unit shown on values, e.g. '%' or 'bps' or '' if none"
     },
     "metrics":[
