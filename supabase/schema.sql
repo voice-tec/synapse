@@ -9,6 +9,8 @@ create table profiles (
   email text,
   plan text default 'free',                    -- free | pro | team
   tasks_this_month int default 0,
+  ai_calls_this_month int default 0,           -- memory/suggest/portfolio/challenge
+  refresh_batch_id text,                       -- batch Anthropic pendente per il refresh tesi
   created_at timestamptz default now()
 );
 
@@ -45,11 +47,29 @@ create table theses (
   pattern text,
   suggested_question text,
   source_task_ids uuid[],
-  history jsonb default '[]',                  -- [{thesis, confidence, date}]
+  history jsonb default '[]',                  -- [{thesis, confidence, date, note}]
+  challenge jsonb,                             -- contro-tesi (avvocato del diavolo)
   color text,
   pos_x float,
   pos_y float,
   updated_at timestamptz default now(),
+  created_at timestamptz default now()
+);
+
+-- ── AZIONI (portafogli delle tesi) ──
+create table actions (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users on delete cascade not null,
+  thesis_id uuid references theses on delete set null,
+  cluster_id text not null,
+  title text,
+  summary text,
+  categories jsonb,
+  caveat text,
+  performance jsonb,                           -- {overall, items:[{ticker, perf}], note}
+  performance_updated_at timestamptz,
+  pos_x float,
+  pos_y float,
   created_at timestamptz default now()
 );
 
@@ -61,6 +81,7 @@ alter table profiles enable row level security;
 alter table tasks enable row level security;
 alter table connections enable row level security;
 alter table theses enable row level security;
+alter table actions enable row level security;
 
 create policy "own profile" on profiles
   for all using (auth.uid() = id);
@@ -72,6 +93,9 @@ create policy "own connections" on connections
   for all using (auth.uid() = user_id);
 
 create policy "own theses" on theses
+  for all using (auth.uid() = user_id);
+
+create policy "own actions" on actions
   for all using (auth.uid() = user_id);
 
 -- ═══════════════════════════════════════════════
@@ -92,7 +116,36 @@ create trigger on_auth_user_created
   for each row execute function handle_new_user();
 
 -- ═══════════════════════════════════════════════
--- RESET MENSILE del contatore task (opzionale)
--- Da schedulare con pg_cron o manualmente
+-- RESET MENSILE — gestito dal Vercel cron /api/cron/reset-usage
+-- (vedi vercel.json). In alternativa, manualmente:
+-- update profiles set tasks_this_month = 0, ai_calls_this_month = 0;
 -- ═══════════════════════════════════════════════
--- update profiles set tasks_this_month = 0;
+
+-- ═══════════════════════════════════════════════
+-- MIGRAZIONE — se hai già un database creato con una versione
+-- precedente di questo schema, esegui SOLO questo blocco:
+-- ═══════════════════════════════════════════════
+-- alter table profiles add column if not exists ai_calls_this_month int default 0;
+-- alter table profiles add column if not exists refresh_batch_id text;
+-- alter table theses add column if not exists challenge jsonb;
+--
+-- create table if not exists actions (
+--   id uuid default gen_random_uuid() primary key,
+--   user_id uuid references auth.users on delete cascade not null,
+--   thesis_id uuid references theses on delete set null,
+--   cluster_id text not null,
+--   title text,
+--   summary text,
+--   categories jsonb,
+--   caveat text,
+--   performance jsonb,
+--   performance_updated_at timestamptz,
+--   pos_x float,
+--   pos_y float,
+--   created_at timestamptz default now()
+-- );
+-- alter table actions add column if not exists performance jsonb;
+-- alter table actions add column if not exists performance_updated_at timestamptz;
+-- alter table actions enable row level security;
+-- drop policy if exists "own actions" on actions;
+-- create policy "own actions" on actions for all using (auth.uid() = user_id);

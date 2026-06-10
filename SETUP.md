@@ -45,15 +45,17 @@ npm install
 ## 5. Configura le variabili d'ambiente
 
 1. Nella cartella del progetto, copia il file `.env.local.example` e rinominalo in `.env.local`
-2. Aprilo e riempi i tre valori:
+2. Aprilo e riempi i valori:
 
 ```
 ANTHROPIC_API_KEY=sk-ant-api03-...        ← la tua chiave Anthropic
 NEXT_PUBLIC_SUPABASE_URL=https://...       ← Project URL dal passo 4
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...       ← anon public key dal passo 4
+SUPABASE_SERVICE_ROLE_KEY=eyJ...           ← service_role key (stessa pagina) — solo per i cron
+CRON_SECRET=...                            ← stringa casuale lunga, autentica i cron
 ```
 
-⚠️ La chiave Anthropic resta SOLO qui sul server — non viene mai mandata al browser.
+⚠️ La chiave Anthropic e la service_role restano SOLO qui sul server — mai mandate al browser.
 
 ---
 
@@ -72,10 +74,18 @@ Crea un account, conferma la mail (Supabase la manda automaticamente), accedi.
 
 1. Carica il progetto su GitHub (crea un repo nuovo, fai push)
 2. Vai su **https://vercel.com** → accedi con GitHub → "Add New Project"
-3. Seleziona il repo → in "Environment Variables" incolla gli stessi 3 valori del `.env.local`
+3. Seleziona il repo → in "Environment Variables" incolla gli stessi 5 valori del `.env.local`
 4. Clicca **Deploy**
 
 In ~2 minuti hai Synapse online con un URL pubblico da condividere.
+
+Il cron job (definito in `vercel.json`) parte automaticamente col deploy:
+- **`/api/cron/reset-usage`** — 1° del mese: azzera i contatori `tasks_this_month` e `ai_calls_this_month`
+
+Vercel autentica i cron mandando `Authorization: Bearer $CRON_SECRET` — basta che la variabile sia impostata.
+
+Il refresh di tesi e performance NON usa un cron: avviene on-demand quando
+l'utente apre l'app (`/api/refresh`) — gli account inattivi costano zero.
 
 ---
 
@@ -87,14 +97,24 @@ app/
     analyze/route.ts    → analisi principale (Sonnet + web search), nasconde la chiave
     memory/route.ts     → rilevamento tesi multiple (Haiku)
     suggest/route.ts    → domande suggerite (Haiku)
+    portfolio/route.ts  → portafoglio della tesi (Sonnet + web search)
+    challenge/route.ts  → avvocato del diavolo: contro-tesi (Sonnet + web search)
+    refresh/route.ts    → refresh on-demand: tesi via Batch API (-50%), performance via prezzi gratuiti
+    cron/
+      reset-usage/      → azzera i contatori mensili (1° del mese)
   login/page.tsx        → pagina di login/registrazione
   page.tsx              → app principale (il grafo)
   layout.tsx            → layout root
 lib/
+  anthropic.ts          → helper condiviso chiamate Claude (pause_turn, extractJSON, batches)
+  ai-usage.ts           → metering chiamate AI accessorie
+  quotes.ts             → prezzi ETF da API gratuita (per la performance)
   supabase-browser.ts   → client Supabase lato browser
   supabase-server.ts    → client Supabase lato server
+  supabase-admin.ts     → client service-role (solo cron)
 supabase/
   schema.sql            → schema database da eseguire
+vercel.json             → schedulazione cron
 middleware.ts           → protegge le route, gestisce le sessioni
 ```
 
@@ -102,11 +122,13 @@ middleware.ts           → protegge le route, gestisce le sessioni
 
 ## Come funzionano i costi
 
-- **Free tier utenti**: 10 task al mese (limite gestito in `app/api/analyze/route.ts`, variabile `PLAN_LIMITS`)
-- **Prompt caching attivo**: -85% sui token del system prompt
-- **Haiku** per memory e suggest: ~25x più economico di Sonnet
+- **Free tier utenti**: 10 task al mese (`PLAN_LIMITS` in `app/api/analyze/route.ts`) + 50 chiamate AI accessorie al mese (`AI_CALL_LIMITS` in `lib/ai-usage.ts` — memory, suggest, portfolio, challenge)
+- **Web search con `max_uses`**: ogni chiamata ha un tetto di ricerche (1-2) — era il vero driver di costo
+- **Haiku** per memory e suggest: ~10-25x più economico di Sonnet
+- **Refresh on-demand**: tesi ri-valutate solo per utenti che aprono l'app, via Batch API (-50% sui token); performance dei portafogli da prezzi di mercato gratuiti (zero AI)
 - **Vercel + Supabase**: tier gratuiti coprono i primi utenti
+- **Niente prompt caching**: con traffico sporadico il cache write costa più di quanto risparmia (e i system prompt sono sotto il minimo cacheabile di Sonnet 4.6)
 
-Per cambiare i limiti dei piani, modifica `PLAN_LIMITS` in `app/api/analyze/route.ts`.
+Per cambiare i limiti dei piani, modifica `PLAN_LIMITS` e `AI_CALL_LIMITS`.
 
 Per promuovere un utente a Pro manualmente: Supabase → Table Editor → `profiles` → cambia `plan` in `pro`.

@@ -1,0 +1,162 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase-server';
+import { extractJSON, createBatch, getBatch, getBatchResults } from '@/lib/anthropic';
+import { fetchTickerPerformance, formatPerf } from '@/lib/quotes';
+
+// Refresh ON-DEMAND dei dati dell'utente, chiamato dal client all'apertura
+// dell'app. Paga solo chi usa l'app: gli account inattivi costano zero.
+//
+// - Tesi: ri-valutate via Message Batches (-50% sui token). Il batch viene
+//   SOTTOMESSO a questa apertura e INGERITO alla successiva (o quando pronto):
+//   per dati che invecchiano in settimane, la latenza è irrilevante.
+// - Performance portafogli: prezzi da API gratuita (lib/quotes), zero AI,
+//   calcolata in modo sincrono qui.
+
+const STALE_MS = 7 * 24 * 3600 * 1000;
+const THESES_PER_REFRESH = 8;
+const ACTIONS_PER_REFRESH = 8;
+
+const REFRESH_SYS = `Sei il motore di Synapse, una piattaforma di financial intelligence.
+Ti viene data una tesi di investimento formulata da un utente in passato, con la sua confidenza (0-100) di allora.
+Ri-valuta la tesi ALLA LUCE DEI DATI DI OGGI. Usa web_search per verificare i dati chiave più recenti.
+Rispondi SOLO con JSON valido:
+{
+  "confidence": numero 0-100 (la confidenza AGGIORNATA nella tesi, oggi),
+  "note": "una frase italiana concisa: cosa è cambiato e perché la confidenza sale/scende/tiene"
+}`;
+
+export async function POST(req: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
+
+  const staleCutoff = new Date(Date.now() - STALE_MS).toISOString();
+  const updatedTheses: any[] = [];
+  const updatedActions: any[] = [];
+  let status = 'idle';
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('refresh_batch_id')
+    .eq('id', user.id)
+    .single();
+
+  // ── 1. Ingerisci il batch pendente, se pronto ──
+  if (profile?.refresh_batch_id) {
+    try {
+      const batch = await getBatch(profile.refresh_batch_id);
+      if (batch.processing_status === 'ended' && batch.results_url) {
+        const results = await getBatchResults(batch.results_url);
+        for (const r of results) {
+          if (r.result?.type !== 'succeeded') continue;
+          const msg = r.result.message;
+          const finalText = (msg.content || []).filter((b: any) => b.type === 'text').map((b: any) => b.text).join('');
+          let parsed: any;
+          try { parsed = extractJSON(finalText); } catch { continue; }
+
+          const { data: th } = await supabase
+            .from('theses')
+            .select('*')
+            .eq('id', r.custom_id)
+            .eq('user_id', user.id)
+            .single();
+          if (!th) continue;
+
+          const newConf = Math.max(0, Math.min(100, Number(parsed.confidence) || th.confidence));
+          const history = Array.isArray(th.history) ? th.history : [];
+          history.push({ thesis: th.thesis, confidence: newConf, date: new Date().toISOString(), note: parsed.note || '' });
+
+          await supabase
+            .from('theses')
+            .update({ confidence: newConf, history, updated_at: new Date().toISOString() })
+            .eq('id', th.id);
+          updatedTheses.push({ id: th.id, confidence: newConf, history });
+        }
+        await supabase.from('profiles').update({ refresh_batch_id: null }).eq('id', user.id);
+        status = 'ingested';
+      } else if (batch.processing_status === 'in_progress') {
+        status = 'pending';
+      } else {
+        // canceled / expired / stato ignoto: sgancia e riparti al prossimo giro
+        await supabase.from('profiles').update({ refresh_batch_id: null }).eq('id', user.id);
+      }
+    } catch (e) {
+      // batch non recuperabile (es. cancellato lato API): sgancia
+      await supabase.from('profiles').update({ refresh_batch_id: null }).eq('id', user.id);
+    }
+  }
+
+  // ── 2. Sottometti un nuovo batch per le tesi stantie ──
+  if (status !== 'pending') {
+    const { data: stale } = await supabase
+      .from('theses')
+      .select('id, thesis, confidence, created_at')
+      .eq('user_id', user.id)
+      .lt('updated_at', staleCutoff)
+      .order('updated_at', { ascending: true })
+      .limit(THESES_PER_REFRESH);
+
+    if (stale?.length) {
+      try {
+        const batch = await createBatch(stale.map((th) => ({
+          custom_id: th.id,
+          params: {
+            model: 'claude-sonnet-4-6',
+            max_tokens: 1000,
+            system: [{ type: 'text', text: REFRESH_SYS }],
+            tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }],
+            messages: [{
+              role: 'user',
+              content: `Tesi: "${th.thesis}"\nConfidenza precedente: ${th.confidence}\nFormulata il: ${th.created_at}`,
+            }],
+          },
+        })));
+        await supabase.from('profiles').update({ refresh_batch_id: batch.id }).eq('id', user.id);
+        status = status === 'ingested' ? 'ingested+submitted' : 'submitted';
+      } catch (e: any) {
+        console.warn('batch submit failed', e.message);
+      }
+    }
+  }
+
+  // ── 3. Performance portafogli — prezzi gratuiti, sincrono ──
+  const { data: staleActions } = await supabase
+    .from('actions')
+    .select('*')
+    .eq('user_id', user.id)
+    .or(`performance_updated_at.is.null,performance_updated_at.lt.${staleCutoff}`)
+    .limit(ACTIONS_PER_REFRESH);
+
+  for (const ac of staleActions || []) {
+    const tickers: string[] = (ac.categories || [])
+      .flatMap((c: any) => c.examples || [])
+      .map((ex: any) => ex.ticker)
+      .filter(Boolean)
+      .slice(0, 8);
+    if (!tickers.length) continue;
+
+    const items: any[] = [];
+    for (const tk of tickers) {
+      const pct = await fetchTickerPerformance(tk, ac.created_at);
+      if (pct !== null) items.push({ ticker: tk, perf: formatPerf(pct), pct });
+    }
+
+    // Timestamp aggiornato anche senza risultati: evita di rimartellare
+    // l'endpoint quotes a ogni apertura per ticker irrisolvibili
+    const performance = items.length
+      ? {
+          overall: formatPerf(items.reduce((s, it) => s + it.pct, 0) / items.length),
+          items: items.map(({ ticker, perf }) => ({ ticker, perf })),
+          note: 'Stima da prezzi di mercato, non aggiustata per dividendi o cambio.',
+        }
+      : ac.performance;
+
+    await supabase
+      .from('actions')
+      .update({ performance, performance_updated_at: new Date().toISOString() })
+      .eq('id', ac.id);
+    if (items.length) updatedActions.push({ id: ac.id, performance });
+  }
+
+  return NextResponse.json({ status, updatedTheses, updatedActions });
+}

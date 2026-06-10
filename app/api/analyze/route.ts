@@ -1,31 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
-
-function extractJSON(text: string){
-  if(!text) throw new Error('Risposta vuota dal modello');
-  let t = text.replace(/```json/gi,'').replace(/```/g,'').trim();
-  try { return JSON.parse(t); } catch(e){}
-  const s = t.indexOf('{'), e = t.lastIndexOf('}');
-  if(s!==-1 && e!==-1 && e>s){
-    try { return JSON.parse(t.slice(s, e+1)); } catch(err){}
-  }
-  // Recovery for truncated JSON (model hit max_tokens): close open brackets/strings
-  if(s!==-1){
-    let frag = t.slice(s);
-    // If ends mid-string, drop to last complete value
-    try {
-      // Remove trailing incomplete token after last comma or colon
-      frag = frag.replace(/,\s*"[^"]*$/,'').replace(/:\s*"[^"]*$/,':null').replace(/,\s*$/,'');
-      // Count and close open braces/brackets
-      const opens = (frag.match(/\{/g)||[]).length, closes = (frag.match(/\}/g)||[]).length;
-      const opensA = (frag.match(/\[/g)||[]).length, closesA = (frag.match(/\]/g)||[]).length;
-      frag += ']'.repeat(Math.max(0,opensA-closesA));
-      frag += '}'.repeat(Math.max(0,opens-closes));
-      return JSON.parse(frag);
-    } catch(err){}
-  }
-  throw new Error('JSON non parsabile: ' + t.slice(0,120));
-}
+import { askClaudeJSON } from '@/lib/anthropic';
 
 // Limiti per piano
 const PLAN_LIMITS: Record<string, number> = {
@@ -115,71 +90,14 @@ export async function POST(req: NextRequest) {
       ]
     : [{ type: 'text', text: SYSTEM_PROMPT }];
 
-  const baseBody: any = {
-    model,
-    max_tokens: MAX_TOKENS,
-    system: systemPayload,
-    tools: webTools,
-    tool_choice: { type: 'auto' },
-    messages: [{ role: 'user', content: query }],
-  };
-
   try {
-    // Prima chiamata
-    let res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY!,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify(baseBody),
+    const parsed = await askClaudeJSON({
+      model,
+      system: systemPayload,
+      user: query,
+      maxTokens: MAX_TOKENS,
+      tools: webTools,
     });
-
-    let data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-
-    let finalText = '';
-
-    // Loop tool_use se Claude ha cercato
-    if (data.stop_reason === 'tool_use') {
-      const messages = [
-        { role: 'user', content: query },
-        { role: 'assistant', content: data.content },
-      ];
-      const toolResults = data.content
-        .filter((b: any) => b.type === 'tool_use')
-        .map((b: any) => ({
-          type: 'tool_result',
-          tool_use_id: b.id,
-          content: b.input?.query || '',
-        }));
-      if (toolResults.length) {
-        messages.push({ role: 'user', content: toolResults });
-        res = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': process.env.ANTHROPIC_API_KEY!,
-            'anthropic-version': '2023-06-01',
-          },
-          body: JSON.stringify({
-            model,
-            max_tokens: MAX_TOKENS,
-            system: systemPayload,
-            tools: webTools,
-            messages,
-          }),
-        });
-        data = await res.json();
-        if (data.error) throw new Error(data.error.message);
-      }
-      finalText = data.content.filter((b: any) => b.type === 'text').map((b: any) => b.text).join('');
-    } else {
-      finalText = data.content.filter((b: any) => b.type === 'text').map((b: any) => b.text).join('');
-    }
-
-    const parsed = extractJSON(finalText);
 
     // Incrementa contatore utilizzo
     await supabase

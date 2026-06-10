@@ -1,28 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
-
-function extractJSON(text){
-  if(!text) throw new Error('Risposta vuota dal modello');
-  let t = text.replace(/```json/gi,'').replace(/```/g,'').trim();
-  try { return JSON.parse(t); } catch(e){}
-  const s = t.indexOf('{'), e = t.lastIndexOf('}');
-  if(s!==-1 && e!==-1 && e>s){
-    try { return JSON.parse(t.slice(s, e+1)); } catch(err){}
-  }
-  if(s!==-1){
-    let frag = t.slice(s);
-    try {
-      frag = frag.replace(/,\s*"[^"]*$/,'').replace(/:\s*"[^"]*$/,':null').replace(/,\s*$/,'');
-      const opens=(frag.match(/\{/g)||[]).length, closes=(frag.match(/\}/g)||[]).length;
-      const opensA=(frag.match(/\[/g)||[]).length, closesA=(frag.match(/\]/g)||[]).length;
-      frag += ']'.repeat(Math.max(0,opensA-closesA));
-      frag += '}'.repeat(Math.max(0,opens-closes));
-      return JSON.parse(frag);
-    } catch(err){}
-  }
-  throw new Error('JSON non parsabile: ' + t.slice(0,120));
-}
-
+import { askClaudeJSON } from '@/lib/anthropic';
+import { checkAiCall, bumpAiCall } from '@/lib/ai-usage';
 
 const SYS = `Sei il motore di Synapse, una piattaforma di financial intelligence.
 Analizza questa task e il suo contesto nel grafo semantico dell'utente.
@@ -36,28 +15,21 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
 
+  const gate = await checkAiCall(supabase, user.id);
+  if (!gate.allowed) {
+    return NextResponse.json({ error: 'limit_reached', plan: gate.plan, limit: gate.limit }, { status: 429 });
+  }
+
   const { userMsg } = await req.json();
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY!,
-        'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'prompt-caching-2024-07-31',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5',
-        max_tokens: 1024,
-        system: [{ type: 'text', text: SYS }],
-        messages: [{ role: 'user', content: userMsg }],
-      }),
+    const parsed = await askClaudeJSON({
+      model: 'claude-haiku-4-5',
+      system: SYS,
+      user: userMsg,
+      maxTokens: 1024,
     });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    const rawText = (data.content || []).filter((b)=>b.type==='text').map((b)=>b.text).join('');
-    const parsed = extractJSON(rawText);
+    await bumpAiCall(supabase, user.id, gate.used);
     return NextResponse.json({ result: parsed });
   } catch (err: any) {
     return NextResponse.json({ error: err.message, detail: String(err) }, { status: 500 });
