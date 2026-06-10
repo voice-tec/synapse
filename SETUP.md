@@ -100,8 +100,11 @@ app/
     portfolio/route.ts  → portafoglio della tesi (Sonnet + web search)
     challenge/route.ts  → avvocato del diavolo: contro-tesi (Sonnet + web search)
     refresh/route.ts    → refresh on-demand: tesi via Batch API (-50%), performance via prezzi gratuiti
+    share/route.ts      → crea/aggiorna lo snapshot pubblico del grafo (zero AI)
+    shared/[token]/     → lettura pubblica dello snapshot (service role, token non enumerabili)
     cron/
       reset-usage/      → azzera i contatori mensili (1° del mese)
+  g/[token]/page.tsx    → pagina pubblica read-only del grafo condiviso
   login/page.tsx        → pagina di login/registrazione
   page.tsx              → app principale (il grafo)
   layout.tsx            → layout root

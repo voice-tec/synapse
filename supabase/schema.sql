@@ -74,6 +74,17 @@ create table actions (
   created_at timestamptz default now()
 );
 
+-- ── GRAFI CONDIVISI (snapshot pubblici read-only) ──
+create table shared_graphs (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users on delete cascade not null unique,
+  token text unique not null,
+  title text,
+  snapshot jsonb not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 -- ═══════════════════════════════════════════════
 -- ROW LEVEL SECURITY — ogni utente vede solo i suoi dati
 -- ═══════════════════════════════════════════════
@@ -97,6 +108,12 @@ create policy "own theses" on theses
   for all using (auth.uid() = user_id);
 
 create policy "own actions" on actions
+  for all using (auth.uid() = user_id);
+
+-- Nessuna policy di lettura pubblica: la pagina /g/[token] passa dal
+-- service role lato server, così i token non sono enumerabili
+alter table shared_graphs enable row level security;
+create policy "own shared graphs" on shared_graphs
   for all using (auth.uid() = user_id);
 
 -- ═══════════════════════════════════════════════
@@ -151,3 +168,16 @@ create trigger on_auth_user_created
 -- alter table actions enable row level security;
 -- drop policy if exists "own actions" on actions;
 -- create policy "own actions" on actions for all using (auth.uid() = user_id);
+--
+-- create table if not exists shared_graphs (
+--   id uuid default gen_random_uuid() primary key,
+--   user_id uuid references auth.users on delete cascade not null unique,
+--   token text unique not null,
+--   title text,
+--   snapshot jsonb not null,
+--   created_at timestamptz default now(),
+--   updated_at timestamptz default now()
+-- );
+-- alter table shared_graphs enable row level security;
+-- drop policy if exists "own shared graphs" on shared_graphs;
+-- create policy "own shared graphs" on shared_graphs for all using (auth.uid() = user_id);
