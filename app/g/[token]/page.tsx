@@ -112,7 +112,7 @@ export default function SharedGraphPage() {
       let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
       for (const n of nodes) { minX = Math.min(minX, n.x); maxX = Math.max(maxX, n.x); minY = Math.min(minY, n.y); maxY = Math.max(maxY, n.y); }
       const r = canvas.getBoundingClientRect();
-      const pad = 90;
+      const pad = Math.min(90, r.width * 0.1); // su schermi stretti meno margine, grafo più grande
       const z = Math.min(1.4, Math.min((r.width - pad * 2) / Math.max(120, maxX - minX), (r.height - pad * 2) / Math.max(120, maxY - minY)));
       view.z = Math.max(0.3, z);
       view.x = r.width / 2 - ((minX + maxX) / 2) * view.z;
@@ -226,9 +226,38 @@ export default function SharedGraphPage() {
     canvas.addEventListener('mousedown', (e) => down(e.clientX - rect().left, e.clientY - rect().top));
     window.addEventListener('mousemove', (e) => move(e.clientX - rect().left, e.clientY - rect().top));
     window.addEventListener('mouseup', (e) => up(e.clientX - rect().left, e.clientY - rect().top));
-    canvas.addEventListener('touchstart', (e) => down(e.touches[0].clientX - rect().left, e.touches[0].clientY - rect().top), { passive: true });
-    canvas.addEventListener('touchmove', (e) => move(e.touches[0].clientX - rect().left, e.touches[0].clientY - rect().top), { passive: true });
-    canvas.addEventListener('touchend', (e) => up(e.changedTouches[0].clientX - rect().left, e.changedTouches[0].clientY - rect().top));
+
+    // Touch: 1 dito = pan/tap, 2 dita = pinch zoom sul punto medio
+    let pinchD = 0, pinching = false;
+    canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        pinching = true; dragging = false; moved = true;
+        pinchD = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY) || 1;
+      } else {
+        down(e.touches[0].clientX - rect().left, e.touches[0].clientY - rect().top);
+      }
+    }, { passive: true });
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault(); // niente scroll della pagina mentre interagisci col grafo
+      if (pinching && e.touches.length === 2) {
+        const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY) || 1;
+        const r = rect();
+        const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left;
+        const my = (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top;
+        const before = toWorld(mx, my);
+        view.z = Math.max(0.25, Math.min(2.5, view.z * (d / pinchD)));
+        view.x = mx - before.x * view.z; view.y = my - before.y * view.z;
+        pinchD = d;
+      } else if (!pinching && e.touches.length === 1) {
+        move(e.touches[0].clientX - rect().left, e.touches[0].clientY - rect().top);
+      }
+    }, { passive: false });
+    canvas.addEventListener('touchend', (e) => {
+      if (e.touches.length === 0) {
+        if (!pinching) up(e.changedTouches[0].clientX - rect().left, e.changedTouches[0].clientY - rect().top);
+        pinching = false;
+      }
+    });
     canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
       const mx = e.clientX - rect().left, my = e.clientY - rect().top;
@@ -251,14 +280,22 @@ export default function SharedGraphPage() {
         .gd-card { animation: cardIn .35s cubic-bezier(.22,1,.36,1) both; }
         .gd-cta { transition: opacity .15s, transform .15s; }
         .gd-cta:hover { opacity: .88; transform: translateY(-1px); }
+        @media (max-width: 640px) {
+          .gd-head { padding: 10px 14px !important; gap: 8px !important; }
+          .gd-stats { display: none !important; }
+          .gd-badge { display: none !important; }
+          .gd-cta { padding: 7px 12px !important; font-size: 11px !important; }
+          .gd-tagline { display: none !important; }
+          .gd-hint { font-size: 9px !important; }
+        }
       `}</style>
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 20px', borderBottom: '1px solid #1f1f28', background: '#0e0e12', flexShrink: 0, zIndex: 5 }}>
+      <div className="gd-head" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 20px', borderBottom: '1px solid #1f1f28', background: '#0e0e12', flexShrink: 0, zIndex: 5 }}>
         <span style={{ fontFamily: "'Fraunces', serif", fontSize: 17, fontWeight: 300 }}>Symnaps</span>
-        <span style={{ fontSize: 10, padding: '3px 10px', borderRadius: 6, background: '#1a2a4a', color: '#5b9cf6', textTransform: 'uppercase', letterSpacing: '.06em' }}>grafo condiviso</span>
+        <span className="gd-badge" style={{ fontSize: 10, padding: '3px 10px', borderRadius: 6, background: '#1a2a4a', color: '#5b9cf6', textTransform: 'uppercase', letterSpacing: '.06em' }}>grafo condiviso</span>
         {stats && (
-          <span style={{ fontSize: 10, color: '#5a5a78', display: 'flex', gap: 12 }}>
+          <span className="gd-stats" style={{ fontSize: 10, color: '#5a5a78', display: 'flex', gap: 12 }}>
             <span>● {stats.t} domande</span>
             <span style={{ color: '#a78bfa99' }}>◆ {stats.th} tesi</span>
             <span style={{ color: '#34d39999' }}>▤ {stats.a} portafogli</span>
@@ -282,8 +319,8 @@ export default function SharedGraphPage() {
         )}
         <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block', cursor: 'grab' }} />
         {state === 'ok' && (
-          <div style={{ position: 'absolute', top: 14, left: 18, fontSize: 10, color: '#3a3a50', pointerEvents: 'none' }}>
-            trascina per muoverti · rotella per zoom · tocca un nodo per i dettagli
+          <div className="gd-hint" style={{ position: 'absolute', top: 14, left: 18, fontSize: 10, color: '#3a3a50', pointerEvents: 'none' }}>
+            trascina · pizzica o rotella per lo zoom · tocca un nodo per i dettagli
           </div>
         )}
 
@@ -342,7 +379,7 @@ export default function SharedGraphPage() {
 
       {/* Footer */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '10px 20px', borderTop: '1px solid #1f1f28', background: '#0e0e12', fontSize: 10, color: '#3a3a50', flexShrink: 0, flexWrap: 'wrap' }}>
-        <span>fatto con <span style={{ fontFamily: "'Fraunces', serif", color: '#7a7a95' }}>Symnaps</span> — le domande diventano un grafo, le tesi emergono da sole</span>
+        <span className="gd-tagline">fatto con <span style={{ fontFamily: "'Fraunces', serif", color: '#7a7a95' }}>Symnaps</span> — le domande diventano un grafo, le tesi emergono da sole</span>
         <a href="/login" style={{ color: '#5b9cf6', textDecoration: 'none' }}>inizia gratis →</a>
       </div>
     </div>
