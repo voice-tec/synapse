@@ -27,7 +27,11 @@ Rispondi SOLO con JSON valido:
       "explanation": "2 frasi su perché questa tesi emerge",
       "pattern": "descrivi il pattern analitico del cluster",
       "source_indices": [indici 1-based, massimo 6],
-      "suggested_question": "una domanda che completerebbe questa tesi"
+      "suggested_question": "una domanda che completerebbe questa tesi",
+      "signals": {
+        "confirm": ["2 segnali OSSERVABILI e concreti che rafforzerebbero la tesi (dati, eventi, soglie)"],
+        "invalidate": ["2 segnali OSSERVABILI e concreti che la indebolirebbero"]
+      }
     }
   ]
 }

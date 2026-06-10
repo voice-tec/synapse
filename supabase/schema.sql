@@ -49,6 +49,7 @@ create table theses (
   source_task_ids uuid[],
   history jsonb default '[]',                  -- [{thesis, confidence, date, note}]
   challenge jsonb,                             -- contro-tesi (avvocato del diavolo)
+  signals jsonb,                               -- {confirm:[...], invalidate:[...]}
   color text,
   pos_x float,
   pos_y float,
@@ -128,6 +129,7 @@ create trigger on_auth_user_created
 -- alter table profiles add column if not exists ai_calls_this_month int default 0;
 -- alter table profiles add column if not exists refresh_batch_id text;
 -- alter table theses add column if not exists challenge jsonb;
+-- alter table theses add column if not exists signals jsonb;
 --
 -- create table if not exists actions (
 --   id uuid default gen_random_uuid() primary key,
