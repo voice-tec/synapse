@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
 
 export default function LoginPage() {
@@ -9,7 +8,6 @@ export default function LoginPage() {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const supabase = createClient();
 
   async function handleAuth() {
@@ -24,13 +22,13 @@ export default function LoginPage() {
         // email" step needed.
         const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
         if (signInErr) throw signInErr;
-        router.push('/');
-        router.refresh();
+        // Full reload, NON navigazione SPA: lo script del grafo inietta stato
+        // globale (TASKS, NODES, __SYN_INITIALIZED) che deve morire col cambio utente
+        window.location.href = '/';
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        router.push('/');
-        router.refresh();
+        window.location.href = '/';
       }
     } catch (e: any) {
       setMsg(e.message);

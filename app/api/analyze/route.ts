@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { askClaudeJSON } from '@/lib/anthropic';
+import { enrichChartWithRealData } from '@/lib/quotes';
 
 // Limiti per piano
 const PLAN_LIMITS: Record<string, number> = {
@@ -33,8 +34,10 @@ Return ONLY a valid JSON object, no extra text, no markdown.
     "chart":{
       "label":"chart title in Italian (clear, what the chart shows)",
       "type":"bar for comparisons between categories/sectors/assets; line only for evolution over time",
-      "values":[4-7 realistic numbers based on real data],
-      "labels":["ONE or TWO words each, max 10 chars, e.g. 'Oro','Azioni','Bond brevi' — never long phrases"],
+      "tickers":["up to 4 REAL traded tickers (ETFs/stocks/indices, e.g. GLD, SPY, ^GSPC) that best illustrate the point — the server will fetch REAL market data for them. Empty array [] only if the concept is not directly quotable"],
+      "timeframe":"lookback window for the chart, one of: 1m|3m|6m|1y|5y",
+      "values":[4-7 realistic numbers — FALLBACK ONLY, used when tickers is empty],
+      "labels":["ONE or TWO words each, max 10 chars — fallback only, paired with values"],
       "suffix":"optional unit shown on values, e.g. '%' or 'bps' or '' if none"
     },
     "metrics":[
@@ -98,6 +101,16 @@ export async function POST(req: NextRequest) {
       maxTokens: MAX_TOKENS,
       tools: webTools,
     });
+
+    // Grafico con dati di mercato VERI quando il modello indica ticker;
+    // altrimenti i valori stimati restano ma etichettati "stima".
+    if (parsed?.output?.chart) {
+      try {
+        parsed.output.chart = await enrichChartWithRealData(parsed.output.chart);
+      } catch (e) {
+        // dati reali non disponibili: tieni la stima del modello
+      }
+    }
 
     // Incrementa contatore utilizzo
     await supabase
