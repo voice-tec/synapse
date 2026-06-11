@@ -5,6 +5,8 @@
 // Best effort: ticker non risolto o endpoint muto → null, lo strumento
 // viene omesso senza rompere niente.
 
+import { fredSeries } from './fred';
+
 const UA_HEADERS = { 'User-Agent': 'Mozilla/5.0 (compatible; SynapseApp/1.0)' };
 const TD_KEY = process.env.TWELVEDATA_API_KEY;
 
@@ -109,6 +111,25 @@ export async function enrichChartWithRealData(chart: any) {
   const tickers: string[] = (chart.tickers || []).filter(Boolean).slice(0, 4);
   const days = TIMEFRAME_DAYS[chart.timeframe] || 182;
   const fromIso = new Date(Date.now() - days * 24 * 3600 * 1000).toISOString();
+
+  // FRED ha precedenza sui ticker: per le domande macro la serie ufficiale
+  // (CPI, tassi, disoccupazione...) è più autorevole di qualsiasi proxy ETF.
+  const fredId: string | undefined = Array.isArray(chart.fred) ? chart.fred[0] : chart.fred;
+  if (fredId) {
+    const s = await fredSeries(fredId, fromIso);
+    if (s) {
+      const fmt: Intl.DateTimeFormatOptions =
+        days > 365 ? { month: 'short', year: '2-digit' } : { day: 'numeric', month: 'short' };
+      const n = Math.min(12, s.points.length);
+      const idxs = Array.from({ length: n }, (_, i) => Math.round((i * (s.points.length - 1)) / (n - 1)));
+      chart.type = 'line';
+      chart.values = idxs.map((i) => Number(s.points[i].value.toFixed(2)));
+      chart.labels = idxs.map((i) => new Date(s.points[i].date).toLocaleDateString('it', fmt));
+      chart.suffix = s.meta.unit;
+      chart.label = `${s.meta.label} · ${chart.timeframe || ''} · fonte FRED`.replace(' ·  ·', ' ·').trim();
+      return chart;
+    }
+  }
 
   if (tickers.length) {
     if (chart.type === 'line') {

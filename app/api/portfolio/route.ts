@@ -44,13 +44,15 @@ export async function POST(req: NextRequest) {
   const { thesis, pattern } = await req.json();
 
   try {
-    const parsed = await askClaudeJSON({
+    const { json: parsed, citations } = await askClaudeJSON({
       model: 'claude-sonnet-4-6',
       system: SYS,
       user: `Tesi: "${thesis}"\nPattern: "${pattern || ''}"\n\nGenera il portafoglio della tesi.`,
       maxTokens: 3000,
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }],
     });
+    // sources = citazioni vere dall'API web_search (mai auto-dichiarate dal modello)
+    if (citations.length) parsed.sources = citations.slice(0, 4);
     await bumpAiCall(supabase, user.id, gate.used);
     return NextResponse.json({ result: parsed });
   } catch (err: any) {

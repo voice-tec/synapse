@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   if (!thesis) return NextResponse.json({ error: 'Tesi mancante' }, { status: 400 });
 
   try {
-    const parsed = await askClaudeJSON({
+    const { json: parsed, citations } = await askClaudeJSON({
       model: 'claude-sonnet-4-6',
       system: SYS,
       user: `Tesi: "${thesis}"\nContesto: "${explanation || ''}"\n\nCostruisci il caso contrario.`,
@@ -44,7 +44,12 @@ export async function POST(req: NextRequest) {
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }],
     });
 
-    const challenge = { ...parsed, date: new Date().toISOString() };
+    // sources = citazioni vere dall'API web_search (mai auto-dichiarate dal modello)
+    const challenge = {
+      ...parsed,
+      ...(citations.length ? { sources: citations.slice(0, 4) } : {}),
+      date: new Date().toISOString(),
+    };
 
     // Persiste sulla tesi, così sopravvive ai reload
     if (clusterId) {

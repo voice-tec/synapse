@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { askClaudeJSON } from '@/lib/anthropic';
 import { enrichChartWithRealData } from '@/lib/quotes';
+import { macroSnapshot } from '@/lib/fred';
 
 // Limiti per piano
 const PLAN_LIMITS: Record<string, number> = {
@@ -35,6 +36,7 @@ Return ONLY a valid JSON object, no extra text, no markdown.
       "label":"chart title in Italian. MUST state exactly what is shown AND the period, e.g. 'Oro vs S&P 500, ultimi 6 mesi' — never vague titles like 'Confronto asset'",
       "type":"bar for comparisons between categories/sectors/assets; line only for evolution over time",
       "tickers":["up to 4 REAL traded tickers (ETFs/stocks/indices, e.g. GLD, SPY, ^GSPC). The server fetches REAL market data for them. RULES: pick tickers SPECIFIC to THIS question, not generic theme proxies; the chart must prove the main claim of YOUR insight; if a similar comparison already appears in the prior context, choose a DIFFERENT angle (other assets, other metric, other timeframe). Empty array [] if the concept is not directly quotable"],
+      "fred":"ONE FRED series ID when the chart should show OFFICIAL US macro data instead of tickers (inflation, policy rates, treasury yields, unemployment, GDP, money supply, dollar, oil). Allowed values ONLY: CPIAUCSL, FEDFUNDS, DGS10, DGS2, T10Y2Y, UNRATE, GDPC1, M2SL, DTWEXBGS, DCOILWTICO. null otherwise. When set it takes precedence over tickers",
       "timeframe":"lookback window matching the question, one of: 1m|3m|6m|1y|5y",
       "values":[4-7 realistic numbers — ALWAYS provide them (also when tickers is set: they are the fallback if market data is unavailable)],
       "labels":["ONE or TWO words each, max 10 chars — ALWAYS provide, paired with values"],
@@ -42,8 +44,7 @@ Return ONLY a valid JSON object, no extra text, no markdown.
     },
     "metrics":[
       {"k":"label","v":"value with unit","pos":true}
-    ],
-    "sources":["only if web search was used"]
+    ]
   }
 }`;
 
@@ -84,23 +85,37 @@ export async function POST(req: NextRequest) {
   const webTools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }];
   const MAX_TOKENS = 3000;
 
+  // Snapshot macro ufficiale (FRED) nel system: ~150 token che ancorano ogni
+  // affermazione macro a numeri veri e risparmiano web_search inutili.
+  const macro = await macroSnapshot();
+
   // No prompt caching: with intermittent beta usage the cache is rewritten
   // before it's reused, so the write surcharge costs more than it saves.
-  const systemPayload = priorContext
-    ? [
-        { type: 'text', text: SYSTEM_PROMPT },
-        { type: 'text', text: priorContext },
-      ]
-    : [{ type: 'text', text: SYSTEM_PROMPT }];
+  const systemPayload = [
+    { type: 'text', text: SYSTEM_PROMPT },
+    ...(macro ? [{ type: 'text', text: macro }] : []),
+    ...(priorContext ? [{ type: 'text', text: priorContext }] : []),
+  ];
 
   try {
-    const parsed = await askClaudeJSON({
+    const { json: parsed, citations } = await askClaudeJSON({
       model,
       system: systemPayload,
       user: query,
       maxTokens: MAX_TOKENS,
       tools: webTools,
     });
+
+    // Fonti: SOLO citazioni vere estratte dalla risposta API (web_search).
+    // Quelle auto-dichiarate dal modello nel JSON vengono scartate: potevano
+    // essere allucinate. Niente citazioni = niente fonti (badge "training").
+    if (parsed?.output) {
+      if (citations.length) {
+        parsed.output.sources = citations.slice(0, 6);
+      } else {
+        delete parsed.output.sources;
+      }
+    }
 
     // Grafico con dati di mercato VERI quando il modello indica ticker;
     // altrimenti i valori stimati restano ma etichettati "stima".

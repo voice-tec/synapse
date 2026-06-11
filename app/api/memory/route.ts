@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     : 'TESI ESISTENTI: nessuna';
 
   try {
-    const parsed = await askClaudeJSON({
+    const { json: parsed } = await askClaudeJSON({
       model: 'claude-haiku-4-5', // clustering semplice: Haiku basta, ~10x più economico
       system: SYS,
       user: `${thesesBlock}\n\nAnalizza queste ${taskCount} task:\n${summary}`,

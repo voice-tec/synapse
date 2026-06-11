@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   const { userMsg } = await req.json();
 
   try {
-    const parsed = await askClaudeJSON({
+    const { json: parsed } = await askClaudeJSON({
       model: 'claude-haiku-4-5',
       system: SYS,
       user: userMsg,

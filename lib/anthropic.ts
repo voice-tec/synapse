@@ -35,14 +35,33 @@ export function extractJSON(text: string) {
   throw new Error('JSON non parsabile: ' + t.slice(0, 120));
 }
 
+export type Citation = { url: string; title: string };
+
+// Citazioni VERE dalla risposta API: i blocchi text portano `citations`
+// (web_search_result_location) quando il modello cita risultati di web_search.
+// Sono le uniche fonti affidabili — quelle scritte dal modello nel JSON
+// possono essere allucinate.
+function collectCitations(content: any[], seen: Set<string>, out: Citation[]) {
+  for (const b of content || []) {
+    for (const c of b.citations || []) {
+      if (c.url && !seen.has(c.url)) {
+        seen.add(c.url);
+        out.push({ url: c.url, title: c.title || c.url });
+      }
+    }
+  }
+}
+
 export async function askClaudeJSON(opts: {
   model: string;
   system: string | any[];
   user: string;
   maxTokens: number;
   tools?: any[];
-}) {
+}): Promise<{ json: any; citations: Citation[] }> {
   const messages: any[] = [{ role: 'user', content: opts.user }];
+  const citations: Citation[] = [];
+  const seenUrls = new Set<string>();
 
   const call = async () => {
     const res = await fetch(API_URL, {
@@ -62,15 +81,17 @@ export async function askClaudeJSON(opts: {
   };
 
   let data = await call();
+  collectCitations(data.content, seenUrls, citations);
   let continuations = 0;
   while (data.stop_reason === 'pause_turn' && continuations < 3) {
     messages.push({ role: 'assistant', content: data.content });
     data = await call();
+    collectCitations(data.content, seenUrls, citations);
     continuations++;
   }
 
   const finalText = data.content.filter((b: any) => b.type === 'text').map((b: any) => b.text).join('');
-  return extractJSON(finalText);
+  return { json: extractJSON(finalText), citations };
 }
 
 // ── Message Batches API — -50% sul prezzo dei token, per lavori non urgenti ──
