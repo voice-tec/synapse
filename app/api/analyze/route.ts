@@ -32,6 +32,12 @@ Return ONLY a valid JSON object, no extra text, no markdown.
   },
   "output":{
     "insight":"3-4 sentence analysis in Italian, concrete and data-grounded",
+    "verdict":{
+      "stance":"si|no|dipende. Verdict ONLY when the question implies a decision or judgment (è da comprare? conviene? meglio X o Y? è rischioso?) — whole verdict null for purely informative questions",
+      "label":"the direct answer in ONE Italian sentence, max 12 words, no hedging — e.g. 'Non quotata: esposizione possibile solo tramite veicoli indiretti'",
+      "confidence":"alta|media|bassa"
+    },
+    "takeaways":["2-3 key facts in Italian, max 14 words each — the numbers/facts that actually drive the conclusion. ALWAYS provided"],
     "chart":{
       "label":"chart title in Italian. MUST state exactly what is shown AND the period, e.g. 'Oro vs S&P 500, ultimi 6 mesi' — never vague titles like 'Confronto asset'",
       "type":"bar for comparisons between categories/sectors/assets; line only for evolution over time",
