@@ -50,9 +50,20 @@ Return ONLY a valid JSON object, no extra text, no markdown.
     },
     "metrics":[
       {"k":"label","v":"value with unit","pos":true}
-    ]
+    ],
+    "scenarios":[
+      {"name":"bull|base|bear","prob":"approximate probability as 'NN%' — the three must sum to ~100","trigger":"the IF condition in Italian, max 10 words, e.g. 'Fed taglia due volte entro fine anno'","outcome":"expected effect in Italian, max 12 words"}
+    ],
+    "catalysts":[
+      {"when":"upcoming date or period in Italian, short, e.g. '18 giu' or 'metà lug'","event":"event name in Italian, max 7 words, e.g. 'Riunione FOMC' or 'Trimestrale NVDA'","why":"why it matters for THIS question, max 10 words in Italian"}
+    ],
+    "portfolio_link":{"exposed":true,"note":"ONE Italian sentence quantifying the user's CURRENT exposure to the question's theme through their REAL holdings (look-through: e.g. a world ETF carries the index's tech share), citing instrument and approximate exposure with '~', e.g. 'Sei già esposto ~12% a questo tema via VWCE (quota tech dell'indice)'"}
   }
-}`;
+}
+
+scenarios: EXACTLY 3 (bull, base, bear in this order) when the question implies a decision, outlook or risk judgment — the same cases that get a verdict. null for purely informative/historical questions.
+catalysts: 2-4 UPCOMING events (central bank meetings, CPI/jobs releases, earnings, deadlines) relevant to the question, ordered by date, all AFTER today's date given below. Only events you are reasonably confident about; use period granularity ('metà lug') when unsure of the exact day. null when nothing relevant.
+portfolio_link: ONLY when a USER REAL PORTFOLIO block is provided below AND the question meaningfully touches it. Estimate look-through exposure from the declared weights and the typical composition of each instrument; mark estimates with '~'. "exposed" false (with note explaining the gap) when the portfolio has NO meaningful exposure to the theme. null when no portfolio block or no meaningful relation. NEVER invent holdings not in the block.`;
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -62,10 +73,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
   }
 
-  // Controlla piano e utilizzo del mese
+  // Controlla piano e utilizzo del mese (+ portafoglio reale dichiarato)
   const { data: profile } = await supabase
     .from('profiles')
-    .select('plan, tasks_this_month')
+    .select('plan, tasks_this_month, portfolio')
     .eq('id', user.id)
     .single();
 
@@ -89,17 +100,38 @@ export async function POST(req: NextRequest) {
   // answers were already under that, so no quality loss).
   const model = 'claude-sonnet-4-6';
   const webTools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }];
-  const MAX_TOKENS = 3000;
+  // 3600 (era 3000): scenari + catalizzatori + portfolio_link aggiungono
+  // ~400 token di output; il recupero JSON troncato resta solo rete di sicurezza.
+  const MAX_TOKENS = 3600;
 
   // Snapshot macro ufficiale (FRED) nel system: ~150 token che ancorano ogni
   // affermazione macro a numeri veri e risparmiano web_search inutili.
   const macro = await macroSnapshot();
 
+  // Portafoglio REALE dichiarato dall'utente (profiles.portfolio): permette
+  // al modello di dire "sei già esposto ~12% a questo tema via VWCE"
+  // invece di una risposta generica.
+  let portfolioCtx: string | null = null;
+  const holdings: any[] = Array.isArray((profile as any)?.portfolio) ? (profile as any).portfolio : [];
+  if (holdings.length) {
+    const lines = holdings
+      .filter((h) => h && (h.ticker || h.name))
+      .slice(0, 20)
+      .map((h) => `- ${h.ticker || ''}${h.name ? ` (${h.name})` : ''}: ${h.weight != null ? `${h.weight}%` : 'peso n/d'}`);
+    if (lines.length) {
+      portfolioCtx = `USER REAL PORTFOLIO (actual holdings the user declared, with portfolio weights):\n${lines.join('\n')}`;
+    }
+  }
+
+  const today = `Today's date: ${new Date().toISOString().slice(0, 10)}. Catalysts must all be AFTER this date.`;
+
   // No prompt caching: with intermittent beta usage the cache is rewritten
   // before it's reused, so the write surcharge costs more than it saves.
   const systemPayload = [
     { type: 'text', text: SYSTEM_PROMPT },
+    { type: 'text', text: today },
     ...(macro ? [{ type: 'text', text: macro }] : []),
+    ...(portfolioCtx ? [{ type: 'text', text: portfolioCtx }] : []),
     ...(priorContext ? [{ type: 'text', text: priorContext }] : []),
   ];
 

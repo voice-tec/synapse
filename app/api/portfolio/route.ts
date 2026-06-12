@@ -13,6 +13,8 @@ IMPORTANTE — INQUADRAMENTO EDUCATIVO OBBLIGATORIO:
 
 Usa web_search per trovare strumenti reali e aggiornati (ticker ETF, nomi corretti) quando utile.
 
+Se è fornito un blocco USER REAL PORTFOLIO (gli strumenti che l'utente possiede davvero), nel "rationale" di ogni categoria segnala quando l'utente è GIÀ coperto da uno strumento che possiede (es. "già coperto in parte dalla quota tech di VWCE") — così il portafoglio della tesi si collega a ciò che ha. Non inventare mai strumenti non presenti nel blocco.
+
 Rispondi SOLO con JSON valido, nessun testo extra:
 {
   "title": "nome breve del portafoglio della tesi in italiano",
@@ -43,10 +45,22 @@ export async function POST(req: NextRequest) {
 
   const { thesis, pattern } = await req.json();
 
+  // Holdings reali: il portafoglio generato segnala cosa è già coperto
+  const { data: profile } = await supabase
+    .from('profiles').select('portfolio').eq('id', user.id).single();
+  const holdings: any[] = Array.isArray(profile?.portfolio) ? profile!.portfolio : [];
+  const holdingsCtx = holdings.length
+    ? `\n\nUSER REAL PORTFOLIO:\n${holdings
+        .filter((h) => h && (h.ticker || h.name))
+        .slice(0, 20)
+        .map((h) => `- ${h.ticker || ''}${h.name ? ` (${h.name})` : ''}: ${h.weight != null ? `${h.weight}%` : 'peso n/d'}`)
+        .join('\n')}`
+    : '';
+
   try {
     const { json: parsed, citations } = await askClaudeJSON({
       model: 'claude-sonnet-4-6',
-      system: SYS,
+      system: SYS + holdingsCtx,
       user: `Tesi: "${thesis}"\nPattern: "${pattern || ''}"\n\nGenera il portafoglio della tesi.`,
       maxTokens: 3000,
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }],

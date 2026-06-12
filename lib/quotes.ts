@@ -127,6 +127,7 @@ export async function enrichChartWithRealData(chart: any) {
       chart.labels = idxs.map((i) => new Date(s.points[i].date).toLocaleDateString('it', fmt));
       chart.suffix = s.meta.unit;
       chart.label = `${s.meta.label} · ${chart.timeframe || ''} · fonte FRED`.replace(' ·  ·', ' ·').trim();
+      chart.asof = new Date().toISOString(); // freshness: dati reali, timestamp del fetch
       return chart;
     }
   }
@@ -142,6 +143,7 @@ export async function enrichChartWithRealData(chart: any) {
         chart.labels = idxs.map((i) => s.dates[i]);
         chart.suffix = '%';
         chart.label = `${chart.label || `Andamento ${tickers[0]}`} · ${tickers[0]} ${chart.timeframe || ''}, var. % reale`.trim();
+        chart.asof = new Date().toISOString();
         return chart;
       }
     } else {
@@ -155,6 +157,7 @@ export async function enrichChartWithRealData(chart: any) {
         chart.labels = items.map((it) => it.tk);
         chart.suffix = '%';
         chart.label = `${chart.label || 'Performance a confronto'} · perf. % reale ${chart.timeframe || ''}`.trim();
+        chart.asof = new Date().toISOString();
         return chart;
       }
     }

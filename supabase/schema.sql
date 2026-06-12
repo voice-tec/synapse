@@ -11,6 +11,7 @@ create table profiles (
   tasks_this_month int default 0,
   ai_calls_this_month int default 0,           -- memory/suggest/portfolio/challenge
   refresh_batch_id text,                       -- batch Anthropic pendente per il refresh tesi
+  portfolio jsonb,                             -- holdings REALI dichiarate: [{ticker,name,weight}]
   created_at timestamptz default now()
 );
 
@@ -74,6 +75,23 @@ create table actions (
   created_at timestamptz default now()
 );
 
+-- ── WATCH ("avvisami se cambia"): ricontrollo periodico del verdetto ──
+create table watches (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users on delete cascade not null,
+  task_id uuid references tasks on delete cascade not null,
+  query text not null,
+  last_stance text,                            -- si | no | dipende
+  last_label text,
+  last_confidence text,
+  last_checked_at timestamptz default now(),
+  flip jsonb,                                  -- {old_stance,new_stance,new_label,detected_at}
+  flip_seen boolean default false,
+  active boolean default true,
+  created_at timestamptz default now(),
+  unique(user_id, task_id)
+);
+
 -- ── GRAFI CONDIVISI (snapshot pubblici read-only) ──
 create table shared_graphs (
   id uuid default gen_random_uuid() primary key,
@@ -108,6 +126,10 @@ create policy "own theses" on theses
   for all using (auth.uid() = user_id);
 
 create policy "own actions" on actions
+  for all using (auth.uid() = user_id);
+
+alter table watches enable row level security;
+create policy "own watches" on watches
   for all using (auth.uid() = user_id);
 
 -- Nessuna policy di lettura pubblica: la pagina /g/[token] passa dal
@@ -145,6 +167,7 @@ create trigger on_auth_user_created
 -- ═══════════════════════════════════════════════
 -- alter table profiles add column if not exists ai_calls_this_month int default 0;
 -- alter table profiles add column if not exists refresh_batch_id text;
+-- alter table profiles add column if not exists portfolio jsonb;
 -- alter table theses add column if not exists challenge jsonb;
 -- alter table theses add column if not exists signals jsonb;
 --
@@ -181,3 +204,22 @@ create trigger on_auth_user_created
 -- alter table shared_graphs enable row level security;
 -- drop policy if exists "own shared graphs" on shared_graphs;
 -- create policy "own shared graphs" on shared_graphs for all using (auth.uid() = user_id);
+--
+-- create table if not exists watches (
+--   id uuid default gen_random_uuid() primary key,
+--   user_id uuid references auth.users on delete cascade not null,
+--   task_id uuid references tasks on delete cascade not null,
+--   query text not null,
+--   last_stance text,
+--   last_label text,
+--   last_confidence text,
+--   last_checked_at timestamptz default now(),
+--   flip jsonb,
+--   flip_seen boolean default false,
+--   active boolean default true,
+--   created_at timestamptz default now(),
+--   unique(user_id, task_id)
+-- );
+-- alter table watches enable row level security;
+-- drop policy if exists "own watches" on watches;
+-- create policy "own watches" on watches for all using (auth.uid() = user_id);
