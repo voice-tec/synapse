@@ -13,8 +13,10 @@ const TD_KEY = process.env.TWELVEDATA_API_KEY;
 const itDate = (d: string | number) =>
   new Date(d).toLocaleDateString('it', { day: 'numeric', month: 'short' });
 
+type Series = { dates: string[]; iso: string[]; closes: number[] };
+
 // ── Twelve Data ──
-async function tdSeries(ticker: string, fromIso: string): Promise<{ dates: string[]; closes: number[] } | null> {
+async function tdSeries(ticker: string, fromIso: string): Promise<Series | null> {
   if (!TD_KEY) return null;
   try {
     const sr = await fetch(
@@ -33,12 +35,13 @@ async function tdSeries(ticker: string, fromIso: string): Promise<{ dates: strin
     if (j.status === 'error' || !j.values?.length) return null;
 
     const dates: string[] = [];
+    const iso: string[] = [];
     const closes: number[] = [];
     for (const v of [...j.values].reverse()) { // TD restituisce dal più recente
       const f = parseFloat(v.close);
-      if (!isNaN(f)) { closes.push(f); dates.push(itDate(v.datetime)); }
+      if (!isNaN(f)) { closes.push(f); dates.push(itDate(v.datetime)); iso.push(String(v.datetime).slice(0, 10)); }
     }
-    return closes.length >= 2 ? { dates, closes } : null;
+    return closes.length >= 2 ? { dates, iso, closes } : null;
   } catch {
     return null;
   }
@@ -58,7 +61,7 @@ async function yahooResolve(ticker: string): Promise<string | null> {
   }
 }
 
-async function yahooSeries(ticker: string, fromIso: string): Promise<{ dates: string[]; closes: number[] } | null> {
+async function yahooSeries(ticker: string, fromIso: string): Promise<Series | null> {
   try {
     const symbol = await yahooResolve(ticker);
     if (!symbol) return null;
@@ -73,32 +76,48 @@ async function yahooSeries(ticker: string, fromIso: string): Promise<{ dates: st
     const ts: number[] = result?.timestamp || [];
     const raw: (number | null)[] = result?.indicators?.quote?.[0]?.close || [];
     const dates: string[] = [];
+    const iso: string[] = [];
     const closes: number[] = [];
     ts.forEach((t, i) => {
-      if (raw[i] != null) { dates.push(itDate(t * 1000)); closes.push(raw[i] as number); }
+      if (raw[i] != null) { dates.push(itDate(t * 1000)); iso.push(new Date(t * 1000).toISOString().slice(0, 10)); closes.push(raw[i] as number); }
     });
-    return closes.length >= 2 ? { dates, closes } : null;
+    return closes.length >= 2 ? { dates, iso, closes } : null;
   } catch {
     return null;
   }
 }
 
 // ── API pubblica ──
-// Cache in-modulo (1h) per ridurre le chiamate ai provider (free tier Twelve
-// Data: 800/giorno). Chiave = ticker+giorno-di-partenza; cacha anche i null
-// così un ticker irrisolvibile non rimartella il provider per un'ora.
-// Dedup le richieste identiche (stesso ticker e data) di portafogli e segnali.
-const seriesCache = new Map<string, { at: number; data: { dates: string[]; closes: number[] } | null }>();
+// Cache in-modulo (1h) PER TICKER per ridurre le chiamate ai provider (free
+// tier Twelve Data: 800/giorno). Si tiene la finestra più AMPIA scaricata per
+// un ticker e si affetta per la data richiesta: così tesi/portafogli con date
+// di creazione diverse ma stesso ticker condividono una sola chiamata.
+// Cacha anche i null → un ticker irrisolvibile non rimartella per un'ora.
+const seriesCache = new Map<string, { at: number; from: string; data: Series | null }>();
 const SERIES_TTL = 60 * 60 * 1000;
+
+// Taglia la serie ai punti con data >= fromDay (yyyy-mm-dd), mantenendo dates/closes allineati.
+export function sliceFrom(s: Series | null, fromDay: string): Series | null {
+  if (!s) return null;
+  let i = 0;
+  while (i < s.iso.length && s.iso[i] < fromDay) i++;
+  if (i === 0) return s;
+  const out: Series = { dates: s.dates.slice(i), iso: s.iso.slice(i), closes: s.closes.slice(i) };
+  return out.closes.length >= 2 ? out : (s.closes.length >= 2 ? s : null);
+}
 
 export async function fetchSeries(ticker: string, fromIso: string) {
   if (!fromIso || Date.now() - new Date(fromIso).getTime() < 24 * 3600 * 1000) return null;
-  const key = `${ticker.toUpperCase()}|${fromIso.slice(0, 10)}`;
+  const fromDay = fromIso.slice(0, 10);
+  const key = ticker.toUpperCase();
   const c = seriesCache.get(key);
-  if (c && Date.now() - c.at < SERIES_TTL) return c.data;
-  const data = (await tdSeries(ticker, fromIso)) || (await yahooSeries(ticker, fromIso));
-  seriesCache.set(key, { at: Date.now(), data });
-  return data;
+  // cache fresca e abbastanza ampia (parte da una data <= richiesta) → riusa e affetta
+  if (c && Date.now() - c.at < SERIES_TTL && c.from <= fromDay) return sliceFrom(c.data, fromDay);
+  // altrimenti scarica dalla data più vecchia tra cache e richiesta (mantiene la finestra ampia)
+  const start = c && c.from < fromDay ? c.from : fromDay;
+  const data = (await tdSeries(ticker, start)) || (await yahooSeries(ticker, start));
+  seriesCache.set(key, { at: Date.now(), from: start, data });
+  return sliceFrom(data, fromDay);
 }
 
 export async function fetchTickerPerformance(ticker: string, fromIso: string): Promise<number | null> {
