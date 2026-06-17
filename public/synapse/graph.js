@@ -1480,7 +1480,19 @@ function renderProtoTheses(){
   const panel=document.getElementById('proto-panel');
   if(!panel) return;
   const list=(PROTO_THESES||[]).slice(0,4);
-  if(!list.length){ panel.classList.remove('show'); return; }
+  if(!list.length){
+    // Cold start: poche domande e nessuna tesi ancora → trasforma il vuoto in
+    // promessa invece di nascondere il pannello.
+    const tn=(typeof TASKS!=='undefined'&&TASKS)?TASKS.length:0;
+    if(tn>0 && tn<5){
+      panel.classList.add('show');
+      const cnt0=document.getElementById('proto-count'); if(cnt0) cnt0.textContent='0';
+      const b0=document.getElementById('proto-body');
+      if(b0) b0.innerHTML='<div style="font-size:11px;color:var(--text2);line-height:1.6;padding:4px 2px">Ancora poche domande. Le tesi emergono da ~5 domande collegate: continua a esplorare e qui vedrai quelle che stanno maturando.</div>';
+      return;
+    }
+    panel.classList.remove('show'); return;
+  }
   panel.classList.add('show');
   const cnt=document.getElementById('proto-count'); if(cnt) cnt.textContent=list.length;
   const body=document.getElementById('proto-body'); if(!body) return;

@@ -32,6 +32,7 @@ export const BODY = `
       <span>◆ tesi in formazione · <b id="proto-count">0</b></span>
       <span class="proto-caret">▾</span>
     </div>
+    <div style="font-size:9.5px;color:var(--text3);padding:0 12px 6px;letter-spacing:.03em">emergono dalle tue domande · maturano coi dati</div>
     <div class="proto-body" id="proto-body"></div>
   </div>
 

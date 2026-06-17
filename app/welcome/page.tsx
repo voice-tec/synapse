@@ -458,6 +458,62 @@ export default function Welcome() {
         <div style={{ position: 'absolute', bottom: 26, left: '50%', transform: 'translateX(-50%)', zIndex: 2, fontSize: 18, color: C.faint, animation: 'wIn 1s 1s both' }}>↓</div>
       </header>
 
+      {/* ── Anteprima: grafo campione vivo (al posto del vecchio video) ── */}
+      <section style={{ position: 'relative', zIndex: 5, maxWidth: 1000, margin: '0 auto', padding: '0 24px', marginTop: -40 }}>
+        <Reveal>
+          <div style={{ position: 'relative', borderRadius: 18, border: `1px solid ${C.border}`, background: C.cardSolid, overflow: 'hidden', boxShadow: '0 30px 80px #00000080' }}>
+            {/* barra finestra */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '11px 14px', borderBottom: `1px solid ${C.border}88`, background: C.card }}>
+              <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#e0557755' }} />
+              <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#f0a03055' }} />
+              <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#34d39955' }} />
+              <span style={{ marginLeft: 10, fontSize: 10.5, color: C.muted, letterSpacing: '.04em' }}>symnaps · il tuo grafo</span>
+            </div>
+            <div style={{ background: `radial-gradient(ellipse 60% 70% at 50% 50%, ${C.t}10, transparent 60%), ${C.bg}`, padding: '8px 0' }}>
+              <svg viewBox="0 0 720 300" style={{ display: 'block', width: '100%', height: 'auto' }}>
+                {/* archi */}
+                {/* domande → tesi: rafforzano (verde) */}
+                <line x1="120" y1="70" x2="372" y2="150" stroke="#4ad68a" strokeWidth="2" opacity="0.6" />
+                <line x1="120" y1="230" x2="372" y2="150" stroke="#4ad68a" strokeWidth="2" opacity="0.6" />
+                {/* dato complementare (blu) */}
+                <line x1="120" y1="150" x2="372" y2="150" stroke={C.q} strokeWidth="1.4" opacity="0.4" />
+                {/* contraddizione tra due domande (rosso tratteggiato) */}
+                <path d="M120 70 Q 60 150 120 230" fill="none" stroke="#e05555" strokeWidth="2" strokeDasharray="5 4" opacity="0.85" />
+                <text x="48" y="152" fontSize="10" fill="#e05555" textAnchor="middle">contraddice</text>
+                {/* tesi → portafoglio */}
+                <line x1="418" y1="150" x2="584" y2="150" stroke={C.t} strokeWidth="2" opacity="0.6" />
+                <text x="250" y="100" fontSize="10" fill="#4ad68a" textAnchor="middle">rafforza</text>
+
+                {/* nodi domande */}
+                {[[70, 'I tassi restano alti?'], [150, 'Comprare big tech ora?'], [230, 'Il dollaro si rafforza?']].map(([y, label]) => (
+                  <g key={String(y)}>
+                    <circle cx="120" cy={y as number} r="8" fill={C.q} />
+                    <text x="104" y={(y as number) + 4} fontSize="11" fill={C.muted} textAnchor="end">{label as string}</text>
+                  </g>
+                ))}
+
+                {/* tesi */}
+                <circle cx="395" cy="150" r="40" fill={`${C.t}22`} stroke={C.t} strokeWidth="1.5" />
+                <text x="395" y="146" fontSize="11" fill="#fff" textAnchor="middle">tesi</text>
+                <text x="395" y="160" fontSize="9" fill={C.muted} textAnchor="middle">cautela tech</text>
+
+                {/* portafoglio */}
+                <circle cx="600" cy="150" r="26" fill={`${C.p}22`} stroke={C.p} strokeWidth="1.5" />
+                <text x="600" y="154" fontSize="10" fill="#fff" textAnchor="middle">azione</text>
+              </svg>
+            </div>
+            {/* legenda */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center', padding: '12px 16px 16px', fontSize: 10.5, color: C.muted, borderTop: `1px solid ${C.border}88` }}>
+              <span><span style={{ color: C.q }}>●</span> domande</span>
+              <span><span style={{ color: C.t }}>●</span> tesi</span>
+              <span><span style={{ color: C.p }}>●</span> portafogli</span>
+              <span><span style={{ color: '#4ad68a' }}>—</span> rafforza</span>
+              <span><span style={{ color: '#e05555' }}>┄</span> contraddice</span>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
       {/* ── Come funziona ── */}
       <section id="come" style={{ position: 'relative', zIndex: 5, maxWidth: 1040, margin: '0 auto', padding: '90px 24px 40px' }}>
         <Reveal>
