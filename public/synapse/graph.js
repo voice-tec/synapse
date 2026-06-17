@@ -315,11 +315,14 @@ function loop() {
   for (const e of EDGES) {
     const a=NODES.find(n=>n.id===e.from),b=NODES.find(n=>n.id===e.to);
     if(!a||!b)continue;
-    const ecmap={same_hypothesis:'#f0a030',complementary_data:'#5b9cf6',same_question_type:'#2ecf98'};
+    const ecmap={same_hypothesis:'#f0a030',complementary_data:'#5b9cf6',same_question_type:'#2ecf98',contradiction:'#e05555',supports:'#4ad68a'};
     const ec=ecmap[e.type]||'#5b9cf6';
     const mx=(a.x+b.x)/2+(b.y-a.y)*0.18,my=(a.y+b.y)/2-(b.x-a.x)*0.18;
     ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(mx,my,b.x,b.y);
-    ctx.strokeStyle=ec;ctx.globalAlpha=0.1+e.score*0.55;ctx.lineWidth=0.5+e.score*2.5;ctx.stroke();ctx.globalAlpha=1;
+    // Contraddizione: tratteggiata + alpha minimo più alto, così salta all'occhio anche debole.
+    if(e.type==='contradiction'){ ctx.setLineDash([5,4]); ctx.globalAlpha=0.4+e.score*0.45; }
+    else { ctx.globalAlpha=0.1+e.score*0.55; }
+    ctx.strokeStyle=ec;ctx.lineWidth=0.5+e.score*2.5;ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
     // Edge label only when one of its nodes is selected or hovered — keeps dense graphs clean
     const edgeActive = selNode===e.from||selNode===e.to||hovNode===e.from||hovNode===e.to;
     if(e.score>=0.4 && edgeActive){
@@ -992,7 +995,7 @@ function renderDrawerBody(task){
     ${task.connections.map(c=>`
       <div class="conn-pill" onclick="jumpToNode('${c.task_id}')">
         <span class="conn-pct">${Math.round(c.score*100)}%</span>
-        <span class="conn-type">${c.type.replace(/_/g,' ')}</span>
+        <span class="conn-type" style="color:${({contradiction:'#e05555',supports:'#4ad68a'})[c.type]||'inherit'}">${({contradiction:'⚡ contraddice',supports:'✓ rafforza',same_hypothesis:'stessa ipotesi',complementary_data:'dato complementare',same_question_type:'stesso tipo'})[c.type]||c.type.replace(/_/g,' ')}</span>
         <span class="conn-q">${c.query}</span>
       </div>`).join('')}
     </div>`;
@@ -1955,6 +1958,13 @@ function computeConns(newT,existing){
     const c2=(old.fingerprint?.concepts||[]).map(c=>c.toLowerCase());
     const co=c1.filter(c=>c2.some(d=>d.includes(c)||c.includes(d))).length;
     if(co>0)score+=Math.min(0.2,co*0.1);
+    // Verdetti: due domande sullo STESSO tema con verdetti OPPOSTI = contraddizione
+    // (tensione nel ragionamento, va evidenziata); se concordi, si rafforzano.
+    const v1=newT.output?.verdict?.stance, v2=old.output?.verdict?.stance;
+    if(score>=0.35 && v1 && v2 && v1!=='dipende' && v2!=='dipende'){
+      if(v1!==v2){ type='contradiction'; score=Math.max(score,0.6); }
+      else { type='supports'; }
+    }
     score=Math.round(Math.min(score,1)*100)/100;
     if(score>=0.35)res.push({task_id:old.id,query:old.raw_query,type,score});
   }
