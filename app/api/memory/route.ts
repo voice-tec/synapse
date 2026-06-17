@@ -8,11 +8,13 @@ Analizza le task e identifica i CLUSTER SEMANTICI DISTINTI — gruppi di domande
 
 Per ogni cluster decidi l'azione:
 - "update": il cluster corrisponde a una tesi esistente (anche se riformulata o vista da un'angolazione diversa) → metti il suo id in existing_id. La tesi può evolvere: riformula pure il testo.
-- "new": il cluster esprime una tesi GENUINAMENTE DISTINTA da tutte le esistenti.
+- "new": il cluster esprime una tesi GENUINAMENTE DISTINTA da tutte le esistenti, GIÀ SOLIDA.
+- "forming": il cluster è una tesi che STA EMERGENDO — un tema distinto e promettente ma NON ancora maturo per diventare tesi vera (es. una sola task sorgente, oppure confidence medio-bassa). Usala per le idee che nascono e non raggiungono ancora la soglia di "new".
 
 REGOLE:
-- Se il cluster è chiaramente lo STESSO TEMA di una tesi esistente (anche riformulato) → update. Se esplora un ANGOLO o TEMA DISTINTO → new. Evita tesi quasi-identiche, ma NON fondere temi diversi in una sola tesi.
-- "new" richiede confidence >= 68 E almeno 2 task sorgente.
+- Se il cluster è chiaramente lo STESSO TEMA di una tesi esistente (anche riformulato) → update (NON duplicare, NON creare doppioni). Se esplora un TEMA DISTINTO già solido → new. Se è un TEMA DISTINTO ma ancora debole/immaturo → forming.
+- Evita tesi quasi-identiche, ma NON fondere temi diversi in una sola tesi.
+- "new" richiede confidence >= 68 E almeno 2 task sorgente. Un tema distinto sotto questa soglia va in "forming" (confidence >= 50), non scartato.
 - Se le tesi esistenti sono già 10 o più, NON creare "new": solo update.
 - COERENZA COI VERDETTI: ogni task può avere un verdetto (verdict:stance/confidence, es. si/alta, no/bassa, dipende/media). La confidence della tesi DEVE essere coerente con i verdetti delle sue task sorgente: se la maggioranza è negativa (no) o a bassa confidenza, la tesi NON può avere confidence alta. Verdetti concordi e ad alta confidenza → tesi più solida. 'dipende' o assenza di verdetto è neutro.
 
@@ -20,7 +22,7 @@ Rispondi SOLO con JSON valido:
 {
   "clusters": [
     {
-      "action": "update" | "new",
+      "action": "update" | "new" | "forming",
       "existing_id": "id della tesi esistente se update, altrimenti null",
       "id": "stringa identificativa breve del cluster",
       "confidence": numero 0-100,
@@ -36,7 +38,7 @@ Rispondi SOLO con JSON valido:
     }
   ]
 }
-Se non ci sono cluster con confidenza >= 60, rispondi {"clusters":[]}. Massimo 4 cluster.`;
+Se non ci sono cluster con confidenza >= 50, rispondi {"clusters":[]}. Massimo 4 cluster.`;
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
