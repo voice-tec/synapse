@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
   const staleBefore = new Date(Date.now() - RECHECK_DAYS * 24 * 3600 * 1000).toISOString();
   const { data: watches, error } = await admin
     .from('watches')
-    .select('id, query, last_stance, last_label')
+    .select('id, task_id, query, last_stance, last_label')
     .eq('active', true)
     .lt('last_checked_at', staleBefore)
     .order('last_checked_at', { ascending: true })
@@ -73,6 +73,14 @@ export async function GET(req: NextRequest) {
         };
         update.flip_seen = false;
         flips++;
+        // Propaga al sistema tesi: una domanda sorgente ha cambiato verdetto →
+        // la/le tesi che la contengono vanno ricalcolate. Le marca stantie
+        // (updated_at all'epoca) così /api/refresh le riprende alla prossima apertura.
+        if (w.task_id) {
+          await admin.from('theses')
+            .update({ updated_at: new Date(0).toISOString() })
+            .contains('source_task_ids', [w.task_id]);
+        }
       }
       await admin.from('watches').update(update).eq('id', w.id);
       checked++;
