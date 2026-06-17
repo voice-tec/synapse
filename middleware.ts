@@ -25,9 +25,13 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Protegge la home — se non loggato, redirect a /login
+  // Protegge la home — se non loggato, redirect alla landing pubblica
   if (!user && request.nextUrl.pathname === '/') {
-    return NextResponse.redirect(new URL('/login', request.url));
+    return NextResponse.redirect(new URL('/welcome', request.url));
+  }
+  // Se loggato e su /welcome, vai dritto all'app
+  if (user && request.nextUrl.pathname === '/welcome') {
+    return NextResponse.redirect(new URL('/', request.url));
   }
   // Se loggato e su /login, manda alla home
   if (user && request.nextUrl.pathname === '/login') {
