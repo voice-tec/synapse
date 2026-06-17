@@ -365,13 +365,13 @@ function Beat({ show, c, k, h, children }: { show: boolean; c: string; k: string
 const STEPS = [
   {
     g: '●', c: C.q, k: 'domande',
-    h: 'Parti da una domanda',
-    b: 'Ogni domanda di analisi è un nodo blu sul grafo. Una società, un tema macro, una view. Più chiedi, più il grafo cresce.',
+    h: "Parti da un'ipotesi",
+    b: "Ogni domanda di analisi è un nodo blu sul grafo. Una società, un tema macro, una view di mercato. Più esplori, più l'architettura visiva si espande.",
   },
   {
     g: '◆', c: C.t, k: 'tesi',
-    h: 'Le tesi emergono da sole',
-    b: 'Le domande sullo stesso tema si coagulano. Symnaps deduplica semanticamente e fa germogliare una tesi viola — con confidenza che evolve e segnali di conferma o invalidazione.',
+    h: 'Le tesi si strutturano attraverso i dati',
+    b: 'Symnaps elimina le ridondanze e raggruppa le informazioni correlate per rilevanza semantica. Il sistema fa germogliare un nodo viola, completo di verdetto, scenari e catalizzatori.',
   },
   {
     g: '▤', c: C.p, k: 'portafogli',
@@ -381,12 +381,12 @@ const STEPS = [
 ];
 
 const FEATURES = [
+  { g: '◵', c: C.q, h: 'Scenari & catalizzatori', b: 'Modelli Bull / Base / Bear per ogni tesi, integrati con i catalizzatori di mercato in arrivo che possono spostare i prezzi.' },
+  { g: '▦', c: C.p, h: 'Dati macro ufficiali', b: 'Serie FRED® e prezzi Twelve Data integrati direttamente nei tuoi parametri di ricerca e nei grafici a linea. Niente numeri inventati, solo fonti istituzionali.' },
+  { g: '◆', c: C.t, h: 'Memoria del grafo', b: 'Nodi di memoria storici che ricordano ogni tua analisi conclusa. La tua ricerca non riparte mai da zero, si evolve.' },
+  { g: '✕', c: C.warn, h: 'Stress Test', b: "Sfida la tenuta di una tesi inserendo una nuova variabile macro. Guarda se l'analisi regge alla pressione dei dati storici o se invalida l'ipotesi." },
+  { g: '◷', c: C.t, h: 'Verdetto dinamico', b: 'Symnaps monitora le tesi e aggiorna i collegamenti ogni settimana, registrando ogni singolo cambiamento di scenario nello storico delle tue analisi.' },
   { g: '▤', c: C.p, h: 'Carica il tuo portafoglio', b: 'Inserisci gli strumenti che possiedi davvero (ticker e peso). Ogni portafoglio di tesi segnala cosa hai già coperto — es. "già coperto in parte da VWCE".' },
-  { g: '◷', c: C.t, h: 'Verdetto sotto osservazione', b: 'Metti un verdetto in watch: Symnaps lo ricontrolla ogni settimana e ti avvisa se flippa (sì→no). E la confidenza di ogni tesi resta tracciata nello storico.' },
-  { g: '◵', c: C.q, h: 'Scenari & catalizzatori', b: 'Bull / base / bear per ogni domanda con un verdetto, più i catalizzatori in arrivo che possono muoverlo.' },
-  { g: '▦', c: C.p, h: 'Dati macro ufficiali', b: 'Serie FRED e prezzi Twelve Data, dentro i prompt e nei grafici a linea — niente numeri inventati.' },
-  { g: '◆', c: C.t, h: 'Memoria del grafo', b: 'Nodi memoria che ricordano cosa hai già concluso: il grafo non riparte mai da zero.' },
-  { g: '✕', c: C.warn, h: 'Challenge', b: 'Sfida una tesi con la domanda giusta e guarda se regge alla pressione o si spezza.' },
   { g: '↗', c: C.q, h: 'Condividi il grafo', b: 'Pubblica un link al grafo: responsive, pinch-zoom, leggibile da chiunque — senza account.' },
 ];
 
@@ -425,24 +425,24 @@ export default function Welcome() {
             sistema di pensiero visivo · ricerca finanziaria
           </div>
 
-          <h1 className="w-in" style={{ fontFamily: serif, fontWeight: 300, fontSize: 'clamp(34px, 6vw, 62px)', lineHeight: 1.08, color: '#fff', letterSpacing: '-.01em', animationDelay: '.08s' }}>
-            Le tue domande<br />diventano un{' '}
-            <span style={{ fontStyle: 'italic', color: C.q }}>grafo</span>.<br />
-            Le tesi <span style={{ fontStyle: 'italic', color: C.t }}>emergono</span> da sole.
+          <h1 className="w-in" style={{ fontFamily: serif, fontWeight: 300, fontSize: 'clamp(40px, 8vw, 84px)', lineHeight: 1.04, letterSpacing: '-.02em', animationDelay: '.08s' }}>
+            <span style={{ display: 'block', color: C.q }}>Questions.</span>
+            <span style={{ display: 'block', color: C.t }}>Theses.</span>
+            <span style={{ display: 'block', color: C.p }}>Portfolios.</span>
           </h1>
 
-          <p className="w-in" style={{ maxWidth: 540, fontSize: 14, lineHeight: 1.7, color: C.muted, animationDelay: '.16s' }}>
-            Symnaps trasforma la ricerca finanziaria in un grafo vivo. Fai domande, le tesi
-            si coagulano da sole, i portafogli germogliano dalle tesi forti — con dati macro
-            ufficiali, scenari e un verdetto che si aggiorna ogni settimana.
+          <p className="w-in" style={{ maxWidth: 560, fontSize: 14.5, lineHeight: 1.7, color: C.muted, animationDelay: '.16s' }}>
+            Mappa la tua ricerca finanziaria in un grafo dinamico. Symnaps collega le tue
+            ipotesi a macro-scenari e dati ufficiali, organizzando visivamente la tua
+            intelligenza.
           </p>
 
           <div className="w-in" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', animationDelay: '.24s' }}>
             <a href="/login" className="w-btn" style={{ background: C.q, color: C.bg, fontFamily: mono, fontWeight: 500, fontSize: 13, borderRadius: 10, padding: '13px 22px', boxShadow: `0 8px 30px ${C.q}40` }}>
-              inizia da una domanda →
+              Inizia da una domanda →
             </a>
             <a href="#come" className="w-btn" style={{ color: C.text, fontFamily: mono, fontSize: 13, borderRadius: 10, padding: '13px 22px', border: `1px solid ${C.border}` }}>
-              come funziona
+              Vedi come funziona
             </a>
           </div>
 
@@ -457,6 +457,37 @@ export default function Welcome() {
 
         <div style={{ position: 'absolute', bottom: 26, left: '50%', transform: 'translateX(-50%)', zIndex: 2, fontSize: 18, color: C.faint, animation: 'wIn 1s 1s both' }}>↓</div>
       </header>
+
+      {/* ── Anteprima interfaccia (placeholder per micro-video loop del grafo reale) ── */}
+      <section style={{ position: 'relative', zIndex: 5, maxWidth: 1000, margin: '0 auto', padding: '0 24px', marginTop: -40 }}>
+        <Reveal>
+          <div style={{ position: 'relative', borderRadius: 18, border: `1px solid ${C.border}`, background: C.cardSolid, overflow: 'hidden', boxShadow: '0 30px 80px #00000080' }}>
+            {/* barra finestra */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '11px 14px', borderBottom: `1px solid ${C.border}88`, background: C.card }}>
+              <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#e0557755' }} />
+              <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#f0a03055' }} />
+              <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#34d39955' }} />
+              <span style={{ marginLeft: 10, fontSize: 10.5, color: C.muted, letterSpacing: '.04em' }}>symnaps · il tuo grafo</span>
+            </div>
+            {/* area video — sostituisci il placeholder con <video src=… autoPlay muted loop playsInline /> */}
+            <div style={{ position: 'relative', aspectRatio: '16 / 9', background: `radial-gradient(ellipse 60% 70% at 50% 50%, ${C.t}10, transparent 60%), ${C.bg}` }}>
+              {/*
+                <video
+                  src="/demo/graph-loop.mp4"
+                  poster="/demo/graph-loop.jpg"
+                  autoPlay muted loop playsInline
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              */}
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
+                <div style={{ width: 56, height: 56, borderRadius: '50%', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, fontSize: 18, background: C.card }}>▶</div>
+                <div style={{ fontSize: 11, color: C.muted, letterSpacing: '.12em', textTransform: 'uppercase' }}>anteprima · il grafo in azione</div>
+                <div style={{ fontSize: 10.5, color: C.faint }}>video loop dell'interfaccia reale — in arrivo</div>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+      </section>
 
       {/* ── Come funziona ── */}
       <section id="come" style={{ position: 'relative', zIndex: 5, maxWidth: 1040, margin: '0 auto', padding: '90px 24px 40px' }}>
@@ -507,7 +538,7 @@ export default function Welcome() {
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <div style={{ fontSize: 11, color: C.faint, letterSpacing: '.14em', textTransform: 'uppercase', marginBottom: 14 }}>cosa ti dà</div>
             <h2 style={{ fontFamily: serif, fontWeight: 300, fontSize: 'clamp(26px, 4vw, 38px)', color: '#fff' }}>
-              Non un editor di note. Un <span style={{ fontStyle: 'italic' }}>secondo cervello</span> che ragiona.
+              Non un editor di note. Un <span style={{ fontStyle: 'italic' }}>sistema visivo</span> che connette i dati.
             </h2>
           </div>
         </Reveal>
@@ -534,11 +565,11 @@ export default function Welcome() {
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: `radial-gradient(ellipse 60% 80% at 50% 0%, ${C.t}1f, transparent 60%)` }} />
             <div style={{ position: 'relative' }}>
               <h2 style={{ fontFamily: serif, fontWeight: 300, fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', marginBottom: 14, lineHeight: 1.2 }}>
-                Inizia da una domanda.<br /><span style={{ fontStyle: 'italic', color: C.muted }}>Al resto pensa il grafo.</span>
+                Inizia da una domanda.<br /><span style={{ fontStyle: 'italic', color: C.muted }}>Al resto pensa la struttura.</span>
               </h2>
-              <p style={{ fontSize: 13, color: C.muted, marginBottom: 26 }}>Gratis per iniziare. Nessuna carta.</p>
+              <p style={{ fontSize: 13, color: C.muted, marginBottom: 26 }}>Gratis per iniziare. Nessuna carta richiesta.</p>
               <a href="/login" className="w-btn" style={{ display: 'inline-block', background: C.q, color: C.bg, fontFamily: mono, fontWeight: 500, fontSize: 13, borderRadius: 10, padding: '14px 26px', boxShadow: `0 8px 30px ${C.q}40` }}>
-                crea il tuo grafo →
+                [ crea il tuo grafo → ]
               </a>
             </div>
           </div>
@@ -551,7 +582,7 @@ export default function Welcome() {
           <img src={LOGO} alt="" style={{ height: 18 }} />
           <span style={{ fontFamily: serif, fontWeight: 300, fontSize: 15, color: C.muted }}>Symnaps</span>
         </div>
-        <div style={{ fontSize: 10.5, color: C.faint, letterSpacing: '.04em' }}>un sistema di pensiero visivo per la ricerca finanziaria</div>
+        <div style={{ fontSize: 11, color: C.muted, letterSpacing: '.04em' }}>un sistema di pensiero visivo per la ricerca finanziaria</div>
         <a href="/login" style={{ fontSize: 11, color: C.muted }}>accedi →</a>
       </footer>
     </div>
