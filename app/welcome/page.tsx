@@ -251,7 +251,7 @@ function FlowDemo() {
           <GNode p={N.q1} show={on(0)} kind="q" col={C.q} glyph="V" label="le big tech reggono coi tassi alti?" />
           <GNode p={N.q2} show={on(1)} kind="q" col={C.q} glyph="M" label="nvidia: la domanda AI rallenta?" />
           {/* Tesi: esagono, arco di confidenza, verdetto */}
-          <GNode p={N.t} show={on(2)} kind="t" col={C.t} glyph="◆" label="mega-cap tech" sub="BUY · 72% ↑" conf={0.72} />
+          <GNode p={N.t} show={on(2)} kind="t" col={C.t} glyph="◆" label="mega-cap tech" sub="conf. 72% ↑" conf={0.72} />
           {/* Portafoglio: quadrato verde */}
           <GNode p={N.p} show={on(3)} kind="p" col={C.p} glyph="▤" label="portafoglio tesi" sub={on(4) ? '+ già coperto' : '5 categorie'} />
         </div>
@@ -268,7 +268,7 @@ function FlowDemo() {
             Ogni domanda è un nodo blu. Symnaps cerca i dati reali — FRED, prezzi Twelve Data — e risponde.
           </Beat>
           <Beat show={s === 2} c={C.t} k="tesi" h="La tesi emerge da sola">
-            Le domande sullo stesso tema si coagulano in una tesi viola. Verdetto <b style={{ color: C.p }}>BUY · conf. 72%</b>, con scenari bull / base / bear.
+            Le domande sullo stesso tema si coagulano in una tesi viola, con una <b style={{ color: C.t }}>confidenza che sale e scende</b> e segnali che la confermano o la smontano. Si ricontrolla ogni settimana.
           </Beat>
           <Beat show={s === 3} c={C.p} k="portafoglio" h="Germoglia un portafoglio">
             Dalla tesi forte nasce un portafoglio verde: categorie di asset e strumenti reali (ETF, indici), derivati dalla tesi.
@@ -371,7 +371,7 @@ const STEPS = [
   {
     g: '◆', c: C.t, k: 'tesi',
     h: 'Le tesi emergono da sole',
-    b: 'Le domande sullo stesso tema si coagulano. Symnaps deduplica semanticamente e fa germogliare una tesi viola — con verdetto, scenari e catalizzatori.',
+    b: 'Le domande sullo stesso tema si coagulano. Symnaps deduplica semanticamente e fa germogliare una tesi viola — con confidenza che evolve e segnali di conferma o invalidazione.',
   },
   {
     g: '▤', c: C.p, k: 'portafogli',
@@ -382,8 +382,8 @@ const STEPS = [
 
 const FEATURES = [
   { g: '▤', c: C.p, h: 'Carica il tuo portafoglio', b: 'Inserisci gli strumenti che possiedi davvero (ticker e peso). Ogni portafoglio di tesi segnala cosa hai già coperto — es. "già coperto in parte da VWCE".' },
-  { g: '◷', c: C.t, h: 'Verdetto che vive', b: 'Symnaps ricontrolla le tesi ogni settimana e salva ogni cambio di verdetto — il flip resta nella storia.' },
-  { g: '◵', c: C.q, h: 'Scenari & catalizzatori', b: 'Bull / base / bear per ogni tesi, più i catalizzatori in arrivo che possono farla muovere.' },
+  { g: '◷', c: C.t, h: 'Verdetto sotto osservazione', b: 'Metti un verdetto in watch: Symnaps lo ricontrolla ogni settimana e ti avvisa se flippa (sì→no). E la confidenza di ogni tesi resta tracciata nello storico.' },
+  { g: '◵', c: C.q, h: 'Scenari & catalizzatori', b: 'Bull / base / bear per ogni domanda con un verdetto, più i catalizzatori in arrivo che possono muoverlo.' },
   { g: '▦', c: C.p, h: 'Dati macro ufficiali', b: 'Serie FRED e prezzi Twelve Data, dentro i prompt e nei grafici a linea — niente numeri inventati.' },
   { g: '◆', c: C.t, h: 'Memoria del grafo', b: 'Nodi memoria che ricordano cosa hai già concluso: il grafo non riparte mai da zero.' },
   { g: '✕', c: C.warn, h: 'Challenge', b: 'Sfida una tesi con la domanda giusta e guarda se regge alla pressione o si spezza.' },

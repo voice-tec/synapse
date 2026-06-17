@@ -14,6 +14,7 @@ REGOLE:
 - Se il cluster è chiaramente lo STESSO TEMA di una tesi esistente (anche riformulato) → update. Se esplora un ANGOLO o TEMA DISTINTO → new. Evita tesi quasi-identiche, ma NON fondere temi diversi in una sola tesi.
 - "new" richiede confidence >= 68 E almeno 2 task sorgente.
 - Se le tesi esistenti sono già 10 o più, NON creare "new": solo update.
+- COERENZA COI VERDETTI: ogni task può avere un verdetto (verdict:stance/confidence, es. si/alta, no/bassa, dipende/media). La confidence della tesi DEVE essere coerente con i verdetti delle sue task sorgente: se la maggioranza è negativa (no) o a bassa confidenza, la tesi NON può avere confidence alta. Verdetti concordi e ad alta confidenza → tesi più solida. 'dipende' o assenza di verdetto è neutro.
 
 Rispondi SOLO con JSON valido:
 {

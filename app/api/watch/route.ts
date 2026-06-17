@@ -52,6 +52,13 @@ export async function POST(req: NextRequest) {
   }
 
   const verdict = (task.output as any)?.verdict || {};
+  // Watch ha senso solo se c'è un verdetto da osservare: senza stance il
+  // recheck non può rilevare un flip (resterebbe un avviso morto che brucia
+  // il limite del piano).
+  if (!verdict.stance) {
+    return NextResponse.json({ error: 'no_verdict' }, { status: 400 });
+  }
+
   const { data: watch, error } = await supabase
     .from('watches')
     .upsert({
