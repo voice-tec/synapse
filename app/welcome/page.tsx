@@ -228,46 +228,32 @@ function FlowDemo() {
 
   const on = (n: number) => s >= n;       // comparso a questa battuta
 
-  // Geometria nodi (coordinate % nel box)
+  // Geometria nodi (coordinate % nel box) — come nell'app: domande a sx, tesi
+  // al centro, portafoglio a dx.
   const N = {
-    q1: { x: 16, y: 30 }, q2: { x: 16, y: 70 },
-    t: { x: 50, y: 50 }, p: { x: 84, y: 50 },
+    q1: { x: 17, y: 28 }, q2: { x: 17, y: 72 },
+    t: { x: 50, y: 50 }, p: { x: 83, y: 50 },
   };
-  const line = (a: { x: number; y: number }, b: { x: number; y: number }, show: boolean, col: string) => (
-    <line
-      x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-      stroke={col} strokeWidth={0.5} strokeLinecap="round"
-      pathLength={1} strokeDasharray={1}
-      strokeDashoffset={show ? 0 : 1}
-      style={{ transition: 'stroke-dashoffset .7s ease, opacity .5s', opacity: show ? 0.7 : 0 }}
-    />
-  );
-  const dot = (p: { x: number; y: number }, col: string, show: boolean, r = 3.2) => (
-    <g style={{ transition: 'opacity .5s, transform .5s', opacity: show ? 1 : 0.12 }}>
-      <circle cx={p.x} cy={p.y} r={r * 2.4} fill={col} opacity={show ? 0.14 : 0} />
-      <circle cx={p.x} cy={p.y} r={r} fill={col} opacity={show ? 0.95 : 0.25} />
-    </g>
-  );
 
   return (
     <div ref={wrap} className="w-card" style={{ background: C.card, border: `1px solid ${C.border}88`, borderRadius: 18, padding: 0, overflow: 'hidden', position: 'relative' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.25fr) minmax(0,1fr)' }} className="fd-grid">
-        {/* Scena grafo */}
-        <div style={{ position: 'relative', minHeight: 300, borderRight: `1px solid ${C.border}55` }}>
+        {/* Scena grafo — gli stessi nodi del prodotto: domanda·cerchio, tesi·esagono, portafoglio·quadrato */}
+        <div style={{ position: 'relative', minHeight: 320, borderRight: `1px solid ${C.border}55`, background: 'radial-gradient(ellipse 80% 70% at 50% 50%, #0c0c1100, #08080a55)' }}>
+          {/* Connettori tratteggiati (come gli archi memory→task / action→memory dell'app) */}
           <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-            {line(N.q1, N.t, on(2), C.t)}
-            {line(N.q2, N.t, on(2), C.t)}
-            {line(N.t, N.p, on(3), C.p)}
-            {dot(N.q1, C.q, on(0))}
-            {dot(N.q2, C.q, on(1))}
-            {dot(N.t, C.t, on(2), 4)}
-            {dot(N.p, C.p, on(3), 4)}
+            <Conn a={N.q1} b={N.t} show={on(2)} col={C.t} />
+            <Conn a={N.q2} b={N.t} show={on(2)} col={C.t} />
+            <Conn a={N.t} b={N.p} show={on(3)} col={C.p} />
           </svg>
-          {/* etichette nodi */}
-          <Lbl p={N.q1} show={on(0)} col={C.q} t="le big tech reggono coi tassi alti?" />
-          <Lbl p={N.q2} show={on(1)} col={C.q} t="nvidia: la domanda AI rallenta?" />
-          <Lbl p={N.t} show={on(2)} col={C.t} t="Tesi · mega-cap tech" big />
-          <Lbl p={N.p} show={on(3)} col={C.p} t="Portafoglio" big />
+
+          {/* Domande: cerchio scuro, bordo blu, lettera del tipo di analisi */}
+          <GNode p={N.q1} show={on(0)} kind="q" col={C.q} glyph="V" label="le big tech reggono coi tassi alti?" />
+          <GNode p={N.q2} show={on(1)} kind="q" col={C.q} glyph="M" label="nvidia: la domanda AI rallenta?" />
+          {/* Tesi: esagono, arco di confidenza, verdetto */}
+          <GNode p={N.t} show={on(2)} kind="t" col={C.t} glyph="◆" label="mega-cap tech" sub="BUY · 72% ↑" conf={0.72} />
+          {/* Portafoglio: quadrato verde */}
+          <GNode p={N.p} show={on(3)} kind="p" col={C.p} glyph="▤" label="portafoglio tesi" sub={on(4) ? '+ già coperto' : '5 categorie'} />
         </div>
 
         {/* Pannello che racconta la battuta */}
@@ -299,22 +285,68 @@ function FlowDemo() {
       </div>
       <style>{`
         @media (max-width: 640px){ .fd-grid{ grid-template-columns: 1fr !important; } .fd-grid > div:first-child{ border-right: none !important; border-bottom: 1px solid ${C.border}55; } }
+        .fd-march{ animation: fdMarch 1.2s linear infinite; }
+        @keyframes fdMarch{ to { stroke-dashoffset: -6; } }
+        @media (prefers-reduced-motion: reduce){ .fd-march{ animation: none; } }
       `}</style>
     </div>
   );
 }
 
-function Lbl({ p, show, col, t, big }: { p: { x: number; y: number }; show: boolean; col: string; t: string; big?: boolean }) {
+// Connettore tratteggiato in stile app (marching ants), appare alla sua battuta
+function Conn({ a, b, show, col }: { a: { x: number; y: number }; b: { x: number; y: number }; show: boolean; col: string }) {
+  return (
+    <line
+      x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+      stroke={col} strokeWidth={0.5} strokeLinecap="round"
+      strokeDasharray="1.4 1.6"
+      className={show ? 'fd-march' : undefined}
+      style={{ opacity: show ? 0.55 : 0, transition: 'opacity .6s ease' }}
+    />
+  );
+}
+
+// Nodo disegnato come nel prodotto: domanda·cerchio, tesi·esagono, portafoglio·quadrato.
+// Lo shape sta in un <svg> quadrato proprio, così non si deforma.
+const HEX = '85,30 85,70 50,90 15,70 15,30 50,10'; // esagono pointy-top, come drawHex()
+function GNode({ p, show, kind, col, glyph, label, sub, conf }: {
+  p: { x: number; y: number }; show: boolean; kind: 'q' | 't' | 'p'; col: string;
+  glyph: string; label: string; sub?: string; conf?: number;
+}) {
+  const size = kind === 'q' ? 50 : kind === 't' ? 68 : 60;
+  const fill = kind === 'q' ? '#0e0e12' : kind === 't' ? '#0d0a18' : '#0a1a14';
+  const C2 = 2 * Math.PI * 46;
   return (
     <div style={{
       position: 'absolute', left: `${p.x}%`, top: `${p.y}%`,
-      transform: `translate(-50%, ${big ? '-150%' : '14px'})`,
-      maxWidth: 150, textAlign: 'center', fontSize: big ? 11 : 10, lineHeight: 1.35,
-      color: big ? '#fff' : C.muted, fontFamily: big ? serif : mono,
-      opacity: show ? 1 : 0, transition: 'opacity .55s ease', pointerEvents: 'none',
-      letterSpacing: big ? 0 : '.01em',
+      transform: `translate(-50%, -50%) scale(${show ? 1 : 0.7})`,
+      opacity: show ? 1 : 0, transition: 'opacity .5s ease, transform .5s cubic-bezier(.22,1,.36,1)',
+      pointerEvents: 'none', textAlign: 'center',
     }}>
-      {big && <span style={{ color: col, marginRight: 4 }}>{col === C.t ? '◆' : '▤'}</span>}{t}
+      <div style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}>
+        <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0, overflow: 'visible' }}>
+          {/* alone */}
+          {kind === 'q' && <circle cx={50} cy={50} r={48} fill={col} opacity={0.06} />}
+          {kind === 'q' && <circle cx={50} cy={50} r={38} fill={fill} stroke={col} strokeWidth={4} opacity={0.95} />}
+          {kind === 't' && <polygon points={HEX} fill={col} opacity={0.06} transform="scale(1.18) translate(-7.6 -7.6)" />}
+          {kind === 't' && <polygon points={HEX} fill={fill} stroke={col} strokeWidth={3.5} />}
+          {kind === 't' && conf != null && (
+            <circle cx={50} cy={50} r={46} fill="none" stroke={col} strokeWidth={3}
+              strokeDasharray={`${C2 * conf} ${C2}`} strokeLinecap="round"
+              transform="rotate(-90 50 50)" opacity={0.6} />
+          )}
+          {kind === 'p' && <rect x={6} y={6} width={88} height={88} rx={3} fill={col} opacity={0.06} />}
+          {kind === 'p' && <rect x={16} y={16} width={68} height={68} fill={fill} stroke={col} strokeWidth={4} />}
+        </svg>
+        <span style={{
+          position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: col, fontFamily: mono, fontSize: kind === 'q' ? 15 : 18, fontWeight: 500,
+        }}>{glyph}</span>
+      </div>
+      <div style={{ marginTop: 7, fontFamily: kind === 'q' ? mono : serif, fontSize: kind === 'q' ? 10 : 11.5, lineHeight: 1.3, color: kind === 'q' ? C.muted : '#fff', maxWidth: 140 }}>
+        {label}
+      </div>
+      {sub && <div style={{ marginTop: 3, fontSize: 9.5, color: col, letterSpacing: '.02em' }}>{sub}</div>}
     </div>
   );
 }
