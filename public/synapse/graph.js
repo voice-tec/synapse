@@ -1476,11 +1476,46 @@ function developProto(q){
   const qi=document.getElementById('qi');
   qi.value=q; qi.focus(); try{qi.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}
 }
+// Spunti generati dal portafoglio al primo accesso (seed). Mostrati nel
+// pannello finché non emergono tesi vere; cliccabili per partire l'analisi.
+let SEED_SPUNTI=[];
+async function seedFromPortfolio(){
+  const holdings=Array.isArray(window.__SYN_PORTFOLIO)?window.__SYN_PORTFOLIO:[];
+  if(!holdings.length) return false;
+  try{
+    const res=await fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    const json=await res.json();
+    const qs=(json.result&&json.result.questions)||[];
+    if(!qs.length) return false;
+    SEED_SPUNTI=qs.slice(1);            // gli altri restano come spunti cliccabili
+    renderProtoTheses();
+    const qi=document.getElementById('qi');
+    if(qi){ qi.value=qs[0].q; runTask(); } // auto-analizza la prima → grafo non vuoto subito
+    return true;
+  }catch(e){ console.warn('seed dal portafoglio fallito',e); return false; }
+}
+async function runSpunto(i){
+  const s=SEED_SPUNTI[i]; if(!s) return;
+  SEED_SPUNTI.splice(i,1);
+  renderProtoTheses();
+  const qi=document.getElementById('qi');
+  if(qi){ qi.value=s.q; runTask(); }
+}
+window.runSpunto=runSpunto;
+
 function renderProtoTheses(){
   const panel=document.getElementById('proto-panel');
   if(!panel) return;
   const list=(PROTO_THESES||[]).slice(0,4);
   if(!list.length){
+    // Spunti dal portafoglio (seed): mostrali finché non ci sono tesi vere.
+    if(SEED_SPUNTI && SEED_SPUNTI.length){
+      panel.classList.add('show');
+      const cntS=document.getElementById('proto-count'); if(cntS) cntS.textContent=SEED_SPUNTI.length;
+      const bS=document.getElementById('proto-body');
+      if(bS) bS.innerHTML=SEED_SPUNTI.map((q,i)=>'<div class="proto-row"><div class="proto-thesis">'+(q.q||'').replace(/</g,'&lt;')+'</div><div class="proto-meta" style="color:var(--text3);line-height:1.4">'+(q.reason||'').replace(/</g,'&lt;')+'</div><button class="proto-dev" onclick="runSpunto('+i+')">esplora →</button></div>').join('');
+      return;
+    }
     // Cold start: poche domande e nessuna tesi ancora → trasforma il vuoto in
     // promessa invece di nascondere il pannello.
     const tn=(typeof TASKS!=='undefined'&&TASKS)?TASKS.length:0;
@@ -2194,7 +2229,11 @@ document.getElementById('qi').addEventListener('input',function(){this.style.hei
     // First-time onboarding: show the swipeable tutorial if the user has no tasks yet.
     // Deferred so window.startTutorial (defined later in the file) already exists.
     if(TASKS.length===0){
-      setTimeout(()=>{ if(window.startTutorial) window.startTutorial(); }, 300);
+      const _hold=Array.isArray(window.__SYN_PORTFOLIO)?window.__SYN_PORTFOLIO:[];
+      // Con un portafoglio ma grafo vuoto: seed dai titoli posseduti (grafo non
+      // vuoto dal primo secondo). Altrimenti il tutorial classico.
+      if(_hold.length){ setTimeout(()=>seedFromPortfolio(), 400); }
+      else { setTimeout(()=>{ if(window.startTutorial) window.startTutorial(); }, 300); }
     }
     updateUsageLabel();
     updateSessionMirror();
