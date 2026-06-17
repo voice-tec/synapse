@@ -23,6 +23,8 @@ create table tasks (
   intent jsonb,
   fingerprint jsonb,
   output jsonb,
+  origin_kind text,                            -- provenance: 'task' | 'thesis' | null
+  origin_ref text,                             -- task: uuid sorgente · thesis: cluster_id stabile
   created_at timestamptz default now()
 );
 
@@ -168,6 +170,8 @@ create trigger on_auth_user_created
 -- alter table profiles add column if not exists ai_calls_this_month int default 0;
 -- alter table profiles add column if not exists refresh_batch_id text;
 -- alter table profiles add column if not exists portfolio jsonb;
+-- alter table tasks add column if not exists origin_kind text;
+-- alter table tasks add column if not exists origin_ref text;
 -- alter table theses add column if not exists challenge jsonb;
 -- alter table theses add column if not exists signals jsonb;
 --

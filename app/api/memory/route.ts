@@ -10,10 +10,10 @@ Per ogni cluster decidi l'azione:
 - "update": il cluster corrisponde a una tesi esistente (anche se riformulata o vista da un'angolazione diversa) → metti il suo id in existing_id. La tesi può evolvere: riformula pure il testo.
 - "new": il cluster esprime una tesi GENUINAMENTE DISTINTA da tutte le esistenti.
 
-REGOLE DURE:
-- In dubbio tra update e new → SEMPRE update. Tesi semi-sovrapposte sono un errore grave.
-- "new" richiede confidence >= 70 E almeno 3 task sorgente.
-- Se le tesi esistenti sono già 6 o più, NON creare "new": solo update.
+REGOLE:
+- Se il cluster è chiaramente lo STESSO TEMA di una tesi esistente (anche riformulato) → update. Se esplora un ANGOLO o TEMA DISTINTO → new. Evita tesi quasi-identiche, ma NON fondere temi diversi in una sola tesi.
+- "new" richiede confidence >= 68 E almeno 2 task sorgente.
+- Se le tesi esistenti sono già 10 o più, NON creare "new": solo update.
 
 Rispondi SOLO con JSON valido:
 {
@@ -35,7 +35,7 @@ Rispondi SOLO con JSON valido:
     }
   ]
 }
-Se non ci sono cluster con confidenza >= 65, rispondi {"clusters":[]}. Massimo 4 cluster.`;
+Se non ci sono cluster con confidenza >= 60, rispondi {"clusters":[]}. Massimo 5 cluster.`;
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();

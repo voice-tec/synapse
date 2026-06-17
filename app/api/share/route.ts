@@ -21,6 +21,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'empty_graph' }, { status: 400 });
   }
 
+  // Provenance durabile: domande nate da una tesi (origin_ref = cluster_id).
+  // Si fondono con i source_task_ids del clustering così il grafo pubblico
+  // mostra gli stessi archi tesi→domanda di quello live.
+  const provByCluster: Record<string, string[]> = {};
+  for (const t of tasks) {
+    if (t.origin_kind === 'thesis' && t.origin_ref) {
+      (provByCluster[t.origin_ref] ||= []).push(t.id);
+    }
+  }
+
   // Snapshot snello: solo ciò che la pagina pubblica mostra
   const snapshot = {
     tasks: tasks.map((t) => ({
@@ -39,7 +49,7 @@ export async function POST(req: NextRequest) {
       confidence: th.confidence,
       explanation: th.explanation,
       signals: th.signals || null,
-      sources: th.source_task_ids || [],
+      sources: Array.from(new Set([...(th.source_task_ids || []), ...(provByCluster[th.cluster_id] || [])])),
       color: th.color || '#a78bfa',
       revisions: Array.isArray(th.history) ? Math.max(0, th.history.length - 1) : 0,
       clusterId: th.cluster_id,
