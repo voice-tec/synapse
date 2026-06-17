@@ -201,6 +201,135 @@ function Glyph({ ch, color }: { ch: string; color: string }) {
   return <span style={{ color, fontSize: 18 }}>{ch}</span>;
 }
 
+// ─── Demo animata: la stessa scena che vive nell'app, in loop ───────────────
+// Quattro battute che si auto-avanzano: domanda → tesi → portafoglio → il TUO
+// portafoglio che marca "già coperto". Niente video: è il prodotto in piccolo.
+function FlowDemo() {
+  const [s, setS] = useState(0);
+  const wrap = useRef<HTMLDivElement>(null);
+  const [run, setRun] = useState(false);
+
+  // Parte solo quando entra in viewport (e non spreca raf fuori schermo)
+  useEffect(() => {
+    const el = wrap.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setRun(e.isIntersecting), { threshold: 0.3 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!run) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) { setS(4); return; }
+    const id = setInterval(() => setS((p) => (p + 1) % 6), 1700);
+    return () => clearInterval(id);
+  }, [run]);
+
+  const on = (n: number) => s >= n;       // comparso a questa battuta
+
+  // Geometria nodi (coordinate % nel box)
+  const N = {
+    q1: { x: 16, y: 30 }, q2: { x: 16, y: 70 },
+    t: { x: 50, y: 50 }, p: { x: 84, y: 50 },
+  };
+  const line = (a: { x: number; y: number }, b: { x: number; y: number }, show: boolean, col: string) => (
+    <line
+      x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+      stroke={col} strokeWidth={0.5} strokeLinecap="round"
+      pathLength={1} strokeDasharray={1}
+      strokeDashoffset={show ? 0 : 1}
+      style={{ transition: 'stroke-dashoffset .7s ease, opacity .5s', opacity: show ? 0.7 : 0 }}
+    />
+  );
+  const dot = (p: { x: number; y: number }, col: string, show: boolean, r = 3.2) => (
+    <g style={{ transition: 'opacity .5s, transform .5s', opacity: show ? 1 : 0.12 }}>
+      <circle cx={p.x} cy={p.y} r={r * 2.4} fill={col} opacity={show ? 0.14 : 0} />
+      <circle cx={p.x} cy={p.y} r={r} fill={col} opacity={show ? 0.95 : 0.25} />
+    </g>
+  );
+
+  return (
+    <div ref={wrap} className="w-card" style={{ background: C.card, border: `1px solid ${C.border}88`, borderRadius: 18, padding: 0, overflow: 'hidden', position: 'relative' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.25fr) minmax(0,1fr)' }} className="fd-grid">
+        {/* Scena grafo */}
+        <div style={{ position: 'relative', minHeight: 300, borderRight: `1px solid ${C.border}55` }}>
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+            {line(N.q1, N.t, on(2), C.t)}
+            {line(N.q2, N.t, on(2), C.t)}
+            {line(N.t, N.p, on(3), C.p)}
+            {dot(N.q1, C.q, on(0))}
+            {dot(N.q2, C.q, on(1))}
+            {dot(N.t, C.t, on(2), 4)}
+            {dot(N.p, C.p, on(3), 4)}
+          </svg>
+          {/* etichette nodi */}
+          <Lbl p={N.q1} show={on(0)} col={C.q} t="le big tech reggono coi tassi alti?" />
+          <Lbl p={N.q2} show={on(1)} col={C.q} t="nvidia: la domanda AI rallenta?" />
+          <Lbl p={N.t} show={on(2)} col={C.t} t="Tesi · mega-cap tech" big />
+          <Lbl p={N.p} show={on(3)} col={C.p} t="Portafoglio" big />
+        </div>
+
+        {/* Pannello che racconta la battuta */}
+        <div style={{ padding: '24px 22px', display: 'flex', flexDirection: 'column', gap: 12, minHeight: 300, justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {[0, 1, 2, 3].map((i) => (
+              <span key={i} style={{ height: 3, flex: 1, borderRadius: 2, background: s >= i + 1 || (s === 0 && i === 0) ? [C.q, C.q, C.t, C.p][i] : C.faint + '55', transition: 'background .4s' }} />
+            ))}
+          </div>
+
+          <Beat show={s <= 1} c={C.q} k="domande" h="Parti da una domanda">
+            Ogni domanda è un nodo blu. Symnaps cerca i dati reali — FRED, prezzi Twelve Data — e risponde.
+          </Beat>
+          <Beat show={s === 2} c={C.t} k="tesi" h="La tesi emerge da sola">
+            Le domande sullo stesso tema si coagulano in una tesi viola. Verdetto <b style={{ color: C.p }}>BUY · conf. 72%</b>, con scenari bull / base / bear.
+          </Beat>
+          <Beat show={s === 3} c={C.p} k="portafoglio" h="Germoglia un portafoglio">
+            Dalla tesi forte nasce un portafoglio verde: categorie di asset e strumenti reali (ETF, indici), derivati dalla tesi.
+          </Beat>
+          <Beat show={s >= 4} c={C.p} k="il tuo portafoglio" h="Carica cosa possiedi davvero">
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+              {['VWCE 60%', 'SGLN 10%', 'AGGH 30%'].map((h) => (
+                <span key={h} style={{ fontSize: 10.5, color: C.p, border: `1px solid ${C.p}40`, background: C.p + '12', borderRadius: 7, padding: '3px 8px' }}>{h}</span>
+              ))}
+            </div>
+            Il portafoglio della tesi marca cosa hai già: <b style={{ color: C.p }}>«mega-cap già coperte in parte da VWCE»</b>. Si aggancia a ciò che possiedi.
+          </Beat>
+        </div>
+      </div>
+      <style>{`
+        @media (max-width: 640px){ .fd-grid{ grid-template-columns: 1fr !important; } .fd-grid > div:first-child{ border-right: none !important; border-bottom: 1px solid ${C.border}55; } }
+      `}</style>
+    </div>
+  );
+}
+
+function Lbl({ p, show, col, t, big }: { p: { x: number; y: number }; show: boolean; col: string; t: string; big?: boolean }) {
+  return (
+    <div style={{
+      position: 'absolute', left: `${p.x}%`, top: `${p.y}%`,
+      transform: `translate(-50%, ${big ? '-150%' : '14px'})`,
+      maxWidth: 150, textAlign: 'center', fontSize: big ? 11 : 10, lineHeight: 1.35,
+      color: big ? '#fff' : C.muted, fontFamily: big ? serif : mono,
+      opacity: show ? 1 : 0, transition: 'opacity .55s ease', pointerEvents: 'none',
+      letterSpacing: big ? 0 : '.01em',
+    }}>
+      {big && <span style={{ color: col, marginRight: 4 }}>{col === C.t ? '◆' : '▤'}</span>}{t}
+    </div>
+  );
+}
+
+function Beat({ show, c, k, h, children }: { show: boolean; c: string; k: string; h: string; children: React.ReactNode }) {
+  if (!show) return null;
+  return (
+    <div className="w-in" style={{ animationDuration: '.5s' }}>
+      <div style={{ fontSize: 10, color: c, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 7 }}>{k}</div>
+      <h3 style={{ fontFamily: serif, fontWeight: 400, fontSize: 19, color: '#fff', marginBottom: 9 }}>{h}</h3>
+      <p style={{ fontSize: 13, lineHeight: 1.6, color: C.muted, margin: 0 }}>{children}</p>
+    </div>
+  );
+}
+
 const STEPS = [
   {
     g: '●', c: C.q, k: 'domande',
@@ -220,6 +349,7 @@ const STEPS = [
 ];
 
 const FEATURES = [
+  { g: '▤', c: C.p, h: 'Carica il tuo portafoglio', b: 'Inserisci gli strumenti che possiedi davvero (ticker e peso). Ogni portafoglio di tesi segnala cosa hai già coperto — es. "già coperto in parte da VWCE".' },
   { g: '◷', c: C.t, h: 'Verdetto che vive', b: 'Symnaps ricontrolla le tesi ogni settimana e salva ogni cambio di verdetto — il flip resta nella storia.' },
   { g: '◵', c: C.q, h: 'Scenari & catalizzatori', b: 'Bull / base / bear per ogni tesi, più i catalizzatori in arrivo che possono farla muovere.' },
   { g: '▦', c: C.p, h: 'Dati macro ufficiali', b: 'Serie FRED e prezzi Twelve Data, dentro i prompt e nei grafici a linea — niente numeri inventati.' },
@@ -324,8 +454,23 @@ export default function Welcome() {
         </div>
       </section>
 
+      {/* ── Demo animata ── */}
+      <section style={{ position: 'relative', zIndex: 5, maxWidth: 1040, margin: '0 auto', padding: '40px 24px 20px' }}>
+        <Reveal>
+          <div style={{ textAlign: 'center', marginBottom: 36 }}>
+            <div style={{ fontSize: 11, color: C.faint, letterSpacing: '.14em', textTransform: 'uppercase', marginBottom: 14 }}>guardalo lavorare</div>
+            <h2 style={{ fontFamily: serif, fontWeight: 300, fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff' }}>
+              Da una domanda al <span style={{ fontStyle: 'italic' }}>tuo</span> portafoglio.
+            </h2>
+          </div>
+        </Reveal>
+        <Reveal delay={0.06}>
+          <FlowDemo />
+        </Reveal>
+      </section>
+
       {/* ── Features ── */}
-      <section style={{ position: 'relative', zIndex: 5, maxWidth: 1040, margin: '0 auto', padding: '70px 24px 40px' }}>
+      <section style={{ position: 'relative', zIndex: 5, maxWidth: 1040, margin: '0 auto', padding: '50px 24px 40px' }}>
         <Reveal>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <div style={{ fontSize: 11, color: C.faint, letterSpacing: '.14em', textTransform: 'uppercase', marginBottom: 14 }}>cosa ti dà</div>

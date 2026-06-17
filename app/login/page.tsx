@@ -2,9 +2,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 
-// Sfondo: mini-grafo che deriva lentamente — un assaggio del prodotto.
-// Nodi nei tre colori dell'app (task blu, tesi viola, portafogli verdi),
-// archi che appaiono solo tra nodi vicini.
+// Sfondo: lo stesso flusso che racconta la landing, in sottofondo.
+// Non rumore casuale: domande blu a sinistra → tesi viola al centro →
+// portafogli verdi a destra, con impulsi che scorrono lungo i legami.
 function GraphBackdrop() {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -13,69 +13,99 @@ function GraphBackdrop() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d')!;
     let raf = 0;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const Q = '#5b9cf6', T = '#a78bfa', P = '#34d399';
 
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let W = 0, H = 0;
     const resize = () => {
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = W * dpr; canvas.height = H * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
     window.addEventListener('resize', resize);
 
-    const COLORS = ['#5b9cf6', '#5b9cf6', '#5b9cf6', '#a78bfa', '#34d399'];
-    const N = Math.min(34, Math.floor(window.innerWidth / 38));
-    const nodes = Array.from({ length: N }, () => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
-      vx: (Math.random() - 0.5) * 0.18,
-      vy: (Math.random() - 0.5) * 0.18,
-      r: 1.5 + Math.random() * 2.2,
-      c: COLORS[Math.floor(Math.random() * COLORS.length)],
-      ph: Math.random() * Math.PI * 2,
-    }));
+    type Node = { x: number; y: number; vx: number; vy: number; r: number; c: string; ph: number; type: 0 | 1 | 2 };
+    type Edge = { a: number; b: number; c: string; pulse: number; speed: number };
 
-    const loop = () => {
-      const W = window.innerWidth, H = window.innerHeight;
+    const zone = (type: 0 | 1 | 2) => {
+      const band = type === 0 ? 0.2 : type === 1 ? 0.5 : 0.8;
+      return W * (band + (Math.random() - 0.5) * 0.16);
+    };
+    const make = (type: 0 | 1 | 2): Node => ({
+      x: zone(type), y: H * (0.1 + Math.random() * 0.8),
+      vx: (Math.random() - 0.5) * 0.1, vy: (Math.random() - 0.5) * 0.1,
+      r: (type === 0 ? 1.6 : type === 1 ? 2.6 : 3) + Math.random() * 1.2,
+      c: type === 0 ? Q : type === 1 ? T : P,
+      ph: Math.random() * Math.PI * 2, type,
+    });
+
+    const dense = W > 720;
+    const nodes: Node[] = [
+      ...Array.from({ length: dense ? 16 : 9 }, () => make(0)),
+      ...Array.from({ length: dense ? 7 : 4 }, () => make(1)),
+      ...Array.from({ length: dense ? 4 : 3 }, () => make(2)),
+    ];
+    const byType = (ty: 0 | 1 | 2) => nodes.map((n, i) => (n.type === ty ? i : -1)).filter((i) => i >= 0);
+    const idxQ = byType(0), idxT = byType(1), idxP = byType(2);
+    const nearest = (from: number, pool: number[], k: number) =>
+      pool.map((j) => ({ j, d: Math.hypot(nodes[from].x - nodes[j].x, nodes[from].y - nodes[j].y) }))
+        .sort((a, b) => a.d - b.d).slice(0, k).map((o) => o.j);
+
+    const edges: Edge[] = [];
+    for (const t of idxT)
+      for (const q of nearest(t, idxQ, 2 + Math.floor(Math.random() * 2)))
+        edges.push({ a: q, b: t, c: T, pulse: Math.random(), speed: 0.003 + Math.random() * 0.004 });
+    for (const p of idxP)
+      for (const t of nearest(p, idxT, 1 + Math.floor(Math.random() * 2)))
+        edges.push({ a: t, b: p, c: P, pulse: Math.random(), speed: 0.0025 + Math.random() * 0.003 });
+
+    const draw = () => {
       ctx.clearRect(0, 0, W, H);
       const t = Date.now() / 1000;
 
-      for (const n of nodes) {
-        n.x += n.vx; n.y += n.vy;
-        if (n.x < -20) n.x = W + 20; if (n.x > W + 20) n.x = -20;
-        if (n.y < -20) n.y = H + 20; if (n.y > H + 20) n.y = -20;
-      }
+      if (!reduced)
+        for (const n of nodes) {
+          n.x += n.vx; n.y += n.vy;
+          const home = n.type === 0 ? 0.2 : n.type === 1 ? 0.5 : 0.8;
+          n.vx += (W * home - n.x) * 0.000004;
+          if (n.y < H * 0.06 || n.y > H * 0.94) n.vy *= -1;
+        }
 
-      // Archi tra nodi vicini, alpha decrescente con la distanza
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i], b = nodes[j];
-          const dx = a.x - b.x, dy = a.y - b.y;
-          const d = Math.sqrt(dx * dx + dy * dy);
-          if (d < 150) {
-            ctx.beginPath();
-            ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-            ctx.strokeStyle = '#5b9cf6';
-            ctx.globalAlpha = (1 - d / 150) * 0.13;
-            ctx.lineWidth = 1;
-            ctx.stroke();
-          }
+      for (const e of edges) {
+        const a = nodes[e.a], b = nodes[e.b];
+        const grad = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+        grad.addColorStop(0, a.c + '00');
+        grad.addColorStop(1, e.c + '33');
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = grad; ctx.lineWidth = 1; ctx.stroke();
+
+        if (!reduced) {
+          e.pulse += e.speed; if (e.pulse > 1) e.pulse -= 1;
+          const px = a.x + (b.x - a.x) * e.pulse, py = a.y + (b.y - a.y) * e.pulse;
+          ctx.beginPath();
+          ctx.arc(px, py, 1.4, 0, Math.PI * 2);
+          ctx.fillStyle = e.c; ctx.globalAlpha = 0.7; ctx.fill(); ctx.globalAlpha = 1;
         }
       }
-      ctx.globalAlpha = 1;
 
       for (const n of nodes) {
-        const pulse = 0.55 + 0.45 * Math.sin(t * 1.4 + n.ph);
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-        ctx.fillStyle = n.c;
-        ctx.globalAlpha = 0.25 + 0.3 * pulse;
-        ctx.fill();
-        ctx.globalAlpha = 1;
+        const pulse = reduced ? 0.6 : 0.55 + 0.45 * Math.sin(t * 1.3 + n.ph);
+        const glow = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r * 5);
+        glow.addColorStop(0, n.c + '33'); glow.addColorStop(1, n.c + '00');
+        ctx.fillStyle = glow;
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r * 5, 0, Math.PI * 2);
+        ctx.globalAlpha = 0.4 * pulse; ctx.fill(); ctx.globalAlpha = 1;
+
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        ctx.fillStyle = n.c; ctx.globalAlpha = 0.4 + 0.35 * pulse; ctx.fill(); ctx.globalAlpha = 1;
       }
-      raf = requestAnimationFrame(loop);
+
+      if (!reduced) raf = requestAnimationFrame(draw);
     };
-    loop();
+    draw();
 
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
   }, []);
