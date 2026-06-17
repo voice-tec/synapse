@@ -106,3 +106,24 @@ export async function macroSnapshot(): Promise<string | null> {
   snapCache = { at: Date.now(), text };
   return text;
 }
+
+// ── Valore corrente di una serie, per i predicati testabili dei segnali ──
+// Ritorna l'ultimo valore numerico (yoy rispettato) di una serie del catalogo.
+// Solo id whitelisted; cache 12h per id (i dati cambiano al più mensilmente).
+const valCache = new Map<string, { at: number; v: number | null }>();
+export async function latestFredValue(id: string): Promise<number | null> {
+  if (!FRED_KEY) return null;
+  const meta = FRED_CATALOG[id];
+  if (!meta) return null;
+  const c = valCache.get(id);
+  if (c && Date.now() - c.at < 12 * 3600 * 1000) return c.v;
+  const desc = await fredObs(id, 'sort_order=desc&limit=20');
+  let v: number | null = null;
+  if (desc?.length) {
+    const obs = [...desc].reverse();
+    const i = obs.length - 1;
+    v = meta.yoy ? yoyOf(obs, i) : obs[i].value;
+  }
+  valCache.set(id, { at: Date.now(), v });
+  return v;
+}

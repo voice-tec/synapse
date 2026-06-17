@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { extractJSON, createBatch, getBatch, getBatchResults } from '@/lib/anthropic';
 import { fetchTickerPerformance, formatPerf } from '@/lib/quotes';
+import { macroSnapshot, latestFredValue } from '@/lib/fred';
 
 // Refresh ON-DEMAND dei dati dell'utente, chiamato dal client all'apertura
 // dell'app. Paga solo chi usa l'app: gli account inattivi costano zero.
@@ -16,14 +17,86 @@ const STALE_MS = 7 * 24 * 3600 * 1000;
 const THESES_PER_REFRESH = 8;
 const ACTIONS_PER_REFRESH = 8;
 
+// Il NUMERO di confidenza non lo decide il modello (era rumore non riproducibile):
+// è calcolato dai verdetti delle task sorgente + dai segnali testabili scattati
+// (vedi computeConfidence/evalSignals). Al modello chiediamo SOLO la nota qualitativa.
 const REFRESH_SYS = `Sei il motore di Synapse, una piattaforma di financial intelligence.
-Ti viene data una tesi di investimento formulata da un utente in passato, con la sua confidenza (0-100) di allora.
-Ri-valuta la tesi ALLA LUCE DEI DATI DI OGGI. Usa web_search per verificare i dati chiave più recenti.
+Ti viene data una tesi di investimento formulata da un utente in passato.
+Ri-valutala ALLA LUCE DEI DATI DI OGGI. Usa web_search per verificare i dati chiave più recenti.
+NON dare un punteggio numerico: spiega solo cosa è cambiato.
 Rispondi SOLO con JSON valido:
 {
-  "confidence": numero 0-100 (la confidenza AGGIORNATA nella tesi, oggi),
-  "note": "una frase italiana concisa: cosa è cambiato e perché la confidenza sale/scende/tiene"
+  "note": "una frase italiana concisa: cosa è cambiato di recente e in che direzione spinge la tesi (rafforza / indebolisce / tiene)"
 }`;
+
+// ── Confidence calcolata (blend) ─────────────────────────────────────────────
+type Sig = { text?: string; kind?: string; metric?: string | null; op?: string | null; threshold?: number | null; fired?: boolean; checked_at?: string };
+
+// Segnali legacy (stringhe) → oggetto manual; passa oggetti invariati.
+function normSig(s: any): Sig {
+  if (typeof s === 'string') return { text: s, kind: 'manual', metric: null, op: null, threshold: null };
+  return s || {};
+}
+
+function cmp(v: number, op: string | null | undefined, t: number): boolean {
+  switch (op) {
+    case '<': return v < t;
+    case '>': return v > t;
+    case '<=': return v <= t;
+    case '>=': return v >= t;
+    default: return false;
+  }
+}
+
+// Base 20..80 dai verdetti delle task sorgente.
+async function verdictBase(supabase: any, userId: string, sourceIds: string[]): Promise<number> {
+  if (!sourceIds?.length) return 50;
+  const { data: tasks } = await supabase
+    .from('tasks').select('output').eq('user_id', userId).in('id', sourceIds);
+  let num = 0, den = 0;
+  for (const t of tasks || []) {
+    const v = t.output?.verdict;
+    if (!v?.stance) continue;
+    const sign = v.stance === 'si' ? 1 : v.stance === 'no' ? -1 : 0;
+    const w = v.confidence === 'alta' ? 1 : v.confidence === 'media' ? 0.6 : v.confidence === 'bassa' ? 0.3 : 0.6;
+    num += sign * w; den += w;
+  }
+  if (!den) return 50;
+  const net = num / den; // -1..1
+  return 50 + net * 30;
+}
+
+// Valuta i segnali testabili (fred/ticker) contro i dati di oggi; ritorna i
+// segnali annotati con fired/checked_at e i conteggi scattati per direzione.
+async function evalSignals(signals: any, createdAt: string) {
+  const now = new Date().toISOString();
+  const out: any = { confirm: [], invalidate: [] };
+  let confirmFired = 0, invalidateFired = 0;
+  for (const dir of ['confirm', 'invalidate'] as const) {
+    for (const raw of (signals?.[dir] || [])) {
+      const s: Sig = normSig(raw);
+      let fired = s.fired;
+      if (s.metric && s.op && typeof s.threshold === 'number') {
+        if (s.kind === 'fred') {
+          const v = await latestFredValue(s.metric);
+          if (v !== null) { fired = cmp(v, s.op, s.threshold); s.checked_at = now; }
+        } else if (s.kind === 'ticker') {
+          const pct = await fetchTickerPerformance(s.metric, createdAt);
+          if (pct !== null) { fired = cmp(pct, s.op, s.threshold); s.checked_at = now; }
+        }
+      }
+      s.fired = fired;
+      if (fired) { if (dir === 'confirm') confirmFired++; else invalidateFired++; }
+      out[dir].push(s);
+    }
+  }
+  return { signals: out, confirmFired, invalidateFired };
+}
+
+function computeConfidence(base: number, confirmFired: number, invalidateFired: number): number {
+  const adjust = Math.max(-20, Math.min(20, (confirmFired - invalidateFired) * 8));
+  return Math.max(0, Math.min(100, Math.round(base + adjust)));
+}
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -62,15 +135,18 @@ export async function POST(req: NextRequest) {
             .single();
           if (!th) continue;
 
-          const newConf = Math.max(0, Math.min(100, Number(parsed.confidence) || th.confidence));
+          // Confidence CALCOLATA (non dal modello): base verdetti + scarto segnali scattati.
+          const base = await verdictBase(supabase, user.id, th.source_task_ids || []);
+          const { signals, confirmFired, invalidateFired } = await evalSignals(th.signals, th.created_at);
+          const newConf = computeConfidence(base, confirmFired, invalidateFired);
           const history = Array.isArray(th.history) ? th.history : [];
           history.push({ thesis: th.thesis, confidence: newConf, date: new Date().toISOString(), note: parsed.note || '' });
 
           await supabase
             .from('theses')
-            .update({ confidence: newConf, history, updated_at: new Date().toISOString() })
+            .update({ confidence: newConf, signals, history, updated_at: new Date().toISOString() })
             .eq('id', th.id);
-          updatedTheses.push({ id: th.id, confidence: newConf, history });
+          updatedTheses.push({ id: th.id, confidence: newConf, signals, history });
         }
         await supabase.from('profiles').update({ refresh_batch_id: null }).eq('id', user.id);
         status = 'ingested';
@@ -98,16 +174,21 @@ export async function POST(req: NextRequest) {
 
     if (stale?.length) {
       try {
+        const macro = await macroSnapshot();
+        const system = [
+          { type: 'text', text: REFRESH_SYS },
+          ...(macro ? [{ type: 'text', text: macro }] : []),
+        ];
         const batch = await createBatch(stale.map((th) => ({
           custom_id: th.id,
           params: {
             model: 'claude-sonnet-4-6',
-            max_tokens: 1000,
-            system: [{ type: 'text', text: REFRESH_SYS }],
+            max_tokens: 500,
+            system,
             tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }],
             messages: [{
               role: 'user',
-              content: `Tesi: "${th.thesis}"\nConfidenza precedente: ${th.confidence}\nFormulata il: ${th.created_at}`,
+              content: `Tesi: "${th.thesis}"\nFormulata il: ${th.created_at}`,
             }],
           },
         })));

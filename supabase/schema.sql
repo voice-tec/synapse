@@ -52,7 +52,7 @@ create table theses (
   source_task_ids uuid[],
   history jsonb default '[]',                  -- [{thesis, confidence, date, note}]
   challenge jsonb,                             -- contro-tesi (avvocato del diavolo)
-  signals jsonb,                               -- {confirm:[...], invalidate:[...]}
+  signals jsonb,                               -- {confirm:[Sig],invalidate:[Sig]} Sig={text,kind:fred|ticker|manual,metric,op,threshold,fired,checked_at}
   color text,
   pos_x float,
   pos_y float,

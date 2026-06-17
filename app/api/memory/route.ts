@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { askClaudeJSON } from '@/lib/anthropic';
 import { checkAiCall, bumpAiCall } from '@/lib/ai-usage';
+import { FRED_CATALOG } from '@/lib/fred';
+
+const FRED_KEYS = Object.entries(FRED_CATALOG).map(([id, m]) => `${id} (${m.label})`).join(', ');
 
 const SYS = `Sei il motore di analisi di Synapse. Ti vengono date: (1) le TESI GIÀ ESISTENTI dell'utente, (2) le sue task finanziarie.
 Analizza le task e identifica i CLUSTER SEMANTICI DISTINTI — gruppi di domande che esplorano tesi diverse.
@@ -32,12 +35,17 @@ Rispondi SOLO con JSON valido:
       "source_indices": [indici 1-based, massimo 6],
       "suggested_question": "una domanda che completerebbe questa tesi",
       "signals": {
-        "confirm": ["2 segnali OSSERVABILI e concreti che rafforzerebbero la tesi (dati, eventi, soglie)"],
-        "invalidate": ["2 segnali OSSERVABILI e concreti che la indebolirebbero"]
+        "confirm": [{ "text": "segnale osservabile che rafforza la tesi", "kind": "fred|ticker|manual", "metric": "id FRED o simbolo ticker, oppure null", "op": "<|>|<=|>=, oppure null", "threshold": "numero, oppure null" }],
+        "invalidate": [{ "text": "segnale osservabile che indebolisce la tesi", "kind": "...", "metric": "...", "op": "...", "threshold": "..." }]
       }
     }
   ]
 }
+SEGNALI TESTABILI — dai 2 confirm e 2 invalidate. Quando un segnale è misurabile, aggancialo a un dato:
+- macro USA → kind:"fred", metric = UNA di queste serie (usa l'id esatto): ${FRED_KEYS}; op + threshold come numero nell'unità della serie (es. CPI/tassi in %).
+- prezzo di un titolo → kind:"ticker", metric = simbolo (es. AAPL, NVDA); threshold = variazione % attesa dalla creazione della tesi (es. 20 = +20%), op tipicamente > o <.
+- non misurabile con questi → kind:"manual", metric/op/threshold = null.
+Il "text" è SEMPRE presente e leggibile. Preferisci segnali fred/ticker quando il tema lo consente.
 Se non ci sono cluster con confidenza >= 50, rispondi {"clusters":[]}. Massimo 4 cluster.`;
 
 export async function POST(req: NextRequest) {
