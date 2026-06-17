@@ -59,11 +59,14 @@ export async function POST(req: NextRequest) {
       model: 'claude-haiku-4-5', // clustering semplice: Haiku basta, ~10x più economico
       system: SYS,
       user: `${thesesBlock}\n\nAnalizza queste ${taskCount} task:\n${summary}`,
-      maxTokens: 2000,
+      // 3000 (era 2000): fino a 5 cluster con signals possono superare 2000 token
+      // di output → JSON troncato → parse fallita → 500. Headroom per non troncare.
+      maxTokens: 3000,
     });
     await bumpAiCall(supabase, user.id, gate.used);
     return NextResponse.json({ result: parsed });
   } catch (err: any) {
+    console.error('[api/memory] failed:', err?.message, err);
     return NextResponse.json({ error: err.message, detail: String(err) }, { status: 500 });
   }
 }
