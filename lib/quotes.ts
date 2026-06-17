@@ -84,9 +84,21 @@ async function yahooSeries(ticker: string, fromIso: string): Promise<{ dates: st
 }
 
 // ── API pubblica ──
+// Cache in-modulo (1h) per ridurre le chiamate ai provider (free tier Twelve
+// Data: 800/giorno). Chiave = ticker+giorno-di-partenza; cacha anche i null
+// così un ticker irrisolvibile non rimartella il provider per un'ora.
+// Dedup le richieste identiche (stesso ticker e data) di portafogli e segnali.
+const seriesCache = new Map<string, { at: number; data: { dates: string[]; closes: number[] } | null }>();
+const SERIES_TTL = 60 * 60 * 1000;
+
 export async function fetchSeries(ticker: string, fromIso: string) {
   if (!fromIso || Date.now() - new Date(fromIso).getTime() < 24 * 3600 * 1000) return null;
-  return (await tdSeries(ticker, fromIso)) || (await yahooSeries(ticker, fromIso));
+  const key = `${ticker.toUpperCase()}|${fromIso.slice(0, 10)}`;
+  const c = seriesCache.get(key);
+  if (c && Date.now() - c.at < SERIES_TTL) return c.data;
+  const data = (await tdSeries(ticker, fromIso)) || (await yahooSeries(ticker, fromIso));
+  seriesCache.set(key, { at: Date.now(), data });
+  return data;
 }
 
 export async function fetchTickerPerformance(ticker: string, fromIso: string): Promise<number | null> {
