@@ -458,37 +458,6 @@ export default function Welcome() {
         <div style={{ position: 'absolute', bottom: 26, left: '50%', transform: 'translateX(-50%)', zIndex: 2, fontSize: 18, color: C.faint, animation: 'wIn 1s 1s both' }}>↓</div>
       </header>
 
-      {/* ── Anteprima interfaccia (placeholder per micro-video loop del grafo reale) ── */}
-      <section style={{ position: 'relative', zIndex: 5, maxWidth: 1000, margin: '0 auto', padding: '0 24px', marginTop: -40 }}>
-        <Reveal>
-          <div style={{ position: 'relative', borderRadius: 18, border: `1px solid ${C.border}`, background: C.cardSolid, overflow: 'hidden', boxShadow: '0 30px 80px #00000080' }}>
-            {/* barra finestra */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '11px 14px', borderBottom: `1px solid ${C.border}88`, background: C.card }}>
-              <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#e0557755' }} />
-              <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#f0a03055' }} />
-              <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#34d39955' }} />
-              <span style={{ marginLeft: 10, fontSize: 10.5, color: C.muted, letterSpacing: '.04em' }}>symnaps · il tuo grafo</span>
-            </div>
-            {/* area video — sostituisci il placeholder con <video src=… autoPlay muted loop playsInline /> */}
-            <div style={{ position: 'relative', aspectRatio: '16 / 9', background: `radial-gradient(ellipse 60% 70% at 50% 50%, ${C.t}10, transparent 60%), ${C.bg}` }}>
-              {/*
-                <video
-                  src="/demo/graph-loop.mp4"
-                  poster="/demo/graph-loop.jpg"
-                  autoPlay muted loop playsInline
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              */}
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
-                <div style={{ width: 56, height: 56, borderRadius: '50%', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, fontSize: 18, background: C.card }}>▶</div>
-                <div style={{ fontSize: 11, color: C.muted, letterSpacing: '.12em', textTransform: 'uppercase' }}>anteprima · il grafo in azione</div>
-                <div style={{ fontSize: 10.5, color: C.faint }}>video loop dell'interfaccia reale — in arrivo</div>
-              </div>
-            </div>
-          </div>
-        </Reveal>
-      </section>
-
       {/* ── Come funziona ── */}
       <section id="come" style={{ position: 'relative', zIndex: 5, maxWidth: 1040, margin: '0 auto', padding: '90px 24px 40px' }}>
         <Reveal>

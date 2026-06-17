@@ -36,7 +36,7 @@ Rispondi SOLO con JSON valido:
     }
   ]
 }
-Se non ci sono cluster con confidenza >= 60, rispondi {"clusters":[]}. Massimo 5 cluster.`;
+Se non ci sono cluster con confidenza >= 60, rispondi {"clusters":[]}. Massimo 4 cluster.`;
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
