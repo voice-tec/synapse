@@ -85,6 +85,37 @@ describe('evalSignals (segnali manual, niente rete)', () => {
   });
 });
 
+describe('evalSignals (dato disponibile vs mancante, deps iniettate)', () => {
+  const sig = (over: any) => ({ text: 't', kind: 'fred', metric: 'CPIAUCSL', op: '<', threshold: 3, ...over });
+  const depsVal = (v: number | null) => ({
+    latestFredValue: async () => v,
+    fetchTickerPerformance: async () => v,
+  });
+
+  it('dato presente → valuta, conta e marca data_missing:false', async () => {
+    const r = await evalSignals({ confirm: [sig({})] }, '2020-01-01', depsVal(2)); // 2 < 3 → fired
+    expect(r.testableTotal).toBe(1);
+    expect(r.confirmFired).toBe(1);
+    expect(r.signals.confirm[0].fired).toBe(true);
+    expect(r.signals.confirm[0].data_missing).toBe(false);
+  });
+
+  it('dato mancante (null) → data_missing:true, non conteggiato', async () => {
+    const r = await evalSignals({ confirm: [sig({})] }, '2020-01-01', depsVal(null));
+    expect(r.testableTotal).toBe(0);
+    expect(r.confirmFired).toBe(0);
+    expect(r.signals.confirm[0].data_missing).toBe(true);
+    expect(r.signals.confirm[0].fired).toBe(false);
+  });
+
+  it('stale fired:true + dato mancante → azzerato a false, non conteggiato', async () => {
+    const r = await evalSignals({ confirm: [sig({ fired: true })] }, '2020-01-01', depsVal(null));
+    expect(r.signals.confirm[0].fired).toBe(false);
+    expect(r.testableTotal).toBe(0);
+    expect(r.confirmFired).toBe(0);
+  });
+});
+
 describe('deriveOutcome', () => {
   it('nessun segnale scattato → attiva, accuracy null', () => {
     expect(deriveOutcome(0, 0, 2, 60)).toEqual({ status: 'active', accuracy: null, signalsHit: 0, signalsTotal: 2 });

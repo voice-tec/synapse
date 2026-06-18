@@ -120,6 +120,38 @@ export async function fetchSeries(ticker: string, fromIso: string) {
   return sliceFrom(data, fromDay);
 }
 
+// Verifica che un simbolo esista DAVVERO, per validare i segnali ticker prima
+// di salvarli (un ticker inventato resterebbe testabile ma non scatterebbe mai).
+//  - true  = risolto da Twelve Data o Yahoo
+//  - false = entrambi i provider rispondono ma nessun match → ticker inesistente
+//  - null  = impossibile decidere (nessuna chiave / errore di rete) → il chiamante
+//            NON declassa, per non punire problemi transitori.
+const resolveCache = new Map<string, boolean | null>();
+export async function resolveTicker(ticker: string): Promise<boolean | null> {
+  const key = (ticker || '').toUpperCase();
+  if (!key) return false;
+  if (resolveCache.has(key)) return resolveCache.get(key)!;
+  let res: boolean | null = null;
+  // Twelve Data symbol_search (se la chiave c'è)
+  if (TD_KEY) {
+    try {
+      const r = await fetch(`https://api.twelvedata.com/symbol_search?symbol=${encodeURIComponent(ticker)}&apikey=${TD_KEY}`);
+      const j = await r.json();
+      if (j.data?.[0]?.symbol) res = true;
+      else if (Array.isArray(j.data)) res = false; // risposta valida, zero match
+    } catch { /* res resta null */ }
+  }
+  // Fallback Yahoo: può solo CONFERMARE (true). Il suo null è ambiguo
+  // (no-match o errore di rete) → non lo usiamo per dichiarare 'false'.
+  if (res !== true) {
+    try {
+      if (await yahooResolve(ticker)) res = true;
+    } catch { /* res invariato */ }
+  }
+  resolveCache.set(key, res);
+  return res;
+}
+
 export async function fetchTickerPerformance(ticker: string, fromIso: string): Promise<number | null> {
   const s = await fetchSeries(ticker, fromIso);
   if (!s) return null;

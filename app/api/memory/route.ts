@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { askClaudeJSON } from '@/lib/anthropic';
+import { validateSignals } from '@/lib/signals';
 import { checkAiCall, bumpAiCall } from '@/lib/ai-usage';
 import { FRED_CATALOG } from '@/lib/fred';
 
@@ -112,7 +113,13 @@ export async function POST(req: NextRequest) {
       maxTokens: 8000,
     });
     await bumpAiCall(supabase, user.id, gate.used);
-    if (parsed?.clusters?.length) await dedupClusters(parsed.clusters, theses);
+    if (parsed?.clusters?.length) {
+      await dedupClusters(parsed.clusters, theses);
+      // Segnali non verificabili (metric FRED fuori catalogo / ticker inventato)
+      // declassati a 'manual': non sporcano il track record come falsi testabili.
+      try { await validateSignals(parsed.clusters); }
+      catch (e: any) { console.error('[api/memory] validateSignals skipped:', e?.message); }
+    }
     return NextResponse.json({ result: parsed });
   } catch (err: any) {
     // Il clustering è arricchimento di background: un suo fallimento NON deve mai
