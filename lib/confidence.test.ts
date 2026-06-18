@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cmp, computeConfidence, normSig, evalSignals, verdictBase } from './confidence';
+import { cmp, computeConfidence, normSig, evalSignals, verdictBase, deriveOutcome } from './confidence';
 
 describe('cmp', () => {
   it('confronta secondo l\'operatore', () => {
@@ -79,7 +79,33 @@ describe('evalSignals (segnali manual, niente rete)', () => {
     const r = await evalSignals(signals, new Date().toISOString());
     expect(r.confirmFired).toBe(0);
     expect(r.invalidateFired).toBe(0);
+    expect(r.testableTotal).toBe(0); // i manual non sono testabili
     expect(r.signals.confirm[0].text).toBe('a');
     expect(r.signals.invalidate[0].text).toBe('stringa legacy');
+  });
+});
+
+describe('deriveOutcome', () => {
+  it('nessun segnale scattato → attiva, accuracy null', () => {
+    expect(deriveOutcome(0, 0, 2, 60)).toEqual({ status: 'active', accuracy: null, signalsHit: 0, signalsTotal: 2 });
+  });
+  it('confidence alta + solo confirm → confermata', () => {
+    const r = deriveOutcome(2, 0, 2, 72);
+    expect(r.status).toBe('confirmed');
+    expect(r.accuracy).toBe(100);
+  });
+  it('confidence non alta nonostante i confirm → resta attiva', () => {
+    expect(deriveOutcome(1, 0, 1, 60).status).toBe('active');
+  });
+  it('invalidate prevalenti + confidence crollata → invalidata', () => {
+    const r = deriveOutcome(0, 2, 2, 40);
+    expect(r.status).toBe('invalidated');
+    expect(r.accuracy).toBe(0);
+  });
+  it('invalidate prevalenti ma confidence ancora alta → attiva (non chiude)', () => {
+    expect(deriveOutcome(1, 2, 3, 70).status).toBe('active');
+  });
+  it('accuracy è la quota di confirm tra gli scattati', () => {
+    expect(deriveOutcome(3, 1, 4, 65).accuracy).toBe(75);
   });
 });

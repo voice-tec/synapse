@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase-server';
 import { extractJSON, createBatch, getBatch, getBatchResults } from '@/lib/anthropic';
 import { fetchTickerPerformance, formatPerf } from '@/lib/quotes';
 import { macroSnapshot } from '@/lib/fred';
-import { verdictBase, evalSignals, computeConfidence } from '@/lib/confidence';
+import { verdictBase, evalSignals, computeConfidence, deriveOutcome } from '@/lib/confidence';
 
 // Refresh ON-DEMAND dei dati dell'utente, chiamato dal client all'apertura
 // dell'app. Paga solo chi usa l'app: gli account inattivi costano zero.
@@ -69,16 +69,23 @@ export async function POST(req: NextRequest) {
 
           // Confidence CALCOLATA (non dal modello): base verdetti + scarto segnali scattati.
           const base = await verdictBase(supabase, user.id, th.source_task_ids || []);
-          const { signals, confirmFired, invalidateFired } = await evalSignals(th.signals, th.created_at);
+          const { signals, confirmFired, invalidateFired, testableTotal } = await evalSignals(th.signals, th.created_at);
           const newConf = computeConfidence(base, confirmFired, invalidateFired);
           const history = Array.isArray(th.history) ? th.history : [];
           history.push({ thesis: th.thesis, confidence: newConf, date: new Date().toISOString(), note: parsed.note || '' });
 
-          await supabase
-            .from('theses')
-            .update({ confidence: newConf, signals, history, updated_at: new Date().toISOString() })
-            .eq('id', th.id);
-          updatedTheses.push({ id: th.id, confidence: newConf, signals, history });
+          // Track record: esito dedotto dai segnali reali. closed_at solo alla prima chiusura.
+          const outcome = deriveOutcome(confirmFired, invalidateFired, testableTotal, newConf);
+          const closing = outcome.status !== 'active' && th.status === 'active';
+          const update: any = {
+            confidence: newConf, signals, history, updated_at: new Date().toISOString(),
+            status: outcome.status, accuracy: outcome.accuracy,
+            signals_hit: outcome.signalsHit, signals_total: outcome.signalsTotal,
+          };
+          if (closing) update.closed_at = new Date().toISOString();
+
+          await supabase.from('theses').update(update).eq('id', th.id);
+          updatedTheses.push({ id: th.id, confidence: newConf, signals, history, status: outcome.status, accuracy: outcome.accuracy, signals_hit: outcome.signalsHit, signals_total: outcome.signalsTotal });
         }
         await supabase.from('profiles').update({ refresh_batch_id: null }).eq('id', user.id);
         status = 'ingested';

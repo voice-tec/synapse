@@ -61,12 +61,13 @@ export async function verdictBase(supabase: any, userId: string, sourceIds: stri
 export async function evalSignals(signals: Signals | null | undefined, createdAt: string) {
   const now = new Date().toISOString();
   const out: { confirm: Signal[]; invalidate: Signal[] } = { confirm: [], invalidate: [] };
-  let confirmFired = 0, invalidateFired = 0;
+  let confirmFired = 0, invalidateFired = 0, testableTotal = 0;
   for (const dir of ['confirm', 'invalidate'] as const) {
     for (const raw of (signals?.[dir] || [])) {
       const s = normSig(raw);
       let fired = s.fired;
       if (s.metric && s.op && typeof s.threshold === 'number') {
+        testableTotal++;
         if (s.kind === 'fred') {
           const v = await latestFredValue(s.metric);
           if (v !== null) { fired = cmp(v, s.op, s.threshold); s.checked_at = now; }
@@ -80,10 +81,32 @@ export async function evalSignals(signals: Signals | null | undefined, createdAt
       out[dir].push(s);
     }
   }
-  return { signals: out, confirmFired, invalidateFired };
+  return { signals: out, confirmFired, invalidateFired, testableTotal };
 }
 
 export function computeConfidence(base: number, confirmFired: number, invalidateFired: number): number {
   const adjust = Math.max(-20, Math.min(20, (confirmFired - invalidateFired) * 8));
   return Math.max(0, Math.min(100, Math.round(base + adjust)));
+}
+
+// Track record: esito della tesi DEDOTTO dai segnali reali scattati (zero attrito).
+//  - status: confermata se la tesi tiene alta e solo i confirm sono scattati;
+//    invalidata se prevalgono gli invalidate e la confidence è crollata; altrimenti attiva.
+//  - accuracy: quota di segnali "giusti" tra quelli scattati (confirm vs invalidate);
+//    null finché nessun segnale testabile è scattato (niente verdetto prematuro).
+// Soglie centralizzate qui per essere ritoccabili.
+export type ThesisStatus = 'active' | 'confirmed' | 'invalidated';
+
+export function deriveOutcome(
+  confirmFired: number,
+  invalidateFired: number,
+  testableTotal: number,
+  confidence: number,
+): { status: ThesisStatus; accuracy: number | null; signalsHit: number; signalsTotal: number } {
+  const totalFired = confirmFired + invalidateFired;
+  const accuracy = totalFired > 0 ? Math.round((confirmFired / totalFired) * 100) : null;
+  let status: ThesisStatus = 'active';
+  if (confidence >= 68 && confirmFired >= 1 && invalidateFired === 0) status = 'confirmed';
+  else if (invalidateFired > confirmFired && confidence < 50) status = 'invalidated';
+  return { status, accuracy, signalsHit: confirmFired, signalsTotal: testableTotal };
 }

@@ -53,6 +53,12 @@ create table theses (
   history jsonb default '[]',                  -- [{thesis, confidence, date, note}]
   challenge jsonb,                             -- contro-tesi (avvocato del diavolo)
   signals jsonb,                               -- {confirm:[Sig],invalidate:[Sig]} Sig={text,kind:fred|ticker|manual,metric,op,threshold,fired,checked_at}
+  status text default 'active',                -- track record: active | confirmed | invalidated (dedotto dai segnali)
+  accuracy float,                              -- 0..100, quota di confirm tra i segnali scattati; null finché nessuno scatta
+  signals_hit int default 0,                   -- confirm scattati
+  signals_total int default 0,                 -- segnali testabili (con metric/op/threshold)
+  closed_at timestamptz,                        -- quando status è passato a confirmed/invalidated
+  outcome_note text,
   color text,
   pos_x float,
   pos_y float,
@@ -174,6 +180,14 @@ create trigger on_auth_user_created
 -- alter table tasks add column if not exists origin_ref text;
 -- alter table theses add column if not exists challenge jsonb;
 -- alter table theses add column if not exists signals jsonb;
+--
+-- ── Fase 1: track record delle tesi ──
+-- alter table theses add column if not exists status text default 'active';
+-- alter table theses add column if not exists accuracy float;
+-- alter table theses add column if not exists signals_hit int default 0;
+-- alter table theses add column if not exists signals_total int default 0;
+-- alter table theses add column if not exists closed_at timestamptz;
+-- alter table theses add column if not exists outcome_note text;
 --
 -- create table if not exists actions (
 --   id uuid default gen_random_uuid() primary key,

@@ -48,7 +48,7 @@ async function refreshStaleData(){
     let touched=0;
     (json.updatedTheses||[]).forEach(t=>{
       const mn=MEMORY_NODES.find(m=>m.id===t.id);
-      if(mn){ mn.confidence=t.confidence; if(t.history) mn.history=t.history; computeConfDelta(mn); touched++; }
+      if(mn){ mn.confidence=t.confidence; if(t.history) mn.history=t.history; if(t.signals) mn.signals=t.signals; if(t.status) mn.status=t.status; if('accuracy' in t) mn.accuracy=t.accuracy; if('signals_hit' in t) mn.signals_hit=t.signals_hit; if('signals_total' in t) mn.signals_total=t.signals_total; computeConfDelta(mn); touched++; }
     });
     (json.updatedActions||[]).forEach(a=>{
       const an=ACTION_NODES.find(x=>x.id===a.id);
@@ -1189,8 +1189,9 @@ function openMemoryDrawer(mn){
   const color=mn.color||'#a78bfa';
   const body=document.getElementById('dr-body');
   const badge=document.getElementById('dr-badge');
-  badge.textContent='tesi emergente';
-  badge.style.background=color+'22';badge.style.color=color;
+  if(mn.status==='confirmed'){badge.textContent='tesi confermata ✓';badge.style.background='var(--green)22';badge.style.color='var(--green)';}
+  else if(mn.status==='invalidated'){badge.textContent='tesi invalidata ✕';badge.style.background='var(--red)22';badge.style.color='var(--red)';}
+  else{badge.textContent='tesi emergente';badge.style.background=color+'22';badge.style.color=color;}
   tintDrawer(color);
   document.getElementById('dr-query').innerHTML=`<span style="font-size:13px;display:block;margin-bottom:4px;opacity:.6">◆ nodo memoria</span>${mn.thesis}`;
 
@@ -1239,6 +1240,28 @@ function openMemoryDrawer(mn){
       </div>
       ${expo.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">${expo.map(e=>`<span style="font-size:10px;padding:3px 10px;border-radius:20px;background:${color}11;border:1px solid ${color}33;color:${color}cc">${e}</span>`).join('')}</div>`:''}
     </div>`;
+  // Track record: stato di vita + accuratezza dedotti dai segnali reali (Fase 1).
+  const stMap={active:{l:'in corso',c:'var(--text2)',bg:'var(--bg3)'},confirmed:{l:'confermata ✓',c:'var(--green)',bg:'#0f2a1c'},invalidated:{l:'invalidata ✕',c:'var(--red)',bg:'#2a0f0f'}};
+  const stt=stMap[mn.status||'active']||stMap.active;
+  const accStr=(mn.accuracy==null)?'—':mn.accuracy+'%';
+  const trackHTML=`
+    <div>
+      <div class="section-lbl">track record</div>
+      <div style="display:flex;gap:8px;align-items:stretch">
+        <div style="flex:1;background:${stt.bg};border:1px solid ${stt.c}33;border-radius:10px;padding:10px 12px">
+          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">stato</div>
+          <div style="font-size:14px;font-weight:500;color:${stt.c}">${stt.l}</div>
+        </div>
+        <div style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">accuratezza</div>
+          <div style="font-size:14px;font-weight:500;color:var(--text)">${accStr}</div>
+        </div>
+        <div style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">segnali</div>
+          <div style="font-size:14px;font-weight:500;color:var(--text)">${mn.signals_hit||0}/${mn.signals_total||0}</div>
+        </div>
+      </div>
+    </div>`;
   const sg=mn.signals;
   const signalsHTML=(sg&&(((sg.confirm||[]).length)||((sg.invalidate||[]).length)))?`
     <div>
@@ -1260,6 +1283,7 @@ function openMemoryDrawer(mn){
       <div class="section-lbl">tesi corrente</div>
       <div class="memory-thesis" style="border-left-color:${color}">"${mn.thesis}"</div>
     </div>
+    ${trackHTML}
     ${statHTML}
     <div>
       <div class="section-lbl">confidenza</div>
@@ -2194,7 +2218,7 @@ document.getElementById('qi').addEventListener('input',function(){this.style.hei
         const fallbackY=graphH/2+Math.sin(ang)*ringR;
         const px = isMobile ? fallbackX : (th.pos_x||fallbackX);
         const py = isMobile ? fallbackY : (th.pos_y||fallbackY);
-        MEMORY_NODES.push({id:th.id,clusterId:th.cluster_id,thesis:th.thesis,confidence:th.confidence,explanation:th.explanation,pattern:th.pattern,suggested_question:th.suggested_question,source_ids:th.source_task_ids||[],history:th.history||[],challenge:th.challenge||null,signals:th.signals||null,color:th.color||'#a78bfa',phaseOffset:Math.random()*Math.PI*2,x:px,y:py});
+        MEMORY_NODES.push({id:th.id,clusterId:th.cluster_id,thesis:th.thesis,confidence:th.confidence,explanation:th.explanation,pattern:th.pattern,suggested_question:th.suggested_question,source_ids:th.source_task_ids||[],history:th.history||[],challenge:th.challenge||null,signals:th.signals||null,status:th.status||'active',accuracy:(th.accuracy==null?null:th.accuracy),signals_hit:th.signals_hit||0,signals_total:th.signals_total||0,created_at:th.created_at?new Date(th.created_at):null,color:th.color||'#a78bfa',phaseOffset:Math.random()*Math.PI*2,x:px,y:py});
       });
       MEMORY_NODES.forEach(computeConfDelta);
       (pre.actions||[]).forEach((ac)=>{
