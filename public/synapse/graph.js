@@ -1970,9 +1970,10 @@ async function runTask(){
     openDrawer(task);
 
     // Check for memory node (async, non-blocking).
-    // Runs every 2 tasks instead of every task: theses still emerge (at most one
-    // question later), but the cost of the memory call is halved.
-    if(TASKS.length % 2 === 0){
+    // Gira a ogni nuova task da >= 5: con un numero dispari di domande il vecchio
+    // `% 2 === 0` saltava il re-clustering finale (es. 7 domande → tesi mai ricontrollate).
+    // memCheckPending evita comunque chiamate concorrenti.
+    if(TASKS.length >= 5){
       setTimeout(()=>checkMemoryNode(),800);
     }
 

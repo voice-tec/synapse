@@ -20,17 +20,26 @@ export function extractJSON(text: string) {
   if (s !== -1 && e !== -1 && e > s) {
     try { return JSON.parse(t.slice(s, e + 1)); } catch (err) {}
   }
-  // Recovery for truncated JSON (model hit max_tokens): close open brackets/strings
+  // Recovery for truncated JSON (model hit max_tokens): chiude parentesi/stringhe aperte.
+  // Il taglio può cadere dentro array annidati (es. signals[...]): proviamo a tagliare
+  // progressivamente l'ultimo elemento incompleto finché un ribilanciamento parsa.
   if (s !== -1) {
     let frag = t.slice(s);
-    try {
-      frag = frag.replace(/,\s*"[^"]*$/, '').replace(/:\s*"[^"]*$/, ':null').replace(/,\s*$/, '');
-      const opens = (frag.match(/\{/g) || []).length, closes = (frag.match(/\}/g) || []).length;
-      const opensA = (frag.match(/\[/g) || []).length, closesA = (frag.match(/\]/g) || []).length;
-      frag += ']'.repeat(Math.max(0, opensA - closesA));
-      frag += '}'.repeat(Math.max(0, opens - closes));
-      return JSON.parse(frag);
-    } catch (err) {}
+    // Rimuove la coda parziale ovvia: campo/valore stringa o virgola finale tronchi.
+    frag = frag.replace(/,\s*"[^"]*$/, '').replace(/:\s*"[^"]*$/, ':null').replace(/,\s*$/, '');
+    const balance = (str: string) => {
+      const opens = (str.match(/\{/g) || []).length, closes = (str.match(/\}/g) || []).length;
+      const opensA = (str.match(/\[/g) || []).length, closesA = (str.match(/\]/g) || []).length;
+      return str + ']'.repeat(Math.max(0, opensA - closesA)) + '}'.repeat(Math.max(0, opens - closes));
+    };
+    for (let attempt = 0; attempt < 12; attempt++) {
+      try { return JSON.parse(balance(frag)); } catch (err) {}
+      // Scarta l'ultimo elemento incompleto: torna all'ultima virgola di top-level
+      // del frammento e taglia da lì, poi riprova a ribilanciare.
+      const lastComma = frag.lastIndexOf(',');
+      if (lastComma === -1) break;
+      frag = frag.slice(0, lastComma);
+    }
   }
   throw new Error('JSON non parsabile: ' + t.slice(0, 120));
 }
