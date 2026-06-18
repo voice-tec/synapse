@@ -6,6 +6,43 @@ import { FRED_CATALOG } from '@/lib/fred';
 
 const FRED_KEYS = Object.entries(FRED_CATALOG).map(([id, m]) => `${id} (${m.label})`).join(', ');
 
+const DEDUP_SYS = `Sei un giudice di deduplicazione di tesi d'investimento. Ricevi le TESI ESISTENTI (con id) e delle TESI CANDIDATE nuove.
+Per ogni candidata, decidi se esprime lo STESSO TEMA d'investimento di una esistente (anche se riformulata o vista da un'altra angolazione) — in tal caso è un doppione.
+ATTENZIONE: tesi causalmente collegate ma DISTINTE NON sono doppioni (es. "inflazione in calo" e "la FED taglierà i tassi" sono tesi diverse; "Nvidia trainata dall'AI" e "il settore semiconduttori cresce" possono essere lo stesso tema).
+Rispondi SOLO con JSON: {"verdicts":[{"candidate_index": <indice 0-based>, "duplicate_of": "<id esistente se doppione, altrimenti null>"}]}`;
+
+// Secondo passaggio anti-doppione: solo per i cluster "new", chiede a Sonnet
+// (giudizio semantico, non distanza vettoriale — gli embedding non separano i
+// doppioni dalle tesi distinte ma correlate) se sono doppioni di una esistente.
+// In tal caso li declassa a "update" col suo id, così confluiscono invece di
+// creare un nodo nuovo. Best-effort: su errore NON tocca i cluster (fallback al
+// dedup Haiku + Jaccard lato client). Gira solo se ci sono "new" ed esistenti.
+async function dedupClusters(clusters: any[], theses: any[]) {
+  const existing = (theses || []).filter((t: any) => t?.thesis && t?.id);
+  const news = (clusters || []).filter((c: any) => c?.action === 'new' && c?.thesis);
+  if (!existing.length || !news.length) return;
+  try {
+    const existingBlock = existing.map((t: any) => `[${t.id}] "${t.thesis}"`).join('\n');
+    const candidatesBlock = news.map((c: any, i: number) => `${i}: "${c.thesis}"`).join('\n');
+    const { json } = await askClaudeJSON({
+      model: 'claude-sonnet-4-6',
+      system: DEDUP_SYS,
+      user: `TESI ESISTENTI:\n${existingBlock}\n\nTESI CANDIDATE:\n${candidatesBlock}`,
+      maxTokens: 1000,
+    });
+    const validIds = new Set(existing.map((t: any) => t.id));
+    for (const v of json?.verdicts || []) {
+      const cluster = news[v.candidate_index];
+      if (cluster && v.duplicate_of && validIds.has(v.duplicate_of)) {
+        cluster.action = 'update';
+        cluster.existing_id = v.duplicate_of;
+      }
+    }
+  } catch (err: any) {
+    console.error('[api/memory] dedup pass skipped:', err?.message);
+  }
+}
+
 const SYS = `Sei il motore di analisi di Synapse. Ti vengono date: (1) le TESI GIÀ ESISTENTI dell'utente, (2) le sue task finanziarie.
 Analizza le task e identifica i CLUSTER SEMANTICI DISTINTI — gruppi di domande che esplorano tesi diverse.
 
@@ -75,6 +112,7 @@ export async function POST(req: NextRequest) {
       maxTokens: 8000,
     });
     await bumpAiCall(supabase, user.id, gate.used);
+    if (parsed?.clusters?.length) await dedupClusters(parsed.clusters, theses);
     return NextResponse.json({ result: parsed });
   } catch (err: any) {
     // Il clustering è arricchimento di background: un suo fallimento NON deve mai
