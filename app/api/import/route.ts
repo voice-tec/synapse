@@ -4,34 +4,46 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { wordOverlap } from '@/lib/text';
 import { randomBytes } from 'crypto';
 
-// Importa una tesi vista in un grafo condiviso (/g/[token]) nel proprio grafo,
-// come NUOVA tesi con track record azzerato: i segnali dell'autore vengono
-// copiati senza fired/checked_at e ri-valutati da /api/refresh sui dati e sulle
-// date dell'importatore (copiare l'accuratezza altrui sarebbe privo di senso).
+// Importa una tesi nel proprio grafo come NUOVA tesi con track record azzerato:
+// si copiano solo i predicati (segnali senza fired/checked_at), accuracy null e
+// created_at oggi, così /api/refresh li ri-valuta sui dati e sulle date
+// dell'importatore (l'accuratezza dell'autore, ancorata alle SUE date, sarebbe
+// fuorviante). Due sorgenti:
+//  - { thesisId }        → una tesi pubblica del marketplace
+//  - { token, clusterId} → una tesi vista in un grafo condiviso /g/[token]
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
 
-  const { token, clusterId } = await req.json();
-  if (!token || typeof token !== 'string' || token.length > 64 || !clusterId) {
+  const { token, clusterId, thesisId } = await req.json();
+  const admin = createAdminClient();
+
+  // Risolvi la tesi sorgente + il suo proprietario.
+  let src: any = null;
+  let ownerId: string | null = null;
+  if (thesisId) {
+    const { data: th } = await admin
+      .from('theses')
+      .select('user_id, thesis, confidence, explanation, signals, color, is_public')
+      .eq('id', thesisId)
+      .maybeSingle();
+    if (!th || !th.is_public) return NextResponse.json({ error: 'not_found' }, { status: 404 });
+    src = th; ownerId = th.user_id;
+  } else if (token && clusterId) {
+    if (typeof token !== 'string' || token.length > 64) {
+      return NextResponse.json({ error: 'bad_request' }, { status: 400 });
+    }
+    const { data: shared } = await admin
+      .from('shared_graphs').select('snapshot, user_id').eq('token', token).maybeSingle();
+    if (!shared) return NextResponse.json({ error: 'not_found' }, { status: 404 });
+    src = (shared.snapshot?.theses || []).find((t: any) => t.clusterId === clusterId);
+    ownerId = shared.user_id;
+  } else {
     return NextResponse.json({ error: 'bad_request' }, { status: 400 });
   }
-
-  // Snapshot via service role (la tabella non è leggibile da altri utenti).
-  const admin = createAdminClient();
-  const { data: shared } = await admin
-    .from('shared_graphs')
-    .select('snapshot, user_id')
-    .eq('token', token)
-    .maybeSingle();
-  if (!shared) return NextResponse.json({ error: 'not_found' }, { status: 404 });
-  if (shared.user_id === user.id) {
-    return NextResponse.json({ error: 'own_graph' }, { status: 400 });
-  }
-
-  const src = (shared.snapshot?.theses || []).find((t: any) => t.clusterId === clusterId);
   if (!src?.thesis) return NextResponse.json({ error: 'thesis_not_found' }, { status: 404 });
+  if (ownerId === user.id) return NextResponse.json({ error: 'own_thesis' }, { status: 400 });
 
   // Dedup vs le tesi del chiamante.
   const { data: mine } = await supabase.from('theses').select('id, thesis').eq('user_id', user.id);
@@ -69,7 +81,7 @@ export async function POST(req: NextRequest) {
       signals_hit: 0,
       signals_total: 0,
       color: src.color || '#a78bfa',
-      imported_from_token: token,
+      imported_from_token: token || null,
     })
     .select('id')
     .single();

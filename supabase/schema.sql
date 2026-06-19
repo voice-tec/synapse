@@ -63,6 +63,7 @@ create table theses (
   pos_x float,
   pos_y float,
   imported_from_token text,                    -- token del grafo da cui è stata importata (null se nativa)
+  is_public boolean default false,             -- pubblicata nel marketplace (opt-in per tesi)
   updated_at timestamptz default now(),
   created_at timestamptz default now()
 );

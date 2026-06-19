@@ -1262,6 +1262,17 @@ function openMemoryDrawer(mn){
         </div>
       </div>
     </div>`;
+  // Pubblicazione nel marketplace (opt-in per tesi). Solo tesi native, non
+  // quelle a loro volta importate (evita ricircolo).
+  const pub=!!mn.is_public;
+  const publishHTML=`
+    <div>
+      <div class="section-lbl">marketplace</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg3);border:1px solid ${pub?color+'55':'var(--border)'};border-radius:10px;padding:10px 14px">
+        <div style="font-size:11px;color:var(--text2);line-height:1.5">${pub?'Pubblica: altri possono trovarla e importarla':'Privata: visibile solo a te'}</div>
+        <button id="mem-publish-${mn.id}" data-cluster="${mn.clusterId}" data-pub="${pub?1:0}" style="flex-shrink:0;background:${pub?color:'transparent'};color:${pub?'#08080a':'var(--text2)'};border:1px solid ${pub?color:'var(--border)'};border-radius:8px;padding:6px 12px;font-size:11px;font-weight:500;cursor:pointer">${pub?'pubblicata ✓':'pubblica'}</button>
+      </div>
+    </div>`;
   const sg=mn.signals;
   const signalsHTML=(sg&&(((sg.confirm||[]).length)||((sg.invalidate||[]).length)))?`
     <div>
@@ -1284,6 +1295,7 @@ function openMemoryDrawer(mn){
       <div class="memory-thesis" style="border-left-color:${color}">"${mn.thesis}"</div>
     </div>
     ${trackHTML}
+    ${publishHTML}
     ${statHTML}
     <div>
       <div class="section-lbl">confidenza</div>
@@ -1332,6 +1344,17 @@ function openMemoryDrawer(mn){
     if(sq&&mn.suggested_question)sq.addEventListener('click',()=>setQAndClose(mn.suggested_question, mn.clusterId));
     document.querySelectorAll('.mem-source-pill').forEach(el=>{
       el.addEventListener('click',()=>jumpToNode(el.dataset.id));
+    });
+    const pubBtn=document.getElementById(`mem-publish-${mn.id}`);
+    if(pubBtn)pubBtn.addEventListener('click',async()=>{
+      const next=!mn.is_public;
+      pubBtn.disabled=true;pubBtn.textContent='…';
+      try{
+        const r=await fetch('/api/market/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clusterId:mn.clusterId,public:next})});
+        if(!r.ok)throw 0;
+        mn.is_public=next;
+        openMemoryDrawer(mn); // re-render con lo stato aggiornato
+      }catch(e){pubBtn.disabled=false;pubBtn.textContent='riprova';}
     });
     renderPortfolioArea(mn);
     renderChallengeArea(mn);
@@ -2218,7 +2241,7 @@ document.getElementById('qi').addEventListener('input',function(){this.style.hei
         const fallbackY=graphH/2+Math.sin(ang)*ringR;
         const px = isMobile ? fallbackX : (th.pos_x||fallbackX);
         const py = isMobile ? fallbackY : (th.pos_y||fallbackY);
-        MEMORY_NODES.push({id:th.id,clusterId:th.cluster_id,thesis:th.thesis,confidence:th.confidence,explanation:th.explanation,pattern:th.pattern,suggested_question:th.suggested_question,source_ids:th.source_task_ids||[],history:th.history||[],challenge:th.challenge||null,signals:th.signals||null,status:th.status||'active',accuracy:(th.accuracy==null?null:th.accuracy),signals_hit:th.signals_hit||0,signals_total:th.signals_total||0,created_at:th.created_at?new Date(th.created_at):null,color:th.color||'#a78bfa',phaseOffset:Math.random()*Math.PI*2,x:px,y:py});
+        MEMORY_NODES.push({id:th.id,clusterId:th.cluster_id,thesis:th.thesis,confidence:th.confidence,explanation:th.explanation,pattern:th.pattern,suggested_question:th.suggested_question,source_ids:th.source_task_ids||[],history:th.history||[],challenge:th.challenge||null,signals:th.signals||null,status:th.status||'active',accuracy:(th.accuracy==null?null:th.accuracy),signals_hit:th.signals_hit||0,signals_total:th.signals_total||0,is_public:th.is_public||false,created_at:th.created_at?new Date(th.created_at):null,color:th.color||'#a78bfa',phaseOffset:Math.random()*Math.PI*2,x:px,y:py});
       });
       MEMORY_NODES.forEach(computeConfDelta);
       (pre.actions||[]).forEach((ac)=>{
