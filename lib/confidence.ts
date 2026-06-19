@@ -110,12 +110,21 @@ export function computeConfidence(base: number, confirmFired: number, invalidate
 }
 
 // Track record: esito della tesi DEDOTTO dai segnali reali scattati (zero attrito).
-//  - status: confermata se la tesi tiene alta e solo i confirm sono scattati;
-//    invalidata se prevalgono gli invalidate e la confidence è crollata; altrimenti attiva.
-//  - accuracy: quota di segnali "giusti" tra quelli scattati (confirm vs invalidate);
-//    null finché nessun segnale testabile è scattato (niente verdetto prematuro).
-// Soglie centralizzate qui per essere ritoccabili.
+// BARRA RIGOROSA: un verdetto (confermata/invalidata) non è una fotografia di un
+// giorno fortunato. Una tesi ha al più ~2 confirm e ~2 invalidate testabili, quindi
+// il rigore non sta nei grandi numeri ma nel pretendere:
+//   - un CAMPIONE MINIMO: niente verdetto né accuratezza con meno di MIN_FIRED
+//     segnali scattati (1 segnale solo = ancora 'in corso');
+//   - CONFERME MULTIPLE: confermata richiede ≥2 confirm scattati (due conferme
+//     indipendenti, non una), confidence con margine e ZERO invalidate scattati;
+//   - INVALIDAZIONE NETTA: ≥2 invalidate scattati, nessun confirm, confidence crollata.
+// Conseguenza voluta: "confermata ✓" è difficile da ottenere e non gonfiabile con
+// un singolo segnale facile (requisito anti-gaming per un futuro marketplace).
 export type ThesisStatus = 'active' | 'confirmed' | 'invalidated';
+
+const MIN_FIRED = 2;          // campione minimo di segnali scattati per un verdetto/accuratezza
+const CONF_CONFIRM = 72;      // confidence minima per confermare (margine sopra il neutro)
+const CONF_INVALIDATE = 45;   // confidence sotto cui si può invalidare
 
 export function deriveOutcome(
   confirmFired: number,
@@ -124,9 +133,13 @@ export function deriveOutcome(
   confidence: number,
 ): { status: ThesisStatus; accuracy: number | null; signalsHit: number; signalsTotal: number } {
   const totalFired = confirmFired + invalidateFired;
-  const accuracy = totalFired > 0 ? Math.round((confirmFired / totalFired) * 100) : null;
+  // Accuratezza solo con campione sufficiente: niente % su n=1 (sarebbe 0% o 100% a caso).
+  const accuracy = totalFired >= MIN_FIRED ? Math.round((confirmFired / totalFired) * 100) : null;
   let status: ThesisStatus = 'active';
-  if (confidence >= 68 && confirmFired >= 1 && invalidateFired === 0) status = 'confirmed';
-  else if (invalidateFired > confirmFired && confidence < 50) status = 'invalidated';
+  if (confidence >= CONF_CONFIRM && confirmFired >= MIN_FIRED && invalidateFired === 0) {
+    status = 'confirmed';
+  } else if (invalidateFired >= MIN_FIRED && confirmFired === 0 && confidence < CONF_INVALIDATE) {
+    status = 'invalidated';
+  }
   return { status, accuracy, signalsHit: confirmFired, signalsTotal: testableTotal };
 }

@@ -116,27 +116,39 @@ describe('evalSignals (dato disponibile vs mancante, deps iniettate)', () => {
   });
 });
 
-describe('deriveOutcome', () => {
+describe('deriveOutcome (barra rigorosa)', () => {
   it('nessun segnale scattato → attiva, accuracy null', () => {
     expect(deriveOutcome(0, 0, 2, 60)).toEqual({ status: 'active', accuracy: null, signalsHit: 0, signalsTotal: 2 });
   });
-  it('confidence alta + solo confirm → confermata', () => {
+  it('due confirm + confidence ≥72 + zero invalidate → confermata', () => {
     const r = deriveOutcome(2, 0, 2, 72);
     expect(r.status).toBe('confirmed');
     expect(r.accuracy).toBe(100);
   });
-  it('confidence non alta nonostante i confirm → resta attiva', () => {
-    expect(deriveOutcome(1, 0, 1, 60).status).toBe('active');
+  it('UN solo confirm anche con confidence altissima → resta attiva (campione insufficiente)', () => {
+    expect(deriveOutcome(1, 0, 1, 90).status).toBe('active');
   });
-  it('invalidate prevalenti + confidence crollata → invalidata', () => {
+  it('due confirm ma confidence sotto soglia → resta attiva', () => {
+    expect(deriveOutcome(2, 0, 2, 70).status).toBe('active');
+  });
+  it('confirm scattati ma anche un invalidate → non confermata', () => {
+    expect(deriveOutcome(2, 1, 3, 80).status).toBe('active');
+  });
+  it('due invalidate + zero confirm + confidence crollata → invalidata', () => {
     const r = deriveOutcome(0, 2, 2, 40);
     expect(r.status).toBe('invalidated');
     expect(r.accuracy).toBe(0);
   });
-  it('invalidate prevalenti ma confidence ancora alta → attiva (non chiude)', () => {
-    expect(deriveOutcome(1, 2, 3, 70).status).toBe('active');
+  it('UN solo invalidate → resta attiva (campione insufficiente)', () => {
+    expect(deriveOutcome(0, 1, 1, 30).status).toBe('active');
   });
-  it('accuracy è la quota di confirm tra gli scattati', () => {
+  it('invalidate ma anche un confirm scattato → non invalidata', () => {
+    expect(deriveOutcome(1, 2, 3, 30).status).toBe('active');
+  });
+  it('accuracy null finché i segnali scattati sono meno di 2', () => {
+    expect(deriveOutcome(1, 0, 2, 80).accuracy).toBeNull();
+  });
+  it('accuracy è la quota di confirm tra gli scattati (campione ≥2)', () => {
     expect(deriveOutcome(3, 1, 4, 65).accuracy).toBe(75);
   });
 });
