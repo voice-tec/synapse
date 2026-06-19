@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
     };
     if (outcome.status !== 'active' && th.status === 'active') update.closed_at = new Date().toISOString();
     await supabase.from('theses').update(update).eq('id', th.id);
-    updatedTheses.push({ id: th.id, cluster_id: th.cluster_id, signals, status: outcome.status, accuracy: outcome.accuracy, signals_hit: outcome.signalsHit, signals_total: outcome.signalsTotal });
+    updatedTheses.push({ id: th.id, cluster_id: th.cluster_id, confidence: th.confidence, signals, status: outcome.status, accuracy: outcome.accuracy, signals_hit: outcome.signalsHit, signals_total: outcome.signalsTotal });
   }
 
   // ── 3. Performance portafogli — prezzi gratuiti, sincrono ──

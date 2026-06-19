@@ -74,7 +74,7 @@ async function refreshStaleData(){
       // Match per id DB (tesi caricate dal preload) o per clusterId (tesi emerse
       // in questa sessione, il cui id locale è 'mem_…' e non l'uuid del DB).
       const mn=MEMORY_NODES.find(m=>m.id===t.id||(t.cluster_id&&m.clusterId===t.cluster_id));
-      if(mn){ mn.confidence=t.confidence; if(t.history) mn.history=t.history; if(t.signals) mn.signals=t.signals; if(t.status) mn.status=t.status; if('accuracy' in t) mn.accuracy=t.accuracy; if('signals_hit' in t) mn.signals_hit=t.signals_hit; if('signals_total' in t) mn.signals_total=t.signals_total; computeConfDelta(mn); touched++; }
+      if(mn){ if(t.confidence!=null) mn.confidence=t.confidence; if(t.history) mn.history=t.history; if(t.signals) mn.signals=t.signals; if(t.status) mn.status=t.status; if('accuracy' in t) mn.accuracy=t.accuracy; if('signals_hit' in t) mn.signals_hit=t.signals_hit; if('signals_total' in t) mn.signals_total=t.signals_total; computeConfDelta(mn); touched++; }
     });
     (json.updatedActions||[]).forEach(a=>{
       const an=ACTION_NODES.find(x=>x.id===a.id);
