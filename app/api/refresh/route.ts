@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
           if (closing) update.closed_at = new Date().toISOString();
 
           await supabase.from('theses').update(update).eq('id', th.id);
-          updatedTheses.push({ id: th.id, confidence: newConf, signals, history, status: outcome.status, accuracy: outcome.accuracy, signals_hit: outcome.signalsHit, signals_total: outcome.signalsTotal });
+          updatedTheses.push({ id: th.id, cluster_id: th.cluster_id, confidence: newConf, signals, history, status: outcome.status, accuracy: outcome.accuracy, signals_hit: outcome.signalsHit, signals_total: outcome.signalsTotal });
         }
         await supabase.from('profiles').update({ refresh_batch_id: null }).eq('id', user.id);
         status = 'ingested';
@@ -137,6 +137,32 @@ export async function POST(req: NextRequest) {
         console.warn('batch submit failed', e.message);
       }
     }
+  }
+
+  // ── 2b. Valutazione SEGNALI immediata (gratis, niente AI) per tesi mai valutate ──
+  // Senza questa una tesi nuova mostra 0/0 e "in corso" finché non diventa stantia
+  // (7 giorni) e parte il batch AI. evalSignals usa solo dati FRED/prezzi (gratis) e
+  // popola subito signals_hit/total/status/accuracy. NON tocca updated_at: la
+  // staleness per la nota AI resta intatta. Una volta che signals_total > 0 la tesi
+  // non rientra più qui (re-scoring affidato al batch settimanale).
+  const { data: unscored } = await supabase
+    .from('theses')
+    .select('id, cluster_id, signals, created_at, confidence, status')
+    .eq('user_id', user.id)
+    .eq('signals_total', 0)
+    .limit(THESES_PER_REFRESH);
+  for (const th of unscored || []) {
+    if (!th.signals) continue;
+    const { signals, confirmFired, invalidateFired, testableTotal } = await evalSignals(th.signals, th.created_at);
+    if (testableTotal === 0) continue; // niente di testabile: lascia 0/0, niente update inutile
+    const outcome = deriveOutcome(confirmFired, invalidateFired, testableTotal, th.confidence ?? 0);
+    const update: any = {
+      signals, status: outcome.status, accuracy: outcome.accuracy,
+      signals_hit: outcome.signalsHit, signals_total: outcome.signalsTotal,
+    };
+    if (outcome.status !== 'active' && th.status === 'active') update.closed_at = new Date().toISOString();
+    await supabase.from('theses').update(update).eq('id', th.id);
+    updatedTheses.push({ id: th.id, cluster_id: th.cluster_id, signals, status: outcome.status, accuracy: outcome.accuracy, signals_hit: outcome.signalsHit, signals_total: outcome.signalsTotal });
   }
 
   // ── 3. Performance portafogli — prezzi gratuiti, sincrono ──
