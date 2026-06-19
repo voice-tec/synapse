@@ -33,41 +33,49 @@ export default function SynapsePage() {
         document.head.appendChild(styleEl);
       }
 
+      // Lancia se l'insert del task fallisce: chi chiama (persistTask in graph.js)
+      // lo intercetta e avvisa l'utente, così la domanda non si perde in silenzio.
+      // L'insert delle connessioni è invece best-effort: se fallisce, il task è
+      // comunque salvato (lo swap dell'id è già avvenuto) — si perdono solo gli
+      // archi, non il nodo.
       (window as any).__synSaveTask = async (task: any) => {
-        try {
-          const { data: saved } = await supabase.from('tasks').insert({
-            user_id: user.id, raw_query: task.raw_query, intent: task.intent,
-            fingerprint: task.fingerprint, output: task.output,
-            origin_kind: task.originKind || null, origin_ref: task.originRef || null,
-          }).select().single();
-          if (saved) {
-            const oldId = task.id; task.id = saved.id;
-            const NODES = (window as any).NODES;
-            if (NODES) { const n = NODES.find((x: any) => x.id === oldId); if (n) n.id = saved.id; }
-            const EDGES = (window as any).EDGES;
-            if (EDGES) EDGES.forEach((e: any) => { if (e.from === oldId) e.from = saved.id; if (e.to === oldId) e.to = saved.id; });
-            if (task.connections?.length) {
-              await supabase.from('connections').insert(task.connections.map((c: any) => ({
-                user_id: user.id, task_from: saved.id, task_to: c.task_id, type: c.type, score: c.score,
-              })));
-            }
-          }
-        } catch (e) { console.warn('save task failed', e); }
+        const { data: saved, error } = await supabase.from('tasks').insert({
+          user_id: user.id, raw_query: task.raw_query, intent: task.intent,
+          fingerprint: task.fingerprint, output: task.output,
+          origin_kind: task.originKind || null, origin_ref: task.originRef || null,
+        }).select().single();
+        if (error || !saved) throw error || new Error('insert task fallito');
+        const oldId = task.id; task.id = saved.id;
+        const NODES = (window as any).NODES;
+        if (NODES) { const n = NODES.find((x: any) => x.id === oldId); if (n) n.id = saved.id; }
+        const EDGES = (window as any).EDGES;
+        if (EDGES) EDGES.forEach((e: any) => { if (e.from === oldId) e.from = saved.id; if (e.to === oldId) e.to = saved.id; });
+        if (task.connections?.length) {
+          try {
+            await supabase.from('connections').insert(task.connections.map((c: any) => ({
+              user_id: user.id, task_from: saved.id, task_to: c.task_id, type: c.type, score: c.score,
+            })));
+          } catch (e) { console.warn('save connections failed', e); }
+        }
       };
 
+      // Lancia in caso d'errore: persistThesis in graph.js intercetta e segnala.
+      // NB: signals_total/hit/status/accuracy NON si scrivono qui — restano i
+      // default DB (0/active/null) finché /api/refresh non valuta i segnali sui
+      // dati reali. signals_total=0 è il marcatore "non ancora valutata".
       (window as any).__synSaveThesis = async (mn: any) => {
-        try {
-          const { data: existing } = await supabase.from('theses').select('id').eq('user_id', user.id).eq('cluster_id', mn.clusterId).maybeSingle();
-          const payload = {
-            user_id: user.id, cluster_id: mn.clusterId, thesis: mn.thesis, confidence: mn.confidence,
-            explanation: mn.explanation, pattern: mn.pattern, suggested_question: mn.suggested_question,
-            signals: mn.signals || null,
-            source_task_ids: mn.source_ids, history: mn.history, color: mn.color, pos_x: mn.x, pos_y: mn.y,
-            updated_at: new Date().toISOString(),
-          };
-          if (existing) await supabase.from('theses').update(payload).eq('id', existing.id);
-          else await supabase.from('theses').insert(payload);
-        } catch (e) { console.warn('save thesis failed', e); }
+        const { data: existing } = await supabase.from('theses').select('id').eq('user_id', user.id).eq('cluster_id', mn.clusterId).maybeSingle();
+        const payload = {
+          user_id: user.id, cluster_id: mn.clusterId, thesis: mn.thesis, confidence: mn.confidence,
+          explanation: mn.explanation, pattern: mn.pattern, suggested_question: mn.suggested_question,
+          signals: mn.signals || null,
+          source_task_ids: mn.source_ids, history: mn.history, color: mn.color, pos_x: mn.x, pos_y: mn.y,
+          updated_at: new Date().toISOString(),
+        };
+        const { error } = existing
+          ? await supabase.from('theses').update(payload).eq('id', existing.id)
+          : await supabase.from('theses').insert(payload);
+        if (error) throw error;
       };
 
       (window as any).__synSaveAction = async (a: any) => {
@@ -89,6 +97,16 @@ export default function SynapsePage() {
           await supabase.from('connections').delete().or(`task_from.eq.${taskId},task_to.eq.${taskId}`);
           await supabase.from('tasks').delete().eq('id', taskId);
         } catch (e) { console.warn('delete task failed', e); }
+      };
+
+      // Elimina una tesi rimasta orfana (zero task sorgenti dopo una delete) e la
+      // sua eventuale azione. source_task_ids è uuid[] senza FK cascade, quindi la
+      // riconciliazione è esplicita lato app.
+      (window as any).__synDeleteThesis = async (clusterId: string) => {
+        try {
+          await supabase.from('actions').delete().eq('user_id', user.id).eq('cluster_id', clusterId);
+          await supabase.from('theses').delete().eq('user_id', user.id).eq('cluster_id', clusterId);
+        } catch (e) { console.warn('delete thesis failed', e); }
       };
 
       const { data: tasks } = await supabase.from('tasks').select('*').eq('user_id', user.id).order('created_at');

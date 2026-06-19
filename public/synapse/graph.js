@@ -15,11 +15,35 @@ function updateUsageLabel(){
   if(el && u){ el.textContent = u.plan + ' · ' + (u.plan==='free' ? (u.used+'/'+u.limit+' task') : 'illimitato'); }
 }
 // Persistence — saves tasks/connections/theses to Supabase via the page's saver
+// Un id è "persistito" solo se è un UUID (ha i trattini); gli id temporanei
+// generati lato client sono 't'+timestamp (niente trattini). Serve per non
+// salvare tesi che referenziano task non ancora salvate su Supabase.
+function isPersistedId(id){ return typeof id==='string' && id.includes('-'); }
+
+// Ritornano true/false invece di lasciar propagare l'errore: chi chiama decide
+// se avvisare l'utente. Una task non salvata sparirebbe al reload (perdita dati).
 async function persistTask(task){
-  if(window.__synSaveTask) await window.__synSaveTask(task);
+  if(!window.__synSaveTask) return true;
+  try{ await window.__synSaveTask(task); return true; }
+  catch(e){ console.warn('save task failed', e); return false; }
 }
 async function persistThesis(mn){
-  if(window.__synSaveThesis) await window.__synSaveThesis(mn);
+  // Non persistere una tesi le cui fonti non sono ancora salvate: finirebbero id
+  // temporanei dentro source_task_ids → pill sorgente rotte per sempre. Riprova
+  // al prossimo ciclo (refresh / nuova fonte), quando gli id saranno reali.
+  if(mn.source_ids && mn.source_ids.some(id=>!isPersistedId(id))) return false;
+  if(!window.__synSaveThesis) return true;
+  try{ await window.__synSaveThesis(mn); return true; }
+  catch(e){ console.warn('save thesis failed', e); return false; }
+}
+// Banner di notifica riutilizzabile (#mem-notif). variant 'error' lo colora rosso.
+function showNotif(text, ms, variant){
+  const notif=document.getElementById('mem-notif');
+  if(!notif) return;
+  const txt=document.getElementById('mem-notif-text');
+  if(txt){ txt.textContent=text; txt.style.color = variant==='error' ? 'var(--red)' : ''; }
+  notif.classList.add('show');
+  setTimeout(()=>notif.classList.remove('show'), ms||7000);
 }
 // Badge delta confidenza: visibile finché l'utente non apre la tesi.
 // Il "visto" è in localStorage, così non risorge a ogni reload.
@@ -1067,12 +1091,25 @@ async function deleteTask(taskId){
   EDGES = EDGES.filter(e=>e.from!==taskId && e.to!==taskId);
   // Remove this task from other tasks' connections
   TASKS.forEach(t=>{ if(t.connections) t.connections = t.connections.filter(c=>c.task_id!==taskId); });
-  // Remove from memory node sources
-  MEMORY_NODES.forEach(mn=>{ if(mn.source_ids) mn.source_ids = mn.source_ids.filter(id=>id!==taskId); });
+  // Rimuovi il task dalle fonti delle tesi, tracciando quali tesi sono toccate
+  // per riconciliarle nel DB (source_task_ids è uuid[] senza FK cascade).
+  const affected=[];
+  MEMORY_NODES.forEach(mn=>{ if(mn.source_ids && mn.source_ids.includes(taskId)){ mn.source_ids = mn.source_ids.filter(id=>id!==taskId); affected.push(mn); } });
   closeDrawer();
   updateStats();
   // Persist deletion
   if(window.__synDeleteTask) await window.__synDeleteTask(taskId);
+  // Riconcilia le tesi toccate: orfane (zero fonti) → elimina tesi+azione;
+  // altrimenti ri-salva con le fonti aggiornate (niente id morti nel DB).
+  for(const mn of affected){
+    if(mn.source_ids.length===0){
+      if(window.__synDeleteThesis) await window.__synDeleteThesis(mn.clusterId);
+      MEMORY_NODES = MEMORY_NODES.filter(x=>x!==mn);
+      ACTION_NODES = ACTION_NODES.filter(a=>a.clusterId!==mn.clusterId);
+    } else {
+      await persistThesis(mn);
+    }
+  }
 }
 
 const ALLOC_PALETTE=['#34d399','#5b9cf6','#a78bfa','#f0a030','#f472b6','#2ecf98','#60a5fa'];
@@ -1687,7 +1724,9 @@ async function checkMemoryNode(){
           existing.explanation=cluster.explanation;
           existing.pattern=cluster.pattern;
           if(cluster.signals) existing.signals=cluster.signals;
-          existing.source_ids=sourceIds;
+          // Unione (non sostituzione): Haiku cita max 6 source_indices, quindi
+          // assegnare direttamente perderebbe fonti su tesi con più di 6 task.
+          existing.source_ids=Array.from(new Set([...(existing.source_ids||[]),...sourceIds]));
           if(existing.suggested_question===null) existing.suggested_question=cluster.suggested_question;
           persistThesis(existing);
         }
@@ -1992,7 +2031,6 @@ async function runTask(){
     // — keeps input tokens bounded as the graph grows.
     const recentTasks = TASKS.slice(-6);
     const prevCtx=recentTasks.length>0?`\n\nPRIOR TASKS:\n${recentTasks.map((t,i)=>`[${i+1}] "${t.raw_query}" | type:${t.intent?.analysis_type}`).join('\n')}`:'';
-    // Static system prompt — cacheable (never changes)
     const res = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2031,7 +2069,11 @@ async function runTask(){
       // sovrascritture del clustering). originRef=clusterId basta: loop() disegna l'arco.
     }
     pendingOrigin=null;
-    await persistTask(task);
+    const saved=await persistTask(task);
+    if(!saved){
+      task.unsaved=true;
+      showNotif('⚠ salvataggio non riuscito — la domanda potrebbe non essere conservata. Controlla la connessione e riprova.', 9000, 'error');
+    }
 
     updateStats();
     try{ if(window.posthog) window.posthog.capture('question_analyzed',{analysis_type:task.intent?.analysis_type, total_tasks:TASKS.length}); }catch(e){}
