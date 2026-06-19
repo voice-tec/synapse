@@ -1,5 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { authorRep } from './reputation';
+import { authorRep, authorRef } from './reputation';
+
+describe('authorRef', () => {
+  it('deterministico: stesso uid → stesso hash di 8 char', () => {
+    const a = authorRef('user-123'), b = authorRef('user-123');
+    expect(a).toBe(b);
+    expect(a).toHaveLength(8);
+  });
+  it('uid diversi → hash diversi', () => {
+    expect(authorRef('user-a')).not.toBe(authorRef('user-b'));
+  });
+});
 
 describe('authorRep', () => {
   it('aggrega confermate/invalidate e accuratezza media', () => {

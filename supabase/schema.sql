@@ -8,6 +8,7 @@ create table profiles (
   id uuid references auth.users on delete cascade primary key,
   email text,
   plan text default 'free',                    -- free | pro | team
+  display_name text,                           -- nome pubblico opt-in (marketplace); null = anonimo
   tasks_this_month int default 0,
   ai_calls_this_month int default 0,           -- memory/suggest/portfolio/challenge
   refresh_batch_id text,                       -- batch Anthropic pendente per il refresh tesi
@@ -63,6 +64,7 @@ create table theses (
   pos_x float,
   pos_y float,
   imported_from_token text,                    -- token del grafo da cui è stata importata (null se nativa)
+  imported_from_author text,                   -- hash opaco dell'autore sorgente (badge "importata")
   is_public boolean default false,             -- pubblicata nel marketplace (opt-in per tesi)
   updated_at timestamptz default now(),
   created_at timestamptz default now()

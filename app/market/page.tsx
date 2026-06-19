@@ -9,7 +9,7 @@ type Item = {
   id: string; thesis: string; confidence: number; explanation: string | null;
   status: string; created_at: string;
   signals: { confirm: string[]; invalidate: string[] } | null;
-  author: string; authorRep: Rep;
+  author: string; authorName: string | null; authorRep: Rep;
 };
 
 const ST: Record<string, { l: string; c: string }> = {
@@ -23,6 +23,8 @@ export default function MarketPage() {
   const [state, setState] = useState<'loading' | 'ok' | 'empty'>('loading');
   const [isAuthed, setIsAuthed] = useState(false);
   const [imp, setImp] = useState<Record<string, 'idle' | 'loading' | 'done' | 'duplicate' | 'error'>>({});
+  const [q, setQ] = useState('');
+  const [sort, setSort] = useState<'rep' | 'recent'>('rep');
 
   useEffect(() => {
     fetch('/api/market').then((r) => r.json()).then((j) => {
@@ -44,6 +46,18 @@ export default function MarketPage() {
     } catch { setImp((m) => ({ ...m, [id]: 'error' })); }
   };
 
+  // Filtro + ordinamento lato client (la lista è già intera).
+  const shown = items
+    .filter((it) => {
+      if (!q.trim()) return true;
+      const hay = [it.thesis, it.explanation, ...(it.signals?.confirm || []), ...(it.signals?.invalidate || [])]
+        .filter(Boolean).join(' ').toLowerCase();
+      return q.toLowerCase().split(/\s+/).every((w) => hay.includes(w));
+    })
+    .sort((a, b) => sort === 'recent'
+      ? new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      : 0); // 'rep': l'ordine del server è già per reputazione
+
   return (
     <div style={{ minHeight: '100vh', background: '#08080a', color: '#e8e8f0', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: '1px solid #1f1f28' }}>
@@ -61,8 +75,23 @@ export default function MarketPage() {
         {state === 'loading' && <div style={{ color: '#3a3a50', fontSize: 12 }}>caricamento…</div>}
         {state === 'empty' && <div style={{ color: '#7a7a95', fontSize: 13 }}>Ancora nessuna tesi pubblica. Pubblica le tue dal drawer di una tesi nel grafo.</div>}
 
+        {state === 'ok' && (
+          <div style={{ display: 'flex', gap: 10, marginBottom: 18, alignItems: 'center', flexWrap: 'wrap' }}>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="cerca per tema, parola chiave…"
+              style={{ flex: 1, minWidth: 200, background: '#0e0e12', border: '1px solid #2a2a36', borderRadius: 9, padding: '8px 12px', color: '#e8e8f0', fontSize: 12.5 }} />
+            <div style={{ display: 'flex', gap: 4, background: '#0e0e12', border: '1px solid #2a2a36', borderRadius: 9, padding: 3 }}>
+              {(['rep', 'recent'] as const).map((s) => (
+                <button key={s} onClick={() => setSort(s)}
+                  style={{ background: sort === s ? '#241a3a' : 'transparent', color: sort === s ? '#a78bfa' : '#7a7a95', border: 'none', borderRadius: 7, padding: '6px 12px', fontSize: 11.5, cursor: 'pointer' }}>
+                  {s === 'rep' ? 'reputazione' : 'recenti'}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {items.map((it) => {
+          {shown.map((it) => {
             const st = ST[it.status] || ST.active;
             const s = imp[it.id] || 'idle';
             const rep = it.authorRep;
@@ -82,7 +111,7 @@ export default function MarketPage() {
                 )}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderTop: '1px solid #1f1f28', paddingTop: 12 }}>
                   <div style={{ fontSize: 10.5, color: '#7a7a95' }}>
-                    autore <span style={{ color: '#9a9ab2', fontFamily: 'monospace' }}>#{it.author}</span> · {rep.confirmed}/{rep.theses} confermate{rep.accuracy != null ? ` · ${rep.accuracy}% accuratezza` : ''}
+                    autore <span style={{ color: '#9a9ab2', fontFamily: it.authorName ? 'inherit' : 'monospace' }}>{it.authorName || `#${it.author}`}</span> · {rep.confirmed}/{rep.theses} confermate{rep.accuracy != null ? ` · ${rep.accuracy}% accuratezza` : ''}
                   </div>
                   {isAuthed ? (
                     s === 'done' ? <span style={{ fontSize: 11.5, color: '#4ad68a' }}>✓ importata</span>

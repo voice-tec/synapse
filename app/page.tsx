@@ -97,14 +97,21 @@ export default function SynapsePage() {
       const { data: actions } = await supabase.from('actions').select('*').eq('user_id', user.id);
       (window as any).__SYN_PRELOAD = { tasks: tasks || [], conns: conns || [], theses: theses || [], actions: actions || [] };
 
-      const { data: profile } = await supabase.from('profiles').select('plan, tasks_this_month, portfolio').eq('id', user.id).single();
+      const { data: profile } = await supabase.from('profiles').select('plan, tasks_this_month, portfolio, display_name').eq('id', user.id).single();
       if (profile) { (window as any).__SYN_USAGE = { used: profile.tasks_this_month, limit: profile.plan === 'free' ? 10 : 99999, plan: profile.plan }; }
       (window as any).__SYN_PORTFOLIO = (profile as any)?.portfolio || [];
+      (window as any).__SYN_DISPLAY_NAME = (profile as any)?.display_name || '';
 
       // Portafoglio reale: salvato su profiles.portfolio, iniettato nei prompt
       // da /api/analyze e /api/portfolio per il collegamento esposizione.
       (window as any).__synSavePortfolio = async (p: any) => {
         const { error } = await supabase.from('profiles').update({ portfolio: p }).eq('id', user.id);
+        if (error) throw error;
+      };
+
+      // Nome pubblico opt-in per il marketplace (vetrina mostra questo o #hash).
+      (window as any).__synSaveProfile = async (patch: { display_name?: string }) => {
+        const { error } = await supabase.from('profiles').update(patch).eq('id', user.id);
         if (error) throw error;
       };
 

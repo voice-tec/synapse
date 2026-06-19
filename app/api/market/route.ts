@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase-admin';
-import { authorRep } from '@/lib/reputation';
-import { createHash } from 'crypto';
+import { authorRep, authorRef } from '@/lib/reputation';
 
 // Vetrina marketplace: tesi pubbliche di tutti gli utenti, con la reputazione
 // (anonima) dell'autore. Lettura cross-utente → service role (RLS bloccherebbe).
@@ -20,7 +19,15 @@ export async function GET() {
     if (!byUser.has(t.user_id)) byUser.set(t.user_id, []);
     byUser.get(t.user_id)!.push(t);
   }
-  const ref = (uid: string) => createHash('sha256').update(uid).digest('hex').slice(0, 8);
+
+  // Nome pubblico opt-in degli autori con almeno una tesi pubblica.
+  const pubUserIds = Array.from(new Set(rows.filter((t) => t.is_public).map((t) => t.user_id)));
+  const nameByUser = new Map<string, string>();
+  if (pubUserIds.length) {
+    const { data: profs } = await admin
+      .from('profiles').select('id, display_name').in('id', pubUserIds);
+    for (const p of profs || []) if (p.display_name) nameByUser.set(p.id, p.display_name);
+  }
 
   const sigText = (arr: any[]) => (arr || []).map((s: any) => (typeof s === 'string' ? s : s?.text)).filter(Boolean);
 
@@ -34,7 +41,8 @@ export async function GET() {
       status: t.status || 'active',
       created_at: t.created_at,
       signals: t.signals ? { confirm: sigText(t.signals.confirm), invalidate: sigText(t.signals.invalidate) } : null,
-      author: ref(t.user_id),
+      author: authorRef(t.user_id),
+      authorName: nameByUser.get(t.user_id) || null,
       authorRep: authorRep(byUser.get(t.user_id) || []),
     }))
     // Ranking: prima le tesi di autori più affidabili, poi le più recenti.

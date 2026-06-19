@@ -1,3 +1,11 @@
+import { createHash } from 'crypto';
+
+// Riferimento opaco e stabile a un autore (no identità): stesso user_id → stesso
+// hash. Usato dalla vetrina per raggruppare e dall'import per il badge "importata".
+export function authorRef(uid: string): string {
+  return createHash('sha256').update(uid).digest('hex').slice(0, 8);
+}
+
 // Reputazione di un autore = aggregato del suo track record su TUTTE le sue tesi
 // (non solo le pubbliche): quante tesi, quante confermate, accuratezza media.
 // Serve alla vetrina del marketplace per far scegliere su prova reale, non sul

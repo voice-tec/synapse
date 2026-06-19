@@ -154,6 +154,11 @@ function openPortfolioEditor(){
   ov.innerHTML=`<div class="pfe-card">
     <div class="pfe-title">Il mio portafoglio</div>
     <div class="pfe-sub">Gli strumenti che possiedi davvero, col peso in %. Le analisi li useranno per dirti quanto sei già esposto a un tema ("sei già esposto ~12% via VWCE"). Restano privati nel tuo profilo.</div>
+    <div style="margin:4px 0 14px">
+      <label style="display:block;font-size:11px;color:#7a7a95;margin-bottom:5px">Nome pubblico (marketplace) — facoltativo</label>
+      <input id="pfe-display-name" placeholder="lascia vuoto per restare anonimo" maxlength="40" style="width:100%;background:#141418;border:1px solid #2a2a36;border-radius:8px;padding:8px 10px;color:#e8e8f0;font-family:inherit;font-size:12px;box-sizing:border-box">
+      <div style="font-size:10px;color:#5a5a78;margin-top:4px">Mostrato sulle tue tesi pubblicate al posto di #hash anonimo.</div>
+    </div>
     <div class="pfe-rows" id="pfe-rows"></div>
     <div class="pfe-total" id="pfe-total"></div>
     <div class="pfe-actions">
@@ -163,6 +168,8 @@ function openPortfolioEditor(){
     </div>
   </div>`;
   document.body.appendChild(ov);
+  const nameInput=document.getElementById('pfe-display-name');
+  if(nameInput)nameInput.value=window.__SYN_DISPLAY_NAME||'';
   const rows=document.getElementById('pfe-rows');
   (holdings.length?holdings:[{}]).forEach(h=>rows.appendChild(pfeRow(h)));
   pfeUpdateTotal();
@@ -182,6 +189,11 @@ function openPortfolioEditor(){
     try{
       if(window.__synSavePortfolio) await window.__synSavePortfolio(out);
       window.__SYN_PORTFOLIO=out;
+      const dn=(nameInput?nameInput.value:'').trim().slice(0,40);
+      if(dn!==(window.__SYN_DISPLAY_NAME||'')&&window.__synSaveProfile){
+        await window.__synSaveProfile({display_name:dn||null});
+        window.__SYN_DISPLAY_NAME=dn;
+      }
       ov.remove();
       const notif=document.getElementById('mem-notif');
       if(notif){
@@ -1193,7 +1205,9 @@ function openMemoryDrawer(mn){
   else if(mn.status==='invalidated'){badge.textContent='tesi invalidata ✕';badge.style.background='var(--red)22';badge.style.color='var(--red)';}
   else{badge.textContent='tesi emergente';badge.style.background=color+'22';badge.style.color=color;}
   tintDrawer(color);
-  document.getElementById('dr-query').innerHTML=`<span style="font-size:13px;display:block;margin-bottom:4px;opacity:.6">◆ nodo memoria</span>${mn.thesis}`;
+  const impAuthor=mn.imported_from_author||null;
+  const impBadge=impAuthor?`<span style="font-size:10px;color:#a78bfa;background:#241a3a;border-radius:6px;padding:2px 8px;margin-left:8px;vertical-align:middle">↘ importata · #${impAuthor}</span>`:'';
+  document.getElementById('dr-query').innerHTML=`<span style="font-size:13px;display:block;margin-bottom:4px;opacity:.6">◆ nodo memoria${impBadge}</span>${mn.thesis}`;
 
   // History timeline HTML
   const historyHTML = mn.history?.length>1 ? `
@@ -1262,15 +1276,20 @@ function openMemoryDrawer(mn){
         </div>
       </div>
     </div>`;
-  // Pubblicazione nel marketplace (opt-in per tesi). Solo tesi native, non
-  // quelle a loro volta importate (evita ricircolo).
+  // Pubblicazione nel marketplace (opt-in per tesi). Le tesi importate non sono
+  // ripubblicabili (no ricircolo); confidence<60 bloccata lato server.
   const pub=!!mn.is_public;
-  const publishHTML=`
+  const imported=!!(mn.imported_from_author||mn.imported_from_token);
+  const publishHTML=imported?`
+    <div>
+      <div class="section-lbl">marketplace</div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.5;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px">Tesi importata — non ripubblicabile nel marketplace.</div>
+    </div>`:`
     <div>
       <div class="section-lbl">marketplace</div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg3);border:1px solid ${pub?color+'55':'var(--border)'};border-radius:10px;padding:10px 14px">
-        <div style="font-size:11px;color:var(--text2);line-height:1.5">${pub?'Pubblica: altri possono trovarla e importarla':'Privata: visibile solo a te'}</div>
-        <button id="mem-publish-${mn.id}" data-cluster="${mn.clusterId}" data-pub="${pub?1:0}" style="flex-shrink:0;background:${pub?color:'transparent'};color:${pub?'#08080a':'var(--text2)'};border:1px solid ${pub?color:'var(--border)'};border-radius:8px;padding:6px 12px;font-size:11px;font-weight:500;cursor:pointer">${pub?'pubblicata ✓':'pubblica'}</button>
+        <div id="mem-publish-msg-${mn.id}" style="font-size:11px;color:var(--text2);line-height:1.5">${pub?'Pubblica: altri possono trovarla e importarla':'Privata: visibile solo a te'}</div>
+        <button id="mem-publish-${mn.id}" data-cluster="${mn.clusterId}" style="flex-shrink:0;background:${pub?color:'transparent'};color:${pub?'#08080a':'var(--text2)'};border:1px solid ${pub?color:'var(--border)'};border-radius:8px;padding:6px 12px;font-size:11px;font-weight:500;cursor:pointer">${pub?'pubblicata ✓':'pubblica'}</button>
       </div>
     </div>`;
   const sg=mn.signals;
@@ -1351,7 +1370,14 @@ function openMemoryDrawer(mn){
       pubBtn.disabled=true;pubBtn.textContent='…';
       try{
         const r=await fetch('/api/market/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clusterId:mn.clusterId,public:next})});
-        if(!r.ok)throw 0;
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok){
+          const msgs={low_confidence:'Serve confidenza ≥60% per pubblicarla',imported_no_republish:'Tesi importata: non ripubblicabile',limit_reached:'Hai raggiunto il massimo di tesi pubbliche (20)'};
+          const m=document.getElementById(`mem-publish-msg-${mn.id}`);
+          if(m){m.textContent=msgs[j.error]||'Operazione non riuscita';m.style.color='var(--red)';}
+          pubBtn.disabled=false;pubBtn.textContent=mn.is_public?'pubblicata ✓':'pubblica';
+          return;
+        }
         mn.is_public=next;
         openMemoryDrawer(mn); // re-render con lo stato aggiornato
       }catch(e){pubBtn.disabled=false;pubBtn.textContent='riprova';}
@@ -2241,7 +2267,7 @@ document.getElementById('qi').addEventListener('input',function(){this.style.hei
         const fallbackY=graphH/2+Math.sin(ang)*ringR;
         const px = isMobile ? fallbackX : (th.pos_x||fallbackX);
         const py = isMobile ? fallbackY : (th.pos_y||fallbackY);
-        MEMORY_NODES.push({id:th.id,clusterId:th.cluster_id,thesis:th.thesis,confidence:th.confidence,explanation:th.explanation,pattern:th.pattern,suggested_question:th.suggested_question,source_ids:th.source_task_ids||[],history:th.history||[],challenge:th.challenge||null,signals:th.signals||null,status:th.status||'active',accuracy:(th.accuracy==null?null:th.accuracy),signals_hit:th.signals_hit||0,signals_total:th.signals_total||0,is_public:th.is_public||false,created_at:th.created_at?new Date(th.created_at):null,color:th.color||'#a78bfa',phaseOffset:Math.random()*Math.PI*2,x:px,y:py});
+        MEMORY_NODES.push({id:th.id,clusterId:th.cluster_id,thesis:th.thesis,confidence:th.confidence,explanation:th.explanation,pattern:th.pattern,suggested_question:th.suggested_question,source_ids:th.source_task_ids||[],history:th.history||[],challenge:th.challenge||null,signals:th.signals||null,status:th.status||'active',accuracy:(th.accuracy==null?null:th.accuracy),signals_hit:th.signals_hit||0,signals_total:th.signals_total||0,is_public:th.is_public||false,imported_from_author:th.imported_from_author||null,created_at:th.created_at?new Date(th.created_at):null,color:th.color||'#a78bfa',phaseOffset:Math.random()*Math.PI*2,x:px,y:py});
       });
       MEMORY_NODES.forEach(computeConfDelta);
       (pre.actions||[]).forEach((ac)=>{

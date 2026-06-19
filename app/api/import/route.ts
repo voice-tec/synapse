@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { wordOverlap } from '@/lib/text';
+import { authorRef } from '@/lib/reputation';
 import { randomBytes } from 'crypto';
 
 // Importa una tesi nel proprio grafo come NUOVA tesi con track record azzerato:
@@ -82,6 +83,7 @@ export async function POST(req: NextRequest) {
       signals_total: 0,
       color: src.color || '#a78bfa',
       imported_from_token: token || null,
+      imported_from_author: ownerId ? authorRef(ownerId) : null,
     })
     .select('id')
     .single();
