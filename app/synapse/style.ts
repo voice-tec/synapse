@@ -133,6 +133,23 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);font
 .conf-bar-wrap{flex:1;height:4px;background:var(--border2);border-radius:2px}
 .conf-bar{height:4px;border-radius:2px;background:linear-gradient(90deg,#7c3aed,#a78bfa);transition:width .8s ease}
 .conf-label{font-size:12px;color:#a78bfa;min-width:36px;text-align:right}
+/* Hero della tesi: sintesi in cima al drawer (stato, confidenza, cosa la conferma).
+   Colore per-tesi via custom prop --c; --p = confidenza 0..100 per l'anello. */
+.thesis-hero{background:linear-gradient(160deg,color-mix(in srgb,var(--c) 14%,transparent),var(--bg3));border:1px solid color-mix(in srgb,var(--c) 38%,transparent);border-radius:18px;padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.hero-top{display:flex;align-items:center;gap:8px}
+.hero-badge{font-size:10px;padding:3px 10px;border-radius:20px;letter-spacing:.06em;text-transform:uppercase;background:color-mix(in srgb,var(--c) 22%,transparent);color:var(--c)}
+.hero-thesis{font-family:'Fraunces',serif;font-size:19px;font-weight:300;font-style:italic;color:var(--text);line-height:1.45}
+.hero-metrics{display:flex;align-items:center;gap:18px}
+.hero-ring{width:74px;height:74px;flex-shrink:0;border-radius:50%;background:conic-gradient(var(--c) calc(var(--p)*1%),var(--border2) 0);display:grid;place-items:center;position:relative}
+.hero-ring::before{content:'';position:absolute;inset:7px;border-radius:50%;background:var(--bg2)}
+.hero-ring b{position:relative;font-size:17px;font-weight:600;color:var(--c)}
+.hero-ring small{position:relative;display:block;font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;text-align:center;margin-top:1px}
+.hero-track{flex:1;min-width:0}
+.hero-stato{font-size:16px;font-weight:500;margin-bottom:2px}
+.hero-sub{font-size:11px;color:var(--text2)}
+.hero-confirm{margin-top:8px;font-size:11.5px;color:var(--text);line-height:1.5}
+.hero-confirm b{color:var(--c);font-weight:500}
+.hero-note{margin-top:8px;font-size:10px;color:var(--text3);line-height:1.5}
 .memory-sources{display:flex;flex-direction:column;gap:6px}
 .source-pill{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);border:1px solid #2a1a40;border-radius:10px}
 .source-num{font-size:10px;color:#7c3aed;min-width:20px}

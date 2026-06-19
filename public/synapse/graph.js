@@ -1297,21 +1297,34 @@ function openMemoryDrawer(mn){
   const stMap={active:{l:'in corso',c:'var(--text2)',bg:'var(--bg3)'},confirmed:{l:'confermata ✓',c:'var(--green)',bg:'#0f2a1c'},invalidated:{l:'invalidata ✕',c:'var(--red)',bg:'#2a0f0f'}};
   const stt=stMap[mn.status||'active']||stMap.active;
   const accStr=(mn.accuracy==null)?'—':mn.accuracy+'%';
-  const trackHTML=`
-    <div>
-      <div class="section-lbl">track record</div>
-      <div style="display:flex;gap:8px;align-items:stretch">
-        <div style="flex:1;background:${stt.bg};border:1px solid ${stt.c}33;border-radius:10px;padding:10px 12px">
-          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">stato</div>
-          <div style="font-size:14px;font-weight:500;color:${stt.c}">${stt.l}</div>
-        </div>
-        <div style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
-          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">accuratezza</div>
-          <div style="font-size:14px;font-weight:500;color:var(--text)">${accStr}</div>
-        </div>
-        <div style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
-          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">segnali</div>
-          <div style="font-size:14px;font-weight:500;color:var(--text)">${mn.signals_hit||0}/${mn.signals_total||0}</div>
+  // Denominatore segnali: se la tesi è già valutata usa signals_total (autorevole,
+  // esclude i dati mancanti); altrimenti conta i testabili definiti → mostra "0/N"
+  // invece di un fuorviante "0/0" su una tesi appena nata.
+  const _testable=(arr)=>(arr||[]).filter(s=>{const o=(typeof s==='string')?{}:(s||{});return (o.kind==='fred'||o.kind==='ticker')&&o.metric&&o.op&&typeof o.threshold==='number';}).length;
+  const denom=(mn.signals_total&&mn.signals_total>0)?mn.signals_total:(_testable(mn.signals&&mn.signals.confirm)+_testable(mn.signals&&mn.signals.invalidate));
+  const evaluated=(mn.signals_total&&mn.signals_total>0)||((mn.signals?(mn.signals.confirm||[]).concat(mn.signals.invalidate||[]):[]).some(s=>s&&s.checked_at));
+  // Riga esplicativa: rende leggibile lo stato "in corso · 0/N · —", la causa
+  // più comune di confusione (segnali presenti ma non ancora valutati).
+  let trackNote='';
+  if(denom===0) trackNote='Nessun segnale misurabile su dati di mercato: questa tesi non ha un track record automatico.';
+  else if(!evaluated) trackNote='Segnali non ancora valutati — vengono controllati sui dati reali alla prossima apertura.';
+  else if(mn.accuracy==null) trackNote='Servono almeno 2 segnali scattati per un verdetto e una percentuale di accuratezza.';
+  const badgeLabel=mn.status==='confirmed'?'tesi confermata':mn.status==='invalidated'?'tesi invalidata':'tesi emergente';
+  // "Cosa la conferma": primo segnale di conferma leggibile — il punto d'aggancio
+  // più utile a colpo d'occhio.
+  const firstConfirm=(mn.signals?(mn.signals.confirm||[]).map(s=>typeof s==='string'?s:(s&&s.text)).filter(Boolean)[0]:'')||'';
+  // HERO: sintesi in cima (stato + confidenza ad anello + cosa la conferma).
+  const heroHTML=`
+    <div class="thesis-hero" style="--c:${color};--p:${mn.confidence||0}">
+      <div class="hero-top"><span class="hero-badge">◆ ${badgeLabel}</span>${impBadge}</div>
+      <div class="hero-thesis">"${mn.thesis}"</div>
+      <div class="hero-metrics">
+        <div class="hero-ring"><b>${mn.confidence||0}%</b><small>conf.</small></div>
+        <div class="hero-track">
+          <div class="hero-stato" style="color:${stt.c}">${stt.l}</div>
+          <div class="hero-sub">accuratezza ${accStr} · ${mn.signals_hit||0}/${denom} segnali scattati</div>
+          ${firstConfirm?`<div class="hero-confirm">→ <b>la conferma:</b> ${firstConfirm}</div>`:''}
+          ${trackNote?`<div class="hero-note">${trackNote}</div>`:''}
         </div>
       </div>
     </div>`;
@@ -1348,21 +1361,14 @@ function openMemoryDrawer(mn){
     </div>`:'';
 
   body.innerHTML=`
-    <div>
-      <div class="section-lbl">tesi corrente</div>
-      <div class="memory-thesis" style="border-left-color:${color}">"${mn.thesis}"</div>
-    </div>
-    ${trackHTML}
-    ${publishHTML}
+    ${heroHTML}
+    ${signalsHTML}
+    ${mn.explanation?`<div>
+      <div class="section-lbl">perché questa tesi</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7">${mn.explanation}</div>
+    </div>`:''}
     ${statHTML}
-    <div>
-      <div class="section-lbl">confidenza</div>
-      <div class="memory-confidence">
-        <div class="conf-bar-wrap"><div class="conf-bar" id="conf-bar-${mn.id}" style="width:0%;background:linear-gradient(90deg,${color}88,${color})"></div></div>
-        <span class="conf-label" style="color:${color}">${mn.confidence}%</span>
-      </div>
-      <div style="font-size:11px;color:var(--text3);line-height:1.6">${mn.explanation||''}</div>
-    </div>
+    ${publishHTML}
     <div>
       <div class="section-lbl">pattern rilevato</div>
       <div style="background:var(--bg3);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--text2);line-height:1.7;font-family:'Fraunces',serif;font-weight:300">${mn.pattern||''}</div>
@@ -1384,7 +1390,6 @@ function openMemoryDrawer(mn){
         }).join('')}
       </div>
     </div>
-    ${signalsHTML}
     <div>
       <div class="section-lbl">avvocato del diavolo</div>
       <div id="mem-challenge-area-${mn.id}"></div>
@@ -1397,7 +1402,6 @@ function openMemoryDrawer(mn){
     </div>`;
 
   setTimeout(()=>{
-    const b=document.getElementById(`conf-bar-${mn.id}`);if(b)b.style.width=mn.confidence+'%';
     const sq=document.getElementById(`mem-suggested-q-${mn.id}`);
     if(sq&&mn.suggested_question)sq.addEventListener('click',()=>setQAndClose(mn.suggested_question, mn.clusterId));
     document.querySelectorAll('.mem-source-pill').forEach(el=>{
