@@ -62,6 +62,7 @@ create table theses (
   color text,
   pos_x float,
   pos_y float,
+  imported_from_token text,                    -- token del grafo da cui è stata importata (null se nativa)
   updated_at timestamptz default now(),
   created_at timestamptz default now()
 );

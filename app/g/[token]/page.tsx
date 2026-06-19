@@ -4,6 +4,7 @@
 // Niente auth, niente AI — solo la fotografia del grafo + CTA al signup.
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { createClient } from '@/lib/supabase-browser';
 
 const TC: Record<string, string> = { causal: '#5b9cf6', compare: '#2ecf98', risk: '#f0a030', trend: '#4ad68a', screen: '#4ad68a' };
 
@@ -17,6 +18,9 @@ export default function SharedGraphPage() {
   const [detail, setDetail] = useState<Detail>(null);
   const detailRef = useRef<Detail>(null);
   detailRef.current = detail;
+  const [isAuthed, setIsAuthed] = useState(false);
+  // stato import per la tesi aperta: idle | loading | done | duplicate | error
+  const [imp, setImp] = useState<'idle' | 'loading' | 'done' | 'duplicate' | 'error'>('idle');
 
   useEffect(() => {
     fetch(`/api/shared/${token}`)
@@ -24,6 +28,29 @@ export default function SharedGraphPage() {
       .then((j) => { setSnap(j.snapshot); setState('ok'); })
       .catch(() => setState('missing'));
   }, [token]);
+
+  // Sessione: se loggato, la card tesi mostra "salva nel mio grafo".
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data }) => setIsAuthed(!!data.user)).catch(() => {});
+  }, []);
+
+  // Reset dello stato import a ogni cambio di card.
+  useEffect(() => { setImp('idle'); }, [detail]);
+
+  const importThesis = async (clusterId: string) => {
+    setImp('loading');
+    try {
+      const r = await fetch('/api/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, clusterId }),
+      });
+      const j = await r.json();
+      if (j.imported) setImp('done');
+      else if (j.duplicate) setImp('duplicate');
+      else setImp('error');
+    } catch { setImp('error'); }
+  };
 
   useEffect(() => {
     if (!snap || !canvasRef.current) return;
@@ -351,8 +378,27 @@ export default function SharedGraphPage() {
                 {detail.data.explanation && <div style={{ fontSize: 11, color: '#7a7a95', lineHeight: 1.6 }}>{detail.data.explanation}</div>}
                 {detail.data.signals && (
                   <div style={{ display: 'flex', gap: 12, marginTop: 10, fontSize: 10.5, lineHeight: 1.6 }}>
-                    <div style={{ flex: 1 }}>{(detail.data.signals.confirm || []).map((s: string, i: number) => <div key={i} style={{ color: '#4ad68a99' }}>✓ {s}</div>)}</div>
-                    <div style={{ flex: 1 }}>{(detail.data.signals.invalidate || []).map((s: string, i: number) => <div key={i} style={{ color: '#e0555599' }}>✗ {s}</div>)}</div>
+                    <div style={{ flex: 1 }}>{(detail.data.signals.confirm || []).map((s: any, i: number) => <div key={i} style={{ color: '#4ad68a99' }}>✓ {typeof s === 'string' ? s : s?.text}</div>)}</div>
+                    <div style={{ flex: 1 }}>{(detail.data.signals.invalidate || []).map((s: any, i: number) => <div key={i} style={{ color: '#e0555599' }}>✗ {typeof s === 'string' ? s : s?.text}</div>)}</div>
+                  </div>
+                )}
+                {isAuthed && (
+                  <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+                    {imp === 'done' ? (
+                      <a href="/synapse" style={{ fontSize: 12, color: '#4ad68a', textDecoration: 'none' }}>✓ Tesi importata — apri il tuo grafo →</a>
+                    ) : imp === 'duplicate' ? (
+                      <span style={{ fontSize: 12, color: '#f0a030' }}>Hai già una tesi simile</span>
+                    ) : imp === 'error' ? (
+                      <span style={{ fontSize: 12, color: '#e05555' }}>Import non riuscito, riprova</span>
+                    ) : (
+                      <button
+                        onClick={() => importThesis(detail.data.clusterId)}
+                        disabled={imp === 'loading'}
+                        style={{ background: '#a78bfa', color: '#08080a', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 500, cursor: imp === 'loading' ? 'default' : 'pointer', opacity: imp === 'loading' ? 0.6 : 1 }}
+                      >
+                        {imp === 'loading' ? 'importo…' : '+ salva nel mio grafo'}
+                      </button>
+                    )}
                   </div>
                 )}
               </>
