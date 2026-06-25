@@ -18,12 +18,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'bad_request' }, { status: 400 });
   }
 
-  const { data: th } = await supabase
+  const { data: th, error: thErr } = await supabase
     .from('theses')
     .select('id, confidence, imported_from_token, imported_from_author, is_public')
     .eq('user_id', user.id)
     .eq('cluster_id', clusterId)
     .maybeSingle();
+  if (thErr) return NextResponse.json({ error: thErr.message }, { status: 500 });
   if (!th) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 
   if (isPublic) {
@@ -33,19 +34,29 @@ export async function POST(req: NextRequest) {
     if ((th.confidence ?? 0) < MIN_PUBLISH_CONF) {
       return NextResponse.json({ error: 'low_confidence', min: MIN_PUBLISH_CONF }, { status: 400 });
     }
+    // Handle obbligatorio: niente tesi pubbliche anonime senza nome pubblico.
+    const { data: prof, error: profErr } = await supabase
+      .from('profiles').select('display_name').eq('id', user.id).maybeSingle();
+    if (profErr) return NextResponse.json({ error: profErr.message }, { status: 500 });
+    if (!prof?.display_name || !prof.display_name.trim()) {
+      return NextResponse.json({ error: 'no_handle' }, { status: 400 });
+    }
     if (!th.is_public) {
-      const { count } = await supabase
+      const { count, error: cntErr } = await supabase
         .from('theses')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('is_public', true);
+      if (cntErr) return NextResponse.json({ error: cntErr.message }, { status: 500 });
       if ((count ?? 0) >= MAX_PUBLIC) {
         return NextResponse.json({ error: 'limit_reached', max: MAX_PUBLIC }, { status: 400 });
       }
     }
   }
 
-  const { error } = await supabase.from('theses').update({ is_public: isPublic }).eq('id', th.id);
+  const { error } = await supabase
+    .from('theses').update({ is_public: isPublic })
+    .eq('id', th.id).eq('user_id', user.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ ok: true, public: isPublic });

@@ -181,9 +181,9 @@ function openPortfolioEditor(){
     <div class="pfe-title">Il mio portafoglio</div>
     <div class="pfe-sub">Gli strumenti che possiedi davvero, col peso in %. Le analisi li useranno per dirti quanto sei già esposto a un tema ("sei già esposto ~12% via VWCE"). Restano privati nel tuo profilo.</div>
     <div style="margin:4px 0 14px">
-      <label style="display:block;font-size:11px;color:#7a7a95;margin-bottom:5px">Nome pubblico (marketplace) — facoltativo</label>
-      <input id="pfe-display-name" placeholder="lascia vuoto per restare anonimo" maxlength="40" style="width:100%;background:#141418;border:1px solid #2a2a36;border-radius:8px;padding:8px 10px;color:#e8e8f0;font-family:inherit;font-size:12px;box-sizing:border-box">
-      <div style="font-size:10px;color:#5a5a78;margin-top:4px">Mostrato sulle tue tesi pubblicate al posto di #hash anonimo.</div>
+      <label style="display:block;font-size:11px;color:#7a7a95;margin-bottom:5px">Nome pubblico (marketplace) — richiesto per pubblicare</label>
+      <input id="pfe-display-name" placeholder="scegli un nome unico (serve per pubblicare)" maxlength="40" style="width:100%;background:#141418;border:1px solid #2a2a36;border-radius:8px;padding:8px 10px;color:#e8e8f0;font-family:inherit;font-size:12px;box-sizing:border-box">
+      <div id="pfe-name-msg" style="font-size:10px;color:#5a5a78;margin-top:4px">Mostrato sulle tue tesi pubblicate al posto di #hash anonimo. Lascia vuoto per restare anonimo (ma non potrai pubblicare).</div>
     </div>
     <div class="pfe-rows" id="pfe-rows"></div>
     <div class="pfe-total" id="pfe-total"></div>
@@ -227,7 +227,12 @@ function openPortfolioEditor(){
         notif.classList.add('show');
         setTimeout(()=>notif.classList.remove('show'),5000);
       }
-    }catch(e){ btn.disabled=false; btn.textContent='salva'; alert('Salvataggio fallito, riprova.'); }
+    }catch(e){
+      btn.disabled=false; btn.textContent='salva';
+      const nm=document.getElementById('pfe-name-msg');
+      if(e&&e.message==='name_taken'&&nm){ nm.textContent='Questo nome è già in uso, scegline un altro.'; nm.style.color='var(--red,#e05555)'; }
+      else alert('Salvataggio fallito, riprova.');
+    }
   });
 }
 
@@ -1415,7 +1420,7 @@ function openMemoryDrawer(mn){
         const r=await fetch('/api/market/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clusterId:mn.clusterId,public:next})});
         const j=await r.json().catch(()=>({}));
         if(!r.ok){
-          const msgs={low_confidence:'Serve confidenza ≥60% per pubblicarla',imported_no_republish:'Tesi importata: non ripubblicabile',limit_reached:'Hai raggiunto il massimo di tesi pubbliche (20)'};
+          const msgs={low_confidence:'Serve confidenza ≥60% per pubblicarla',imported_no_republish:'Tesi importata: non ripubblicabile',limit_reached:'Hai raggiunto il massimo di tesi pubbliche (20)',not_found:'Tesi non ancora salvata, riprova tra un istante',no_handle:'Scegli un nome pubblico (profilo) prima di pubblicare'};
           const m=document.getElementById(`mem-publish-msg-${mn.id}`);
           if(m){m.textContent=msgs[j.error]||'Operazione non riuscita';m.style.color='var(--red)';}
           pubBtn.disabled=false;pubBtn.textContent=mn.is_public?'pubblicata ✓':'pubblica';
@@ -1729,6 +1734,7 @@ async function checkMemoryNode(){
           existing.confidence=cluster.confidence;
           existing.explanation=cluster.explanation;
           existing.pattern=cluster.pattern;
+          if(cluster.sector) existing.sector=cluster.sector;
           if(cluster.signals) existing.signals=cluster.signals;
           // Unione (non sostituzione): Haiku cita max 6 source_indices, quindi
           // assegnare direttamente perderebbe fonti su tesi con più di 6 task.
@@ -1759,6 +1765,7 @@ async function checkMemoryNode(){
           confidence:cluster.confidence,
           explanation:cluster.explanation,
           pattern:cluster.pattern,
+          sector:cluster.sector||null,
           signals:cluster.signals||null,
           source_ids:sourceIds,
           suggested_question:cluster.suggested_question,
@@ -2315,7 +2322,7 @@ document.getElementById('qi').addEventListener('input',function(){this.style.hei
         const fallbackY=graphH/2+Math.sin(ang)*ringR;
         const px = isMobile ? fallbackX : (th.pos_x||fallbackX);
         const py = isMobile ? fallbackY : (th.pos_y||fallbackY);
-        MEMORY_NODES.push({id:th.id,clusterId:th.cluster_id,thesis:th.thesis,confidence:th.confidence,explanation:th.explanation,pattern:th.pattern,suggested_question:th.suggested_question,source_ids:th.source_task_ids||[],history:th.history||[],challenge:th.challenge||null,signals:th.signals||null,status:th.status||'active',accuracy:(th.accuracy==null?null:th.accuracy),signals_hit:th.signals_hit||0,signals_total:th.signals_total||0,is_public:th.is_public||false,imported_from_author:th.imported_from_author||null,created_at:th.created_at?new Date(th.created_at):null,color:th.color||'#a78bfa',phaseOffset:Math.random()*Math.PI*2,x:px,y:py});
+        MEMORY_NODES.push({id:th.id,clusterId:th.cluster_id,thesis:th.thesis,confidence:th.confidence,explanation:th.explanation,pattern:th.pattern,suggested_question:th.suggested_question,sector:th.sector||null,source_ids:th.source_task_ids||[],history:th.history||[],challenge:th.challenge||null,signals:th.signals||null,status:th.status||'active',accuracy:(th.accuracy==null?null:th.accuracy),signals_hit:th.signals_hit||0,signals_total:th.signals_total||0,is_public:th.is_public||false,imported_from_author:th.imported_from_author||null,created_at:th.created_at?new Date(th.created_at):null,color:th.color||'#a78bfa',phaseOffset:Math.random()*Math.PI*2,x:px,y:py});
       });
       MEMORY_NODES.forEach(computeConfDelta);
       (pre.actions||[]).forEach((ac)=>{

@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   if (thesisId) {
     const { data: th } = await admin
       .from('theses')
-      .select('user_id, thesis, confidence, explanation, signals, color, is_public')
+      .select('user_id, thesis, confidence, explanation, signals, color, sector, is_public')
       .eq('id', thesisId)
       .maybeSingle();
     if (!th || !th.is_public) return NextResponse.json({ error: 'not_found' }, { status: 404 });
@@ -74,6 +74,7 @@ export async function POST(req: NextRequest) {
       thesis: src.thesis,
       confidence: src.confidence ?? 50,
       explanation: src.explanation ?? null,
+      sector: src.sector ?? null,
       signals,
       source_task_ids: [],
       history: [],

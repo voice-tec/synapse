@@ -4,8 +4,10 @@ import { askClaudeJSON } from '@/lib/anthropic';
 import { validateSignals } from '@/lib/signals';
 import { checkAiCall, bumpAiCall } from '@/lib/ai-usage';
 import { FRED_CATALOG } from '@/lib/fred';
+import { SECTORS } from '@/lib/sectors';
 
 const FRED_KEYS = Object.entries(FRED_CATALOG).map(([id, m]) => `${id} (${m.label})`).join(', ');
+const SECTOR_KEYS = SECTORS.join(', ');
 
 const DEDUP_SYS = `Sei un giudice di deduplicazione di tesi d'investimento. Ricevi le TESI ESISTENTI (con id) e delle TESI CANDIDATE nuove.
 Per ogni candidata, decidi se esprime lo STESSO TEMA d'investimento di una esistente (anche se riformulata o vista da un'altra angolazione) — in tal caso è un doppione.
@@ -68,6 +70,7 @@ Rispondi SOLO con JSON valido:
       "id": "stringa identificativa breve del cluster",
       "confidence": numero 0-100,
       "thesis": "la tesi in UNA frase italiana concisa",
+      "sector": "UNO tra: ${SECTOR_KEYS}",
       "explanation": "2 frasi su perché questa tesi emerge",
       "pattern": "descrivi il pattern analitico del cluster",
       "source_indices": [indici 1-based, massimo 6],
@@ -84,6 +87,7 @@ SEGNALI TESTABILI — dai 2 confirm e 2 invalidate. Quando un segnale è misurab
 - prezzo di un titolo → kind:"ticker", metric = simbolo (es. AAPL, NVDA); threshold = variazione % attesa dalla creazione della tesi (es. 20 = +20%), op tipicamente > o <.
 - non misurabile con questi → kind:"manual", metric/op/threshold = null.
 Il "text" è SEMPRE presente e leggibile. Preferisci segnali fred/ticker quando il tema lo consente.
+SETTORE — "sector" DEVE essere ESATTAMENTE uno tra: ${SECTOR_KEYS}. Scegli il più pertinente al tema della tesi; se nessuno calza bene usa "Altro".
 Se non ci sono cluster con confidenza >= 50, rispondi {"clusters":[]}. Massimo 4 cluster.`;
 
 export async function POST(req: NextRequest) {

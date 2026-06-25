@@ -16,6 +16,11 @@ create table profiles (
   created_at timestamptz default now()
 );
 
+-- Handle unico case-insensitive (obbligatorio per pubblicare nel marketplace).
+-- Parziale: gli anonimi (display_name null) non occupano il namespace.
+create unique index if not exists profiles_display_name_uniq
+  on profiles (lower(display_name)) where display_name is not null;
+
 -- ── TASK (i nodi del grafo) ──
 create table tasks (
   id uuid default gen_random_uuid() primary key,
@@ -50,6 +55,7 @@ create table theses (
   explanation text,
   pattern text,
   suggested_question text,
+  sector text,                                 -- tassonomia chiusa (lib/sectors.ts) per il filtro marketplace
   source_task_ids uuid[],
   history jsonb default '[]',                  -- [{thesis, confidence, date, note}]
   challenge jsonb,                             -- contro-tesi (avvocato del diavolo)
@@ -192,6 +198,11 @@ create trigger on_auth_user_created
 -- alter table theses add column if not exists signals_total int default 0;
 -- alter table theses add column if not exists closed_at timestamptz;
 -- alter table theses add column if not exists outcome_note text;
+--
+-- ── Marketplace slice 3: filtro settore + handle obbligatorio/unico ──
+-- alter table theses add column if not exists sector text;
+-- create unique index if not exists profiles_display_name_uniq
+--   on profiles (lower(display_name)) where display_name is not null;
 --
 -- create table if not exists actions (
 --   id uuid default gen_random_uuid() primary key,

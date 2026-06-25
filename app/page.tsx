@@ -68,6 +68,7 @@ export default function SynapsePage() {
         const payload = {
           user_id: user.id, cluster_id: mn.clusterId, thesis: mn.thesis, confidence: mn.confidence,
           explanation: mn.explanation, pattern: mn.pattern, suggested_question: mn.suggested_question,
+          sector: mn.sector || null,
           signals: mn.signals || null,
           source_task_ids: mn.source_ids, history: mn.history, color: mn.color, pos_x: mn.x, pos_y: mn.y,
           updated_at: new Date().toISOString(),
@@ -127,10 +128,15 @@ export default function SynapsePage() {
         if (error) throw error;
       };
 
-      // Nome pubblico opt-in per il marketplace (vetrina mostra questo o #hash).
-      (window as any).__synSaveProfile = async (patch: { display_name?: string }) => {
+      // Nome pubblico per il marketplace (obbligatorio per pubblicare, unico
+      // case-insensitive). La violazione dell'indice unico (Postgres 23505) viene
+      // tradotta in un errore parlante che la UI mostra inline.
+      (window as any).__synSaveProfile = async (patch: { display_name?: string | null }) => {
         const { error } = await supabase.from('profiles').update(patch).eq('id', user.id);
-        if (error) throw error;
+        if (error) {
+          if ((error as any).code === '23505') throw new Error('name_taken');
+          throw error;
+        }
       };
 
       // Full reload, NON router.push: azzera lo stato globale dello script
