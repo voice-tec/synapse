@@ -59,6 +59,21 @@ export default function SynapsePage() {
         }
       };
 
+      // Sostituisce in blocco gli archi ricalcolati (bump dell'euristica in
+      // graph.js). Best-effort: gli archi sono derivabili dai task, una perdita
+      // tra delete e insert si risana al prossimo ricalcolo. Chi chiama aggiorna
+      // il guard (localStorage.synConnV) solo se questa promise risolve.
+      (window as any).__synReplaceAllConns = async (edges: any[]) => {
+        const { error: delErr } = await supabase.from('connections').delete().eq('user_id', user.id);
+        if (delErr) throw delErr;
+        if (edges.length) {
+          const { error: insErr } = await supabase.from('connections').insert(edges.map((e: any) => ({
+            user_id: user.id, task_from: e.from, task_to: e.to, type: e.type, score: e.score,
+          })));
+          if (insErr) throw insErr;
+        }
+      };
+
       // Lancia in caso d'errore: persistThesis in graph.js intercetta e segnala.
       // NB: signals_total/hit/status/accuracy NON si scrivono qui — restano i
       // default DB (0/active/null) finché /api/refresh non valuta i segnali sui

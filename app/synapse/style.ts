@@ -36,9 +36,12 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);font
 .graph-wrap{flex:1;position:relative;overflow:hidden}
 #gc{width:100%;height:100%;display:block}
 .graph-hint{position:absolute;top:18px;left:20px;font-size:10px;color:var(--text3)}
-.graph-legend{position:absolute;bottom:100px;left:20px;display:flex;gap:14px}
+.graph-legend{position:absolute;bottom:100px;left:20px;display:flex;flex-direction:column;gap:6px}
+.leg-row{display:flex;gap:14px;flex-wrap:wrap}
 .leg-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3)}
 .leg-dot{width:7px;height:7px;border-radius:50%}
+.leg-line{width:14px;height:0;border-top:2px solid}
+.leg-line.dash{border-top-style:dashed}
 
 /* INPUT BAR — fixed bottom */
 .input-bar{position:fixed;bottom:0;left:0;right:0;padding:14px 20px 16px;background:linear-gradient(transparent,var(--bg) 30%);z-index:15;display:flex;flex-direction:column;gap:8px}

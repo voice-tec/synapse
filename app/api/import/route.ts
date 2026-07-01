@@ -85,6 +85,11 @@ export async function POST(req: NextRequest) {
       color: src.color || '#a78bfa',
       imported_from_token: token || null,
       imported_from_author: ownerId ? authorRef(ownerId) : null,
+      // Solo per import da marketplace: il clone punta alla tesi pubblica
+      // d'origine (conteggio import in vetrina/profili). Import da grafo
+      // condiviso: lo snapshot non ha l'uuid della tesi → null, non contano
+      // nelle statistiche marketplace.
+      imported_from_thesis: thesisId || null,
     })
     .select('id')
     .single();

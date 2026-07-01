@@ -12,14 +12,26 @@ import { normalizeSector } from '@/lib/sectors';
 // righe da Supabase, e le tesi private mangerebbero quel tetto facendo sparire
 // le pubbliche. Quindi: 1) prendi solo le pubbliche, 2) prendi le tesi degli
 // stessi autori (anche private) solo per calcolare la reputazione.
+// Paginazione a offset IN MEMORIA (non cursore DB): il sort di default
+// "reputazione" è un aggregato calcolato qui (non esprimibile come order by),
+// e il dataset è bounded (max 20 pubbliche/autore). La CDN Vercel usa l'URL
+// completo (query string inclusa) come chiave: ogni pagina/sort è una entry
+// di cache distinta, s-maxage continua a funzionare.
 export async function GET(req: NextRequest) {
   const admin = createAdminClient();
-  const sectorFilter = req.nextUrl.searchParams.get('sector')?.trim() || '';
+  const params = req.nextUrl.searchParams;
+  const sectorFilter = params.get('sector')?.trim() || '';
+  const sort = ['rep', 'recent', 'accuracy'].includes(params.get('sort') || '') ? params.get('sort')! : 'rep';
+  const limit = Math.min(50, Math.max(1, parseInt(params.get('limit') || '20', 10) || 20));
+  const offset = Math.min(500, Math.max(0, parseInt(params.get('offset') || '0', 10) || 0));
 
   let pubQ = admin
     .from('theses')
     .select('id, user_id, thesis, confidence, explanation, signals, status, accuracy, created_at, sector')
-    .eq('is_public', true);
+    .eq('is_public', true)
+    // Tetto Supabase: oltre 1000 pubbliche il totale diventa "almeno 1000".
+    // Accettato oggi (max 20 pubbliche/autore = servono 50+ autori attivi).
+    .limit(1000);
   if (sectorFilter) pubQ = pubQ.eq('sector', sectorFilter);
 
   const { data: pub, error: pubErr } = await pubQ;
@@ -51,29 +63,56 @@ export async function GET(req: NextRequest) {
 
   const sigText = (arr: any[]) => (arr || []).map((s: any) => (typeof s === 'string' ? s : s?.text)).filter(Boolean);
 
-  const items = pubRows
-    .map((t) => ({
-      id: t.id,
-      thesis: t.thesis,
-      confidence: t.confidence,
-      explanation: t.explanation,
-      status: t.status || 'active',
-      created_at: t.created_at,
-      sector: normalizeSector(t.sector),
-      signals: t.signals ? { confirm: sigText(t.signals.confirm), invalidate: sigText(t.signals.invalidate) } : null,
-      author: authorRef(t.user_id),
-      authorName: nameByUser.get(t.user_id) || null,
-      authorRep: authorRep(byUser.get(t.user_id) || []),
-    }))
-    // Ranking: prima le tesi di autori più affidabili, poi le più recenti.
-    .sort((a, b) =>
+  const all = pubRows.map((t) => ({
+    id: t.id,
+    thesis: t.thesis,
+    confidence: t.confidence,
+    explanation: t.explanation,
+    status: t.status || 'active',
+    accuracy: t.accuracy ?? null,
+    created_at: t.created_at,
+    sector: normalizeSector(t.sector),
+    signals: t.signals ? { confirm: sigText(t.signals.confirm), invalidate: sigText(t.signals.invalidate) } : null,
+    author: authorRef(t.user_id),
+    authorName: nameByUser.get(t.user_id) || null,
+    authorRep: authorRep(byUser.get(t.user_id) || []),
+    imports: 0,
+  }));
+
+  const recency = (a: { created_at: string }, b: { created_at: string }) =>
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  if (sort === 'recent') {
+    all.sort(recency);
+  } else if (sort === 'accuracy') {
+    // Accuracy della SINGOLA tesi (null in fondo), non dell'autore.
+    all.sort((a, b) => ((b.accuracy ?? -1) - (a.accuracy ?? -1)) || recency(a, b));
+  } else {
+    // Ranking default: prima le tesi di autori più affidabili, poi le più recenti.
+    all.sort((a, b) =>
       (b.authorRep.confirmed - a.authorRep.confirmed) ||
       ((b.authorRep.accuracy ?? -1) - (a.authorRep.accuracy ?? -1)) ||
-      (new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+      recency(a, b),
     );
+  }
+
+  const items = all.slice(offset, offset + limit);
+
+  // Import ricevuti: conteggio dei cloni che puntano alle tesi in pagina.
+  // Fatto DOPO lo slice (solo gli id in pagina), per restare leggeri.
+  if (items.length) {
+    const { data: clones } = await admin
+      .from('theses')
+      .select('imported_from_thesis')
+      .in('imported_from_thesis', items.map((i) => i.id));
+    const counts = new Map<string, number>();
+    for (const c of clones || []) {
+      if (c.imported_from_thesis) counts.set(c.imported_from_thesis, (counts.get(c.imported_from_thesis) || 0) + 1);
+    }
+    for (const i of items) i.imports = counts.get(i.id) || 0;
+  }
 
   return NextResponse.json(
-    { items },
+    { items, total: all.length, hasMore: offset + limit < all.length, offset, limit },
     { headers: { 'Cache-Control': 'public, s-maxage=20, stale-while-revalidate=60' } },
   );
 }

@@ -71,6 +71,7 @@ create table theses (
   pos_y float,
   imported_from_token text,                    -- token del grafo da cui è stata importata (null se nativa)
   imported_from_author text,                   -- hash opaco dell'autore sorgente (badge "importata")
+  imported_from_thesis uuid references theses(id) on delete set null, -- tesi pubblica d'origine (conteggio import)
   is_public boolean default false,             -- pubblicata nel marketplace (opt-in per tesi)
   updated_at timestamptz default now(),
   created_at timestamptz default now()
@@ -256,3 +257,10 @@ create trigger on_auth_user_created
 -- alter table watches enable row level security;
 -- drop policy if exists "own watches" on watches;
 -- create policy "own watches" on watches for all using (auth.uid() = user_id);
+--
+-- ── Marketplace 2.0: tracciamento import + indici vetrina (applicato 2026-07) ──
+-- alter table theses add column if not exists imported_from_thesis uuid references theses(id) on delete set null;
+-- create index if not exists theses_imported_from_thesis_idx
+--   on theses (imported_from_thesis) where imported_from_thesis is not null;
+-- create index if not exists theses_public_idx
+--   on theses (is_public, created_at desc) where is_public = true;

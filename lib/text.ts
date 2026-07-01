@@ -1,5 +1,5 @@
 // Similarità testuale leggera per il dedup delle tesi (stessa logica di
-// thesisSimilar in public/synapse/graph.js, qui lato server e testabile).
+// wordOverlapRatio in public/synapse/graph.js, qui lato server e testabile).
 
 function words(s: string): Set<string> {
   return new Set(

@@ -72,10 +72,19 @@ export const BODY = `
   </div>
 
   <div class="graph-legend">
-    <div class="leg-item"><div class="leg-dot" style="background:#5b9cf6"></div>causal</div>
-    <div class="leg-item"><div class="leg-dot" style="background:#2ecf98"></div>compare</div>
-    <div class="leg-item"><div class="leg-dot" style="background:#f0a030"></div>risk</div>
-    <div class="leg-item"><div class="leg-dot" style="background:#4ad68a"></div>trend</div>
+    <div class="leg-row">
+      <div class="leg-item"><div class="leg-dot" style="background:#5b9cf6"></div>causal</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#2ecf98"></div>compare</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#f0a030"></div>risk</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#4ad68a"></div>trend</div>
+    </div>
+    <div class="leg-row">
+      <div class="leg-item"><div class="leg-line" style="border-color:#f0a030"></div>stessa ipotesi</div>
+      <div class="leg-item"><div class="leg-line" style="border-color:#5b9cf6"></div>dati complementari</div>
+      <div class="leg-item"><div class="leg-line" style="border-color:#2ecf98"></div>stesso tipo di domanda</div>
+      <div class="leg-item"><div class="leg-line dash" style="border-color:#e05555"></div>contraddizione</div>
+      <div class="leg-item"><div class="leg-line" style="border-color:#4ad68a"></div>si rafforzano</div>
+    </div>
   </div>
 
   <!-- INPUT BAR -->

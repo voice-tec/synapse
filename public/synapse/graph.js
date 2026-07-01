@@ -20,6 +20,14 @@ function updateUsageLabel(){
 // salvare tesi che referenziano task non ancora salvate su Supabase.
 function isPersistedId(id){ return typeof id==='string' && id.includes('-'); }
 
+// Versione dell'euristica di connessione (computeConns/computeMemEdges): bump
+// quando cambiano i pesi, così il ricalcolo al load sa quando riscrivere gli
+// archi vecchi su Supabase (guard su localStorage.synConnV).
+const CONN_HEURISTIC_VERSION = 2;
+// Normalizza un asset/ticker: "$nvda " e "NVDA" matchano exact; forme composte
+// tipo "NVDA (Nvidia)" diventano "NVDANVIDIA" e le cattura il fuzzy (includes).
+function normAsset(a){ return String(a||'').toUpperCase().replace(/^\$/,'').replace(/[^A-Z0-9]/g,''); }
+
 // Ritornano true/false invece di lasciar propagare l'errore: chi chiama decide
 // se avvisare l'utente. Una task non salvata sparirebbe al reload (perdita dati).
 async function persistTask(task){
@@ -101,6 +109,7 @@ let selNode = null, hovNode = null, isLoading = false;
 let loadInterval = null;
 let PROTO_THESES = []; // candidate theses (tesi in formazione) da sviluppare
 let MEMORY_NODES = []; // array of {id, thesis, confidence, history, source_ids, suggested_question, x, y}
+let MEM_EDGES = []; // archi tesi↔tesi {from, to, score, type} — derivati, mai persistiti
 let ACTION_NODES = []; // array of {id, clusterId, title, summary, categories, caveat, x, y, color, sourceMemId}
 const ACTION_COLOR = '#34d399';
 let memCheckPending = false;
@@ -355,25 +364,39 @@ function loop() {
   }
 
   // Draw edges
-  for (const e of EDGES) {
-    const a=NODES.find(n=>n.id===e.from),b=NODES.find(n=>n.id===e.to);
-    if(!a||!b)continue;
-    const ecmap={same_hypothesis:'#f0a030',complementary_data:'#5b9cf6',same_question_type:'#2ecf98',contradiction:'#e05555',supports:'#4ad68a'};
+  const ecmap={same_hypothesis:'#f0a030',complementary_data:'#5b9cf6',same_question_type:'#2ecf98',contradiction:'#e05555',supports:'#4ad68a'};
+  // Percentuale sull'arco: sempre visibile per relazioni forti (>=0.7), altrimenti
+  // solo quando un capo è selezionato/hovered — i grafi densi restano puliti.
+  function drawEdgeLabel(e,mx,my,ec){
+    const edgeActive = selNode===e.from||selNode===e.to||hovNode===e.from||hovNode===e.to;
+    if(!(e.score>=0.7 || (e.score>=0.4 && edgeActive))) return;
+    const lbl=Math.round(e.score*100)+'%';
+    ctx.font='10px DM Mono';const tw=ctx.measureText(lbl).width;
+    ctx.globalAlpha=0.95;ctx.fillStyle='#0e0e12';ctx.strokeStyle=ec;ctx.lineWidth=1;
+    roundRect(ctx,mx-tw/2-6,my-9,tw+12,18,5);ctx.fill();ctx.globalAlpha=0.6;ctx.stroke();ctx.globalAlpha=1;
+    ctx.fillStyle=ec;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(lbl,mx,my);
+  }
+  function drawRelEdge(e,a,b){
     const ec=ecmap[e.type]||'#5b9cf6';
     const mx=(a.x+b.x)/2+(b.y-a.y)*0.18,my=(a.y+b.y)/2-(b.x-a.x)*0.18;
     ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(mx,my,b.x,b.y);
     // Contraddizione: tratteggiata + alpha minimo più alto, così salta all'occhio anche debole.
     if(e.type==='contradiction'){ ctx.setLineDash([5,4]); ctx.globalAlpha=0.4+e.score*0.45; }
     else { ctx.globalAlpha=0.1+e.score*0.55; }
-    ctx.strokeStyle=ec;ctx.lineWidth=0.5+e.score*2.5;ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
-    // Edge label only when one of its nodes is selected or hovered — keeps dense graphs clean
-    const edgeActive = selNode===e.from||selNode===e.to||hovNode===e.from||hovNode===e.to;
-    if(e.score>=0.4 && edgeActive){
-      const lbl=Math.round(e.score*100)+'%';
-      ctx.font='10px DM Mono';const tw=ctx.measureText(lbl).width;
-      ctx.fillStyle='#0e0e12';ctx.globalAlpha=0.92;ctx.fillRect(mx-tw/2-5,my-8,tw+10,16);ctx.globalAlpha=1;
-      ctx.fillStyle=ec;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(lbl,mx,my);
-    }
+    ctx.strokeStyle=ec;ctx.lineWidth=0.6+e.score*3;ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
+    drawEdgeLabel(e,mx,my,ec);
+  }
+  for (const e of EDGES) {
+    const a=NODES.find(n=>n.id===e.from),b=NODES.find(n=>n.id===e.to);
+    if(!a||!b)continue;
+    drawRelEdge(e,a,b);
+  }
+  // Archi tesi↔tesi: stessa grammatica visiva dei task, ma nessuna fisica
+  // (le tesi hanno posizioni salvate — vedi computeMemEdges).
+  for (const e of MEM_EDGES) {
+    const a=MEMORY_NODES.find(m=>m.id===e.from),b=MEMORY_NODES.find(m=>m.id===e.to);
+    if(!a||!b)continue;
+    drawRelEdge(e,a,b);
   }
 
   // Draw nodes
@@ -1117,6 +1140,7 @@ async function deleteTask(taskId){
       await persistThesis(mn);
     }
   }
+  computeMemEdges();
 }
 
 const ALLOC_PALETTE=['#34d399','#5b9cf6','#a78bfa','#f0a030','#f472b6','#2ecf98','#60a5fa'];
@@ -1577,19 +1601,64 @@ async function genActionForThesis(mn){
 }
 async function persistAction(a){ if(window.__synSaveAction) await window.__synSaveAction(a); }
 
-// Returns true if two thesis texts are essentially about the same topic.
-// Used to prevent near-duplicate theses from appearing as separate nodes.
-function thesisSimilar(a, b){
-  if(!a||!b) return false;
+// Rapporto 0..1 di parole significative condivise tra due testi.
+// Mirror della logica di lib/text.ts wordOverlap — tenere allineati.
+function wordOverlapRatio(a, b){
+  if(!a||!b) return 0;
   const norm=s=>s.toLowerCase().replace(/[^a-zà-ù0-9\s]/g,' ').split(/\s+/)
     .filter(w=>w.length>3); // keep meaningful words only
   const wa=new Set(norm(a)), wb=new Set(norm(b));
-  if(wa.size===0||wb.size===0) return false;
+  if(wa.size===0||wb.size===0) return 0;
   let common=0;
   for(const w of wa){ if(wb.has(w)) common++; }
   // Jaccard-like overlap relative to the smaller set
-  const overlap=common/Math.min(wa.size, wb.size);
-  return overlap>=0.55; // 55%+ shared significant words → same thesis
+  return common/Math.min(wa.size, wb.size);
+}
+// Returns true if two thesis texts are essentially about the same topic.
+// Used to prevent near-duplicate theses from appearing as separate nodes.
+function thesisSimilar(a, b){
+  return wordOverlapRatio(a, b)>=0.55; // 55%+ shared significant words → same thesis
+}
+
+// ═══ ARCHI TESI↔TESI ═══
+// Calcolati al volo a ogni cambiamento (N² su poche tesi per utente = gratis),
+// MAI persistiti e SENZA forza fisica: le tesi hanno posizioni salvate
+// (pos_x/pos_y), una molla le sposterebbe.
+function memSignalEntities(mn){
+  const out=[];
+  if(!mn.signals) return out;
+  for(const side of ['confirm','invalidate']){
+    for(const s of (mn.signals[side]||[])){
+      // Segnali legacy = semplici stringhe: nessuna entità estraibile.
+      if(!s||typeof s==='string') continue;
+      if((s.kind==='ticker'||s.kind==='fred')&&s.metric){ const n=normAsset(s.metric); if(n) out.push(n); }
+    }
+  }
+  return out;
+}
+// Modello additivo, cap 1.0, soglia 0.4 (più alta dei task: pochi archi forti):
+//   entità segnali condivise (ticker/FRED)  prima +0.30, ogni altra +0.15, cap 0.50
+//   overlap testo tesi                      ratio≥0.5 → +0.35, ratio≥0.3 → +0.20
+//   settore uguale (exact)                  +0.10
+function computeMemEdges(){
+  MEM_EDGES=[];
+  for(let i=0;i<MEMORY_NODES.length;i++)for(let j=i+1;j<MEMORY_NODES.length;j++){
+    const a=MEMORY_NODES[i],b=MEMORY_NODES[j];
+    const ea=memSignalEntities(a),eb=memSignalEntities(b);
+    const shared=Array.from(new Set(ea.filter(e=>eb.includes(e))));
+    const entScore=shared.length?Math.min(0.5,0.30+(shared.length-1)*0.15):0;
+    const ratio=wordOverlapRatio(a.thesis,b.thesis);
+    const txtScore=ratio>=0.5?0.35:(ratio>=0.3?0.20:0);
+    let score=entScore+txtScore;
+    const s1=(a.sector||'').toLowerCase().trim(),s2=(b.sector||'').toLowerCase().trim();
+    if(s1&&s2&&s1===s2)score+=0.10;
+    score=Math.round(Math.min(score,1)*100)/100;
+    if(score>=0.4){
+      // Type riusati da ecmap (colori/legenda invariati): ambra se domina il
+      // testo, blu se dominano le entità. Niente contradiction: le tesi non hanno stance.
+      MEM_EDGES.push({from:a.id,to:b.id,score,type:txtScore>entScore?'same_hypothesis':'complementary_data'});
+    }
+  }
 }
 
 function developProto(q){
@@ -1794,7 +1863,7 @@ async function checkMemoryNode(){
       ()=>MEMORY_NODES.length?openMemoryDrawer(MEMORY_NODES[MEMORY_NODES.length-1]):null;
 
   }catch(e){console.warn('memory node check failed',e);}
-  finally{memCheckPending=false;}
+  finally{memCheckPending=false; computeMemEdges();}
 }
 
 function renderSuggestedQuestions(questions,originId){
@@ -2115,6 +2184,15 @@ async function runTask(){
   }
 }
 
+// Euristica v2 (modello additivo, cap 1.0, soglia 0.35). Pesi:
+//   overlap ipotesi (≥2 parole >4 char)  +0.40
+//   asset exact (normAsset identici)     +0.22 cad., cap 0.44
+//   asset fuzzy (includes, ≥4 char)      +0.08 cad., cap 0.16
+//   analysis_type uguale                 +0.10
+//   settore uguale (exact)               +0.12
+//   concetti in overlap                  +0.08 cad., cap 0.24
+// Razionale: due ticker identici da soli (0.44) creano un arco; il fuzzy da
+// solo no. Il vecchio settore via includes matchava "tech"⊂"biotech": ora exact.
 function computeConns(newT,existing){
   const res=[];
   for(const old of existing){
@@ -2122,18 +2200,24 @@ function computeConns(newT,existing){
     const h1=(newT.fingerprint?.hypothesis||'').toLowerCase().split(/\s+/).filter(w=>w.length>4);
     const h2=(old.fingerprint?.hypothesis||'').toLowerCase().split(/\s+/).filter(w=>w.length>4);
     const ho=h1.filter(w=>h2.includes(w)).length;
-    if(ho>=2){score+=0.45;type='same_hypothesis';}
-    const a1=(newT.intent?.assets||[]).map(a=>a.toLowerCase());
-    const a2=(old.intent?.assets||[]).map(a=>a.toLowerCase());
-    const ao=a1.filter(a=>a2.some(b=>b.includes(a)||a.includes(b))).length;
-    if(ao>0)score+=Math.min(0.35,ao*0.18);
-    if(newT.intent?.analysis_type===old.intent?.analysis_type){score+=0.15;if(type==='complementary_data')type='same_question_type';}
-    const s1=(newT.fingerprint?.sector||'').toLowerCase(),s2=(old.fingerprint?.sector||'').toLowerCase();
-    if(s1&&s2&&(s1===s2||s1.includes(s2)||s2.includes(s1)))score+=0.15;
+    if(ho>=2){score+=0.40;type='same_hypothesis';}
+    const n1=(newT.intent?.assets||[]).map(normAsset).filter(Boolean);
+    const n2=(old.intent?.assets||[]).map(normAsset).filter(Boolean);
+    const exact=n1.filter(a=>n2.includes(a)).length;
+    if(exact>0)score+=Math.min(0.44,exact*0.22);
+    // Fuzzy solo su ciò che non ha già matchato exact, e solo stringhe ≥4 char
+    // (evita che "AI"⊂"AIRBNB" crei relazioni spurie).
+    const f1=n1.filter(a=>a.length>=4&&!n2.includes(a));
+    const f2=n2.filter(a=>a.length>=4&&!n1.includes(a));
+    const fuzzy=f1.filter(a=>f2.some(b=>b.includes(a)||a.includes(b))).length;
+    if(fuzzy>0)score+=Math.min(0.16,fuzzy*0.08);
+    if(newT.intent?.analysis_type===old.intent?.analysis_type){score+=0.10;if(type==='complementary_data')type='same_question_type';}
+    const s1=(newT.fingerprint?.sector||'').toLowerCase().trim(),s2=(old.fingerprint?.sector||'').toLowerCase().trim();
+    if(s1&&s2&&s1===s2)score+=0.12;
     const c1=(newT.fingerprint?.concepts||[]).map(c=>c.toLowerCase());
     const c2=(old.fingerprint?.concepts||[]).map(c=>c.toLowerCase());
     const co=c1.filter(c=>c2.some(d=>d.includes(c)||c.includes(d))).length;
-    if(co>0)score+=Math.min(0.2,co*0.1);
+    if(co>0)score+=Math.min(0.24,co*0.08);
     // Verdetti: due domande sullo STESSO tema con verdetti OPPOSTI = contraddizione
     // (tensione nel ragionamento, va evidenziata); se concordi, si rafforzano.
     const v1=newT.output?.verdict?.stance, v2=old.output?.verdict?.stance;
@@ -2145,6 +2229,21 @@ function computeConns(newT,existing){
     if(score>=0.35)res.push({task_id:old.id,query:old.raw_query,type,score});
   }
   return res.sort((a,b)=>b.score-a.score).slice(0,4);
+}
+
+// Ricostruisce EDGES e task.connections con l'euristica corrente, in ordine
+// cronologico (task_from = la più recente, come alla creazione). Gli archi nel
+// DB possono avere score/pesi di versioni vecchie: il display è sempre attuale.
+function recomputeAllConns(){
+  const ordered=TASKS.slice().sort((a,b)=>(a.created_at||0)-(b.created_at||0));
+  const newEdges=[];
+  for(let i=0;i<ordered.length;i++){
+    const t=ordered[i];
+    t.connections=computeConns(t,ordered.slice(0,i));
+    for(const c of t.connections) newEdges.push({from:t.id,to:c.task_id,score:c.score,type:c.type});
+  }
+  EDGES=newEdges;
+  window.EDGES=EDGES;
 }
 
 // ═══ SESSION MIRROR — riflette a posteriori la modalità d'uso prevalente ═══
@@ -2311,6 +2410,20 @@ document.getElementById('qi').addEventListener('input',function(){this.style.hei
         const t=TASKS.find(x=>x.id===c.task_from);
         if(t){const other=TASKS.find(x=>x.id===c.task_to);t.connections.push({task_id:c.task_to,query:other?other.raw_query:'',type:c.type,score:c.score});}
       });
+      // Ricalcola sempre gli archi in memoria con l'euristica corrente; se il
+      // ricalcolo fallisce restano gli archi DB appena caricati (fallback).
+      try{ recomputeAllConns(); }catch(e){ console.warn('recompute conns fallito, tengo gli archi DB', e); }
+      // Riconciliazione col DB solo al bump di versione dell'euristica: gli
+      // snapshot condivisi (/api/share) leggono la tabella connections, va
+      // tenuta allineata. localStorage aggiornato SOLO a insert riuscito.
+      try{
+        if(localStorage.getItem('synConnV')!==String(CONN_HEURISTIC_VERSION) && window.__synReplaceAllConns){
+          const persisted=EDGES.filter(e=>isPersistedId(e.from)&&isPersistedId(e.to));
+          window.__synReplaceAllConns(persisted)
+            .then(()=>localStorage.setItem('synConnV',String(CONN_HEURISTIC_VERSION)))
+            .catch(e=>console.warn('replace conns fallito', e));
+        }
+      }catch(e){ console.warn('conn version guard fallito', e); }
       pre.theses.forEach((th,i)=>{
         const n=pre.theses.length;
         const ang=(i/Math.max(1,n))*Math.PI*2;
@@ -2325,6 +2438,7 @@ document.getElementById('qi').addEventListener('input',function(){this.style.hei
         MEMORY_NODES.push({id:th.id,clusterId:th.cluster_id,thesis:th.thesis,confidence:th.confidence,explanation:th.explanation,pattern:th.pattern,suggested_question:th.suggested_question,sector:th.sector||null,source_ids:th.source_task_ids||[],history:th.history||[],challenge:th.challenge||null,signals:th.signals||null,status:th.status||'active',accuracy:(th.accuracy==null?null:th.accuracy),signals_hit:th.signals_hit||0,signals_total:th.signals_total||0,is_public:th.is_public||false,imported_from_author:th.imported_from_author||null,created_at:th.created_at?new Date(th.created_at):null,color:th.color||'#a78bfa',phaseOffset:Math.random()*Math.PI*2,x:px,y:py});
       });
       MEMORY_NODES.forEach(computeConfDelta);
+      computeMemEdges();
       (pre.actions||[]).forEach((ac)=>{
         const srcMem=MEMORY_NODES.find(m=>m.clusterId===ac.cluster_id);
         const isMobile = W <= 640;
