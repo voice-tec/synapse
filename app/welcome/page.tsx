@@ -1,6 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
 import { useEffect, useRef, useState } from 'react';
+import { usePublicLang, LangToggle } from '@/lib/i18n-public';
 
 // ─── Brand palette (stessa dell'app) ───────────────────────────────────────
 const C = {
@@ -19,6 +20,91 @@ const C = {
 
 const LOGO =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAeCAYAAADHJYVoAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAACMklEQVR42rWWPWtUURCGn7m7iVmNScRSjVXwAwSxEg2oRbATa7ERCxv9CWpvYWFasRexsBCtFDXYCIKgFkaIYPADQVMpxuw+Fs6VmxB3k911YNh7zt7zzpy573nPQJoaao0uTd2g3ld/qnfU4SiBI8J83gYcA/YDg0B0wC2AFrALmAKaQA24XC+B1QZwBTifi5q5qJMFIDCQ46UEn0At1GF1xj92Td2nblKHcrvtvJHvHVS/JsYX9UBZr1s5eZQeTB1XT6jby4mpBD6X48HcTazTixWBCtQH6vucqKnRQ+ZFYhTlxKJ6PZ/r9NGK/Mrv+A9W1qnRSznagX8EJvMQ2Vd09WKyZSLHA/3CDnUzMAvMAYcjopUas94ytSKitVr2RzL7GXVPD1VYRuVQaxHRVI8DN4FR4CnwInXin1j5+x14DTyMiPmVQkgptepW9ZL6Sv2h/kpfauNVm1aHywDLtrSKPjc6+EZ1VN2vXs0AzzPJWFmzUOvdcl6dVFvqvU4vrku01MFcdyp3cDL6eF4CqEXEkjoLLPT7QNZzJ9Nqq+i3niQFP1WFiz6XZwSIqEwUeYTtpSxZ82fAGKtcT9FNthW2HEq2XCj/3JIcHatcV2umYiXIDvWD+lIdQt2rzmW0WXW8i8xH1NPqQrYXu0vhugGcARazw/oGfK40O+2aIfKa3JmN0AxwNiLeqEU9garMeQvMrwH8r44Dt4G7EfGoLGtEtEolfKw21SelqnVLwypBfgNA68VUmj2DLAAAAABJRU5ErkJggg==';
+
+// ─── Copy bilingue (IT/EN) — solo testi; struttura e motion invariati ────────
+const L = {
+  it: {
+    nav: { login: 'accedi' },
+    hero: {
+      eyebrow: 'sistema di pensiero visivo · ricerca finanziaria',
+      p: 'Mappa la tua ricerca finanziaria in un grafo dinamico. Symnaps collega le tue ipotesi a macro-scenari e dati ufficiali, organizzando visivamente la tua intelligenza.',
+      cta: 'Inizia da una domanda', how: 'Vedi come funziona',
+      legend: ['domande', 'tesi', 'portafogli'],
+    },
+    marquee: ['FRED macro', 'Twelve Data', 'CPI', 'tassi FED', 'NVDA', 'spread high-yield', 'VWCE', 'mega-cap tech', 'oro', 'curva dei rendimenti', 'utili trimestrali', 'volatilità'],
+    howTitle: { pre: 'Tre tipi di nodo, costruiti sui ', em: 'dati', post: '.' },
+    steps: [
+      { k: 'domanda', h: 'Interroga dati reali, non opinioni', b: 'Ogni domanda è un nodo. Symnaps risponde con dati ufficiali — serie FRED e prezzi Twelve Data, niente numeri inventati — e prende posizione con un verdetto netto: sì, no o dipende.' },
+      { k: 'tesi', h: 'Un track record che non si può gonfiare', b: 'Le domande sullo stesso tema diventano una tesi. La confidenza è calcolata dai dati, non sparata dal modello: segnali testabili la confermano o la invalidano, e si ri-controlla ogni settimana.' },
+      { k: 'portafoglio', h: 'Tradotta in strumenti, con i suoi limiti', b: 'Da una tesi solida nasce un portafoglio: categorie e strumenti reali (ETF, indici), a taglio educativo, agganciato a ciò che già possiedi.' },
+    ],
+    demoTitle: { pre: 'Da una domanda al ', em: 'tuo', post: ' portafoglio.' },
+    demo: {
+      q1: 'le big tech reggono coi tassi alti?', q2: 'nvidia: la domanda AI rallenta?',
+      t: 'mega-cap tech', tSub: 'conf. 72% ↑', p: 'portafoglio tesi', pCats: '5 categorie', pCovered: '+ già coperto',
+      beats: [
+        { k: 'esempio · domande', h: 'Parti da due domande vere', body: <>«Le big tech reggono coi tassi alti?» Poi «la domanda AI di Nvidia rallenta?». Ognuna risponde sui dati e prende posizione.</> },
+        { k: 'esempio · tesi', h: 'Si fondono in una tesi', body: <>Stesso tema → emerge la tesi <b style={{ color: C.t }}>«mega-cap tech»</b> con confidenza 72%, alimentata dai segnali delle due domande.</> },
+        { k: 'esempio · portafoglio', h: 'La tesi diventa strumenti', body: <>Da «mega-cap tech» nasce un portafoglio: categorie e strumenti reali (ETF, indici), pronti da valutare.</> },
+        { k: 'esempio · il tuo portafoglio', h: 'Incrociato con ciò che hai', body: <>Carichi cosa possiedi e Symnaps segnala: <b style={{ color: C.p }}>«mega-cap già coperte in parte da VWCE»</b>.</> },
+      ],
+    },
+    featTitle: { pre: 'Non un editor di note. Un ', em: 'sistema visivo', post: ' che connette i dati.' },
+    features: [
+      { h: 'Scenari & catalizzatori', b: 'Modelli Bull / Base / Bear per ogni tesi, integrati con i catalizzatori di mercato in arrivo che possono spostare i prezzi.' },
+      { h: 'Dati macro ufficiali', b: 'Serie FRED® e prezzi Twelve Data integrati direttamente nei tuoi parametri di ricerca e nei grafici a linea. Niente numeri inventati, solo fonti istituzionali.' },
+      { h: 'Memoria del grafo', b: 'Nodi di memoria storici che ricordano ogni tua analisi conclusa. La tua ricerca non riparte mai da zero, si evolve.' },
+      { h: 'Stress Test', b: "Sfida la tenuta di una tesi inserendo una nuova variabile macro. Guarda se l'analisi regge alla pressione dei dati storici o se invalida l'ipotesi." },
+      { h: 'Verdetto dinamico', b: 'Symnaps monitora le tesi e aggiorna i collegamenti ogni settimana, registrando ogni singolo cambiamento di scenario nello storico delle tue analisi.' },
+      { h: 'Carica il tuo portafoglio', b: 'Inserisci gli strumenti che possiedi davvero (ticker e peso). Ogni portafoglio di tesi segnala cosa hai già coperto — es. "già coperto in parte da VWCE".' },
+      { h: 'Condividi il grafo', b: 'Pubblica un link al grafo: responsive, pinch-zoom, leggibile da chiunque — senza account.' },
+    ],
+    stats: ['tipi di nodo nel grafo', 'fonti dati ufficiali (FRED · Twelve Data)', 'numeri inventati'],
+    final: { h1: 'Inizia da una domanda.', h2: 'Al resto pensa la struttura.', sub: 'Gratis per iniziare. Nessuna carta richiesta.', cta: 'Inizia da una domanda' },
+    footer: { tag: 'un sistema di pensiero visivo per la ricerca finanziaria', pricing: 'piani', privacy: 'privacy', login: 'accedi →' },
+  },
+  en: {
+    nav: { login: 'log in' },
+    hero: {
+      eyebrow: 'visual thinking system · financial research',
+      p: 'Map your financial research as a living graph. Symnaps connects your hypotheses to macro scenarios and official data, organizing your intelligence visually.',
+      cta: 'Start from a question', how: 'See how it works',
+      legend: ['questions', 'theses', 'portfolios'],
+    },
+    marquee: ['FRED macro', 'Twelve Data', 'CPI', 'FED rates', 'NVDA', 'high-yield spreads', 'VWCE', 'mega-cap tech', 'gold', 'yield curve', 'quarterly earnings', 'volatility'],
+    howTitle: { pre: 'Three node types, built on ', em: 'data', post: '.' },
+    steps: [
+      { k: 'question', h: 'Query real data, not opinions', b: 'Every question becomes a node. Symnaps answers with official data — FRED series and Twelve Data prices, no made-up numbers — and takes a stance with a clear verdict: yes, no, or it depends.' },
+      { k: 'thesis', h: 'A track record you can\'t inflate', b: 'Questions on the same theme merge into a thesis. Confidence is computed from data, not declared by the model: testable signals confirm or invalidate it, re-checked every week.' },
+      { k: 'portfolio', h: 'Translated into instruments, limits included', b: 'A solid thesis becomes a portfolio: real categories and instruments (ETFs, indices), educational by design, tied to what you already own.' },
+    ],
+    demoTitle: { pre: 'From a question to ', em: 'your', post: ' portfolio.' },
+    demo: {
+      q1: 'do big tech hold up with high rates?', q2: 'nvidia: is AI demand slowing?',
+      t: 'mega-cap tech', tSub: 'conf. 72% ↑', p: 'thesis portfolio', pCats: '5 categories', pCovered: '+ already covered',
+      beats: [
+        { k: 'example · questions', h: 'Start from two real questions', body: <>"Do big tech hold up with high rates?" Then "is Nvidia's AI demand slowing?". Each one answers on data and takes a stance.</> },
+        { k: 'example · thesis', h: 'They merge into one thesis', body: <>Same theme → the <b style={{ color: C.t }}>"mega-cap tech"</b> thesis emerges at 72% confidence, fed by both questions' signals.</> },
+        { k: 'example · portfolio', h: 'The thesis becomes instruments', body: <>From "mega-cap tech" a portfolio is born: real categories and instruments (ETFs, indices), ready to evaluate.</> },
+        { k: 'example · your portfolio', h: 'Crossed with what you own', body: <>Upload what you hold and Symnaps flags it: <b style={{ color: C.p }}>"mega-caps already partly covered by VWCE"</b>.</> },
+      ],
+    },
+    featTitle: { pre: 'Not a note editor. A ', em: 'visual system', post: ' that connects data.' },
+    features: [
+      { h: 'Scenarios & catalysts', b: 'Bull / Base / Bear models for every thesis, plus the upcoming market catalysts that can move prices.' },
+      { h: 'Official macro data', b: 'FRED® series and Twelve Data prices wired straight into your research and line charts. No invented numbers, institutional sources only.' },
+      { h: 'Graph memory', b: 'Memory nodes remember every completed analysis. Your research never starts from scratch — it evolves.' },
+      { h: 'Stress Test', b: 'Challenge a thesis with a new macro variable. See whether the analysis holds under the pressure of historical data or breaks.' },
+      { h: 'Dynamic verdict', b: 'Symnaps monitors your theses and refreshes links every week, logging every change of scenario in your history.' },
+      { h: 'Upload your portfolio', b: 'Declare the instruments you actually own (ticker and weight). Every thesis portfolio flags what you already cover — e.g. "partly covered by VWCE".' },
+      { h: 'Share the graph', b: 'Publish a link to your graph: responsive, pinch-zoom, readable by anyone — no account needed.' },
+    ],
+    stats: ['node types in the graph', 'official data sources (FRED · Twelve Data)', 'invented numbers'],
+    final: { h1: 'Start from a question.', h2: 'The structure handles the rest.', sub: 'Free to start. No card required.', cta: 'Start from a question' },
+    footer: { tag: 'a visual thinking system for financial research', pricing: 'plans', privacy: 'privacy', login: 'log in →' },
+  },
+};
+type Dict = typeof L.it;
 
 // ─── Hero graph: mostra il flusso domande → tesi → portafogli ───────────────
 // Non rumore casuale come sullo /login: qui i legami nascono in zone precise
@@ -206,7 +292,7 @@ function Glyph({ ch, color }: { ch: string; color: string }) {
 // ─── Demo animata: la stessa scena che vive nell'app, in loop ───────────────
 // Quattro battute che si auto-avanzano: domanda → tesi → portafoglio → il TUO
 // portafoglio che marca "già coperto". Niente video: è il prodotto in piccolo.
-function FlowDemo() {
+function FlowDemo({ d }: { d: Dict['demo'] }) {
   const [s, setS] = useState(0);
   const wrap = useRef<HTMLDivElement>(null);
   const [run, setRun] = useState(false);
@@ -250,12 +336,12 @@ function FlowDemo() {
           </svg>
 
           {/* Domande: cerchio scuro, bordo blu, lettera del tipo di analisi */}
-          <GNode p={N.q1} show={on(0)} active={s === 0} kind="q" col={C.q} glyph="V" label="le big tech reggono coi tassi alti?" />
-          <GNode p={N.q2} show={on(1)} active={s === 1} kind="q" col={C.q} glyph="M" label="nvidia: la domanda AI rallenta?" />
+          <GNode p={N.q1} show={on(0)} active={s === 0} kind="q" col={C.q} glyph="V" label={d.q1} />
+          <GNode p={N.q2} show={on(1)} active={s === 1} kind="q" col={C.q} glyph="M" label={d.q2} />
           {/* Tesi: esagono, arco di confidenza, verdetto */}
-          <GNode p={N.t} show={on(2)} active={s === 2} kind="t" col={C.t} glyph="◆" label="mega-cap tech" sub="conf. 72% ↑" conf={0.72} />
+          <GNode p={N.t} show={on(2)} active={s === 2} kind="t" col={C.t} glyph="◆" label={d.t} sub={d.tSub} conf={0.72} />
           {/* Portafoglio: quadrato verde */}
-          <GNode p={N.p} show={on(3)} active={s >= 3} kind="p" col={C.p} glyph="▤" label="portafoglio tesi" sub={on(4) ? '+ già coperto' : '5 categorie'} />
+          <GNode p={N.p} show={on(3)} active={s >= 3} kind="p" col={C.p} glyph="▤" label={d.p} sub={on(4) ? d.pCovered : d.pCats} />
         </div>
 
         {/* Pannello che racconta la battuta */}
@@ -266,22 +352,16 @@ function FlowDemo() {
             ))}
           </div>
 
-          <Beat show={s <= 1} c={C.q} k="esempio · domande" h="Parti da due domande vere">
-            «Le big tech reggono coi tassi alti?» Poi «la domanda AI di Nvidia rallenta?». Ognuna risponde sui dati e prende posizione.
-          </Beat>
-          <Beat show={s === 2} c={C.t} k="esempio · tesi" h="Si fondono in una tesi">
-            Stesso tema → emerge la tesi <b style={{ color: C.t }}>«mega-cap tech»</b> con confidenza 72%, alimentata dai segnali delle due domande.
-          </Beat>
-          <Beat show={s === 3} c={C.p} k="esempio · portafoglio" h="La tesi diventa strumenti">
-            Da «mega-cap tech» nasce un portafoglio: categorie e strumenti reali (ETF, indici), pronti da valutare.
-          </Beat>
-          <Beat show={s >= 4} c={C.p} k="esempio · il tuo portafoglio" h="Incrociato con ciò che hai">
+          <Beat show={s <= 1} c={C.q} k={d.beats[0].k} h={d.beats[0].h}>{d.beats[0].body}</Beat>
+          <Beat show={s === 2} c={C.t} k={d.beats[1].k} h={d.beats[1].h}>{d.beats[1].body}</Beat>
+          <Beat show={s === 3} c={C.p} k={d.beats[2].k} h={d.beats[2].h}>{d.beats[2].body}</Beat>
+          <Beat show={s >= 4} c={C.p} k={d.beats[3].k} h={d.beats[3].h}>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
               {['VWCE 60%', 'SGLN 10%', 'AGGH 30%'].map((h) => (
                 <span key={h} style={{ fontSize: 10.5, color: C.p, border: `1px solid ${C.p}40`, background: C.p + '12', borderRadius: 7, padding: '3px 8px' }}>{h}</span>
               ))}
             </div>
-            Carichi cosa possiedi e Symnaps segnala: <b style={{ color: C.p }}>«mega-cap già coperte in parte da VWCE»</b>.
+            {d.beats[3].body}
           </Beat>
         </div>
       </div>
@@ -380,32 +460,21 @@ function Beat({ show, c, k, h, children }: { show: boolean; c: string; k: string
 
 // Sticky-stack = ANATOMIA del sistema (cos'è ogni nodo + perché è rigoroso).
 // Distinta dalla demo, che mostra UN esempio concreto svolgersi.
-const STEPS = [
-  {
-    g: '●', c: C.q, k: 'domanda',
-    h: 'Interroga dati reali, non opinioni',
-    b: 'Ogni domanda è un nodo. Symnaps risponde con dati ufficiali — serie FRED e prezzi Twelve Data, niente numeri inventati — e prende posizione con un verdetto netto: sì, no o dipende.',
-  },
-  {
-    g: '◆', c: C.t, k: 'tesi',
-    h: 'Un track record che non si può gonfiare',
-    b: 'Le domande sullo stesso tema diventano una tesi. La confidenza è calcolata dai dati, non sparata dal modello: segnali testabili la confermano o la invalidano, e si ri-controlla ogni settimana.',
-  },
-  {
-    g: '▤', c: C.p, k: 'portafoglio',
-    h: 'Tradotta in strumenti, con i suoi limiti',
-    b: 'Da una tesi solida nasce un portafoglio: categorie e strumenti reali (ETF, indici), a taglio educativo, agganciato a ciò che già possiedi.',
-  },
+// Glifi/colori qui; i testi (k/h/b) vengono dal dizionario L per lingua.
+const STEPS_META = [
+  { g: '●', c: C.q },
+  { g: '◆', c: C.t },
+  { g: '▤', c: C.p },
 ];
 
-const FEATURES = [
-  { g: '◵', c: C.q, h: 'Scenari & catalizzatori', b: 'Modelli Bull / Base / Bear per ogni tesi, integrati con i catalizzatori di mercato in arrivo che possono spostare i prezzi.' },
-  { g: '▦', c: C.p, h: 'Dati macro ufficiali', b: 'Serie FRED® e prezzi Twelve Data integrati direttamente nei tuoi parametri di ricerca e nei grafici a linea. Niente numeri inventati, solo fonti istituzionali.' },
-  { g: '◆', c: C.t, h: 'Memoria del grafo', b: 'Nodi di memoria storici che ricordano ogni tua analisi conclusa. La tua ricerca non riparte mai da zero, si evolve.' },
-  { g: '✕', c: C.warn, h: 'Stress Test', b: "Sfida la tenuta di una tesi inserendo una nuova variabile macro. Guarda se l'analisi regge alla pressione dei dati storici o se invalida l'ipotesi." },
-  { g: '◷', c: C.t, h: 'Verdetto dinamico', b: 'Symnaps monitora le tesi e aggiorna i collegamenti ogni settimana, registrando ogni singolo cambiamento di scenario nello storico delle tue analisi.' },
-  { g: '▤', c: C.p, h: 'Carica il tuo portafoglio', b: 'Inserisci gli strumenti che possiedi davvero (ticker e peso). Ogni portafoglio di tesi segnala cosa hai già coperto — es. "già coperto in parte da VWCE".' },
-  { g: '↗', c: C.q, h: 'Condividi il grafo', b: 'Pubblica un link al grafo: responsive, pinch-zoom, leggibile da chiunque — senza account.' },
+const FEATURES_META = [
+  { g: '◵', c: C.q },
+  { g: '▦', c: C.p },
+  { g: '◆', c: C.t },
+  { g: '✕', c: C.warn },
+  { g: '◷', c: C.t },
+  { g: '▤', c: C.p },
+  { g: '↗', c: C.q },
 ];
 
 // Barra di avanzamento scroll (i 3 colori semantici). transform-only, rAF-throttle.
@@ -439,9 +508,8 @@ function GrainOrbs() {
 }
 
 // Marquee: cosa Symnaps mastica davvero (una sola sulla pagina, racconta i dati).
-const MARQUEE = ['FRED macro', 'Twelve Data', 'CPI', 'tassi FED', 'NVDA', 'spread high-yield', 'VWCE', 'mega-cap tech', 'oro', 'curva dei rendimenti', 'utili trimestrali', 'volatilità'];
-function Marquee() {
-  const items = [...MARQUEE, ...MARQUEE];
+function Marquee({ words }: { words: string[] }) {
+  const items = [...words, ...words];
   return (
     <div className="w-marquee" style={{ borderTop: `1px solid ${C.border}55`, borderBottom: `1px solid ${C.border}55`, padding: '15px 0' }}>
       <div className="w-mtrack">
@@ -479,13 +547,15 @@ function CountUp({ to, suffix = '' }: { to: number; suffix?: string }) {
   return <span ref={ref}>0{suffix}</span>;
 }
 
-const STATS = [
-  { n: 3, k: 'tipi di nodo nel grafo', c: C.q },
-  { n: 2, k: 'fonti dati ufficiali (FRED · Twelve Data)', c: C.p },
-  { n: 0, k: 'numeri inventati', c: C.t },
+const STATS_META = [
+  { n: 3, c: C.q },
+  { n: 2, c: C.p },
+  { n: 0, c: C.t },
 ];
 
 export default function Welcome() {
+  const [lang, setLang] = usePublicLang();
+  const t = L[lang];
   // CTA magnetiche: il bottone segue leggermente il cursore (transform inline,
   // transizione .15s della .w-btn = molla morbida). Spento con reduced-motion.
   useEffect(() => {
@@ -606,7 +676,8 @@ export default function Welcome() {
           <img src={LOGO} alt="Symnaps" style={{ height: 20 }} />
           <span style={{ fontFamily: serif, fontWeight: 300, fontSize: 18, color: '#fff', letterSpacing: '.02em' }}>Symnaps</span>
         </div>
-        <a href="/login" className="w-btn" style={{ fontFamily: mono, fontSize: 12, fontWeight: 500, color: C.bg, background: C.q, borderRadius: 999, padding: '8px 16px' }}>accedi</a>
+        <LangToggle lang={lang} setLang={setLang} />
+        <a href="/login" className="w-btn" style={{ fontFamily: mono, fontSize: 12, fontWeight: 500, color: C.bg, background: C.q, borderRadius: 999, padding: '8px 16px' }}>{t.nav.login}</a>
       </nav>
 
       {/* ── Hero ── */}
@@ -616,7 +687,7 @@ export default function Welcome() {
 
         <div data-par="0.16" data-fade style={{ position: 'relative', zIndex: 2, maxWidth: 760, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 26, willChange: 'transform, opacity' }}>
           <div className="w-in" style={{ fontSize: 11, color: C.faint, letterSpacing: '.14em', textTransform: 'uppercase' }}>
-            sistema di pensiero visivo · ricerca finanziaria
+            {t.hero.eyebrow}
           </div>
 
           <h1 style={{ fontFamily: serif, fontWeight: 300, fontSize: 'clamp(50px, 11vw, 132px)', lineHeight: 1.0, letterSpacing: '-.035em' }}>
@@ -626,27 +697,25 @@ export default function Welcome() {
           </h1>
 
           <p className="w-in" style={{ maxWidth: 560, fontSize: 14.5, lineHeight: 1.7, color: C.muted, animationDelay: '.16s' }}>
-            Mappa la tua ricerca finanziaria in un grafo dinamico. Symnaps collega le tue
-            ipotesi a macro-scenari e dati ufficiali, organizzando visivamente la tua
-            intelligenza.
+            {t.hero.p}
           </p>
 
           <div className="w-in" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', animationDelay: '.24s' }}>
             <a href="/login" className="w-btn w-cta" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: C.q, color: C.bg, fontFamily: mono, fontWeight: 500, fontSize: 13, borderRadius: 12, padding: '11px 13px 11px 20px', boxShadow: `0 10px 34px -10px ${C.q}77` }}>
-              Inizia da una domanda
+              {t.hero.cta}
               <span style={{ width: 26, height: 26, borderRadius: '50%', background: '#08080a26', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}>→</span>
             </a>
             <a href="#come" className="w-btn" style={{ color: C.text, fontFamily: mono, fontSize: 13, borderRadius: 12, padding: '13px 22px', border: `1px solid ${C.border}` }}>
-              Vedi come funziona
+              {t.hero.how}
             </a>
           </div>
 
           <div className="w-in" style={{ display: 'flex', gap: 20, flexWrap: 'wrap', justifyContent: 'center', fontSize: 10.5, color: C.faint, letterSpacing: '.04em', marginTop: 8, animationDelay: '.32s' }}>
-            <span><Glyph ch="●" color={C.q} /> domande</span>
+            <span><Glyph ch="●" color={C.q} /> {t.hero.legend[0]}</span>
             <span style={{ color: C.faint }}>→</span>
-            <span><Glyph ch="◆" color={C.t} /> tesi</span>
+            <span><Glyph ch="◆" color={C.t} /> {t.hero.legend[1]}</span>
             <span style={{ color: C.faint }}>→</span>
-            <span><Glyph ch="▤" color={C.p} /> portafogli</span>
+            <span><Glyph ch="▤" color={C.p} /> {t.hero.legend[2]}</span>
           </div>
         </div>
 
@@ -655,7 +724,7 @@ export default function Welcome() {
 
       {/* ── Marquee dati: cosa analizza ── */}
       <div style={{ position: 'relative', zIndex: 5 }}>
-        <Marquee />
+        <Marquee words={t.marquee} />
       </div>
 
       {/* ── Come funziona ── */}
@@ -663,14 +732,14 @@ export default function Welcome() {
         <Reveal>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
             <h2 style={{ fontFamily: serif, fontWeight: 300, fontSize: 'clamp(26px, 4vw, 38px)', color: '#fff', letterSpacing: '-.01em' }}>
-              Tre tipi di nodo, costruiti sui <span style={{ fontStyle: 'italic' }}>dati</span>.
+              {t.howTitle.pre}<span style={{ fontStyle: 'italic' }}>{t.howTitle.em}</span>{t.howTitle.post}
             </h2>
           </div>
         </Reveal>
 
         <div className="w-stack">
-          {STEPS.map((s, i) => (
-            <div key={s.k} className="w-stack-card" style={{ top: 84 + i * 16, zIndex: i + 1, marginBottom: i < STEPS.length - 1 ? 28 : 0, minHeight: '58vh', background: `linear-gradient(135deg, ${s.c}26, transparent 60%), ${C.cardSolid}`, border: `1px solid ${s.c}3a`, display: 'flex', alignItems: 'center', gap: 'clamp(20px,5vw,64px)', padding: 'clamp(30px,5vw,60px)', flexWrap: 'wrap' }}>
+          {STEPS_META.map((s, i) => (
+            <div key={i} className="w-stack-card" style={{ top: 84 + i * 16, zIndex: i + 1, marginBottom: i < STEPS_META.length - 1 ? 28 : 0, minHeight: '58vh', background: `linear-gradient(135deg, ${s.c}26, transparent 60%), ${C.cardSolid}`, border: `1px solid ${s.c}3a`, display: 'flex', alignItems: 'center', gap: 'clamp(20px,5vw,64px)', padding: 'clamp(30px,5vw,60px)', flexWrap: 'wrap' }}>
               {/* numero filigrana */}
               <div style={{ position: 'absolute', top: '-8%', right: '2%', fontFamily: serif, fontWeight: 300, fontSize: 'clamp(130px,24vw,320px)', lineHeight: 0.8, color: s.c + '1c', pointerEvents: 'none', userSelect: 'none' }}>0{i + 1}</div>
               {/* nodo come nel grafo: cerchio (domanda) · esagono+arco (tesi) · quadrato (portafoglio) */}
@@ -684,9 +753,9 @@ export default function Welcome() {
                 {i === 1 && <span style={{ position: 'absolute', bottom: '-22px', left: 0, right: 0, textAlign: 'center', fontSize: 11, color: s.c, letterSpacing: '.04em' }}>conf. 72% ↑</span>}
               </div>
               <div style={{ flex: 1, minWidth: 240, position: 'relative' }}>
-                <div style={{ fontSize: 11, color: s.c, letterSpacing: '.14em', textTransform: 'uppercase', marginBottom: 14 }}>{s.k}</div>
-                <h3 style={{ fontFamily: serif, fontWeight: 300, fontSize: 'clamp(26px,4vw,44px)', color: '#fff', marginBottom: 16, lineHeight: 1.1, letterSpacing: '-.02em' }}>{s.h}</h3>
-                <p style={{ fontSize: 'clamp(13px,1.4vw,16px)', lineHeight: 1.7, color: C.muted, maxWidth: '48ch' }}>{s.b}</p>
+                <div style={{ fontSize: 11, color: s.c, letterSpacing: '.14em', textTransform: 'uppercase', marginBottom: 14 }}>{t.steps[i].k}</div>
+                <h3 style={{ fontFamily: serif, fontWeight: 300, fontSize: 'clamp(26px,4vw,44px)', color: '#fff', marginBottom: 16, lineHeight: 1.1, letterSpacing: '-.02em' }}>{t.steps[i].h}</h3>
+                <p style={{ fontSize: 'clamp(13px,1.4vw,16px)', lineHeight: 1.7, color: C.muted, maxWidth: '48ch' }}>{t.steps[i].b}</p>
               </div>
             </div>
           ))}
@@ -698,12 +767,12 @@ export default function Welcome() {
         <Reveal>
           <div style={{ textAlign: 'center', marginBottom: 36 }}>
             <h2 style={{ fontFamily: serif, fontWeight: 300, fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', letterSpacing: '-.01em' }}>
-              Da una domanda al <span style={{ fontStyle: 'italic' }}>tuo</span> portafoglio.
+              {t.demoTitle.pre}<span style={{ fontStyle: 'italic' }}>{t.demoTitle.em}</span>{t.demoTitle.post}
             </h2>
           </div>
         </Reveal>
         <Reveal delay={0.06}>
-          <FlowDemo />
+          <FlowDemo d={t.demo} />
         </Reveal>
       </section>
 
@@ -712,20 +781,20 @@ export default function Welcome() {
         <Reveal>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <h2 style={{ fontFamily: serif, fontWeight: 300, fontSize: 'clamp(26px, 4vw, 38px)', color: '#fff', letterSpacing: '-.01em' }}>
-              Non un editor di note. Un <span style={{ fontStyle: 'italic' }}>sistema visivo</span> che connette i dati.
+              {t.featTitle.pre}<span style={{ fontStyle: 'italic' }}>{t.featTitle.em}</span>{t.featTitle.post}
             </h2>
           </div>
         </Reveal>
 
         <div className="w-bentoF">
-          {FEATURES.map((f, i) => (
-            <Reveal key={f.h} className={`f${i}`} delay={(i % 3) * 0.07}>
+          {FEATURES_META.map((f, i) => (
+            <Reveal key={i} className={`f${i}`} delay={(i % 3) * 0.07}>
               <div className="w-card" style={{ background: i === 0 ? `linear-gradient(135deg, ${f.c}16, ${C.card})` : C.card, border: `1px solid ${i === 0 ? f.c + '3a' : C.border + '88'}`, borderRadius: 16, padding: '22px 22px', height: '100%' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                   <span style={{ width: 32, height: 32, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: f.c + '1a', border: `1px solid ${f.c}3a`, color: f.c, fontSize: 15 }}>{f.g}</span>
-                  <h3 style={{ fontFamily: serif, fontWeight: 400, fontSize: 17, color: '#fff' }}>{f.h}</h3>
+                  <h3 style={{ fontFamily: serif, fontWeight: 400, fontSize: 17, color: '#fff' }}>{t.features[i].h}</h3>
                 </div>
-                <p style={{ fontSize: 12.5, lineHeight: 1.65, color: C.muted, maxWidth: i === 0 ? '54ch' : undefined }}>{f.b}</p>
+                <p style={{ fontSize: 12.5, lineHeight: 1.65, color: C.muted, maxWidth: i === 0 ? '54ch' : undefined }}>{t.features[i].b}</p>
               </div>
             </Reveal>
           ))}
@@ -736,10 +805,10 @@ export default function Welcome() {
       <section style={{ position: 'relative', zIndex: 5, maxWidth: 1040, margin: '0 auto', padding: '40px 24px 10px' }}>
         <Reveal>
           <div className="w-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-            {STATS.map((st) => (
-              <div key={st.k} style={{ textAlign: 'center', padding: '26px 16px' }}>
+            {STATS_META.map((st, i) => (
+              <div key={i} style={{ textAlign: 'center', padding: '26px 16px' }}>
                 <div style={{ fontFamily: serif, fontWeight: 300, fontSize: 'clamp(44px, 7vw, 76px)', color: st.c, lineHeight: 1 }}><CountUp to={st.n} /></div>
-                <div style={{ fontSize: 11.5, color: C.muted, marginTop: 12, letterSpacing: '.03em' }}>{st.k}</div>
+                <div style={{ fontSize: 11.5, color: C.muted, marginTop: 12, letterSpacing: '.03em' }}>{t.stats[i]}</div>
               </div>
             ))}
           </div>
@@ -753,11 +822,11 @@ export default function Welcome() {
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: `radial-gradient(ellipse 70% 90% at 50% 0%, ${C.q}24, transparent 62%)` }} />
             <div style={{ position: 'relative' }}>
               <h2 style={{ fontFamily: serif, fontWeight: 300, fontSize: 'clamp(30px, 5.5vw, 52px)', color: '#fff', marginBottom: 16, lineHeight: 1.12, letterSpacing: '-.02em' }}>
-                Inizia da una domanda.<br /><span style={{ fontStyle: 'italic', color: C.muted }}>Al resto pensa la struttura.</span>
+                {t.final.h1}<br /><span style={{ fontStyle: 'italic', color: C.muted }}>{t.final.h2}</span>
               </h2>
-              <p style={{ fontSize: 13, color: C.muted, marginBottom: 26 }}>Gratis per iniziare. Nessuna carta richiesta.</p>
+              <p style={{ fontSize: 13, color: C.muted, marginBottom: 26 }}>{t.final.sub}</p>
               <a href="/login" className="w-btn w-cta" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: C.q, color: C.bg, fontFamily: mono, fontWeight: 500, fontSize: 13, borderRadius: 12, padding: '12px 14px 12px 22px', boxShadow: `0 10px 34px -10px ${C.q}77` }}>
-                Inizia da una domanda
+                {t.final.cta}
                 <span style={{ width: 26, height: 26, borderRadius: '50%', background: '#08080a26', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}>→</span>
               </a>
             </div>
@@ -771,8 +840,12 @@ export default function Welcome() {
           <img src={LOGO} alt="" style={{ height: 18 }} />
           <span style={{ fontFamily: serif, fontWeight: 300, fontSize: 15, color: C.muted }}>Symnaps</span>
         </div>
-        <div style={{ fontSize: 11, color: C.muted, letterSpacing: '.04em' }}>un sistema di pensiero visivo per la ricerca finanziaria</div>
-        <a href="/login" style={{ fontSize: 11, color: C.muted }}>accedi →</a>
+        <div style={{ fontSize: 11, color: C.muted, letterSpacing: '.04em' }}>{t.footer.tag}</div>
+        <div style={{ display: 'flex', gap: 16 }}>
+          <a href="/pricing" style={{ fontSize: 11, color: C.muted }}>{t.footer.pricing}</a>
+          <a href="/privacy" style={{ fontSize: 11, color: C.muted }}>{t.footer.privacy}</a>
+          <a href="/login" style={{ fontSize: 11, color: C.muted }}>{t.footer.login}</a>
+        </div>
       </footer>
     </div>
   );

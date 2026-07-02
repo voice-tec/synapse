@@ -4,8 +4,8 @@
 
 export const AI_CALL_LIMITS: Record<string, number> = {
   free: 50,    // 50 chiamate al mese
-  pro: 99999,
-  team: 99999,
+  pro: 500,    // accessorie (suggest/memory/challenge/portfolio/seed)
+  team: 500,
 };
 
 export async function checkAiCall(supabase: any, userId: string) {

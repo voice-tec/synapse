@@ -2,8 +2,17 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Symnaps',
-  description: 'Questions. Theses. Portfolios. — visual thinking system for financial research',
+  title: { default: 'Symnaps', template: '%s — Symnaps' },
+  description: 'Domande, tesi, portafogli: il grafo visivo che trasforma le tue domande di finanza in convinzioni con un track record misurato su dati reali.',
+  openGraph: {
+    title: 'Symnaps — financial intelligence a grafo',
+    description: 'Fai una domanda di finanza: diventa un nodo. Le domande si collegano, emergono tesi con confidenza e track record su dati reali.',
+    siteName: 'Symnaps',
+    locale: 'it_IT',
+    type: 'website',
+    // images: ['/og.png'], // TODO: asset OG quando c'è il dominio definitivo
+  },
+  twitter: { card: 'summary_large_image' },
 };
 
 export const viewport: Viewport = {

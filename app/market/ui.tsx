@@ -40,6 +40,7 @@ export function MarketTopbar({ isAuthed }: { isAuthed: boolean }) {
       <span style={{ fontSize: 10, padding: '3px 10px', borderRadius: 6, background: '#241a3a', color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '.06em' }}>marketplace</span>
       <span style={{ marginLeft: 'auto', display: 'flex', gap: 16 }}>
         {isAuthed && <a href="/market/mine" style={{ color: '#a78bfa', fontSize: 12, textDecoration: 'none' }}>le mie pubblicazioni</a>}
+        <a href="/pricing" style={{ color: '#7a7a95', fontSize: 12, textDecoration: 'none' }}>piani</a>
         <a href="/" style={{ color: '#5b9cf6', fontSize: 12, textDecoration: 'none' }}>il tuo grafo →</a>
       </span>
     </div>

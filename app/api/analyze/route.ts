@@ -4,11 +4,12 @@ import { askClaudeJSON } from '@/lib/anthropic';
 import { enrichChartWithRealData } from '@/lib/quotes';
 import { macroSnapshot } from '@/lib/fred';
 
-// Limiti per piano
+// Limiti per piano (Pro €9.90/mese: cap 150 tiene il margine positivo
+// anche sui power user — costo AI ~€0.06-0.08/analisi)
 const PLAN_LIMITS: Record<string, number> = {
-  free: 10,    // 10 task al mese
-  pro: 99999,  // illimitato di fatto
-  team: 99999,
+  free: 10,    // 10 analisi al mese
+  pro: 150,
+  team: 150,   // allineato a pro finché non esiste un piano team vero
 };
 
 const SYSTEM_PROMPT = `You are the analysis engine of Synapse, a financial intelligence platform.

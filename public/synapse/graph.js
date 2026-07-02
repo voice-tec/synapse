@@ -12,7 +12,7 @@ window.__SYN_USAGE = null;
 function updateUsageLabel(){
   const u = window.__SYN_USAGE;
   const el = document.getElementById('usage-label');
-  if(el && u){ el.textContent = u.plan + ' · ' + (u.plan==='free' ? (u.used+'/'+u.limit+' task') : 'illimitato'); }
+  if(el && u){ el.textContent = u.plan + ' · ' + u.used + '/' + u.limit + ' analisi'; }
 }
 // Persistence — saves tasks/connections/theses to Supabase via the page's saver
 // Un id è "persistito" solo se è un UUID (ha i trattini); gli id temporanei
@@ -2262,7 +2262,7 @@ async function runTask(){
       body: JSON.stringify({ query, priorContext: prevCtx })
     });
     const json = await res.json();
-    if (json.error === 'limit_reached') { stopLoading(); alert('Hai raggiunto il limite di ' + json.limit + ' task del piano ' + json.plan + '. Passa a Pro per task illimitate.'); isLoading=false; document.getElementById('sb').disabled=false; return; }
+    if (json.error === 'limit_reached') { stopLoading(); alert('Hai raggiunto il limite di ' + json.limit + ' analisi del piano ' + json.plan + ' questo mese. Scopri il piano Pro su /pricing.'); isLoading=false; document.getElementById('sb').disabled=false; return; }
     if (json.error) throw new Error(json.error);
     const parsed = json.result;
     if (json.usage) { window.__SYN_USAGE = json.usage; updateUsageLabel(); }
