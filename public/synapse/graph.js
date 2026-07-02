@@ -23,7 +23,7 @@ function isPersistedId(id){ return typeof id==='string' && id.includes('-'); }
 // Versione dell'euristica di connessione (computeConns/computeMemEdges): bump
 // quando cambiano i pesi, così il ricalcolo al load sa quando riscrivere gli
 // archi vecchi su Supabase (guard su localStorage.synConnV).
-const CONN_HEURISTIC_VERSION = 2;
+const CONN_HEURISTIC_VERSION = 3;
 // Normalizza un asset/ticker: "$nvda " e "NVDA" matchano exact; forme composte
 // tipo "NVDA (Nvidia)" diventano "NVDANVIDIA" e le cattura il fuzzy (includes).
 function normAsset(a){ return String(a||'').toUpperCase().replace(/^\$/,'').replace(/[^A-Z0-9]/g,''); }
@@ -342,6 +342,17 @@ function loop() {
       const push=(minHard-d)/2+1;
       a.x-=(dx/d)*push;a.y-=(dy/d)*push;
       b.x+=(dx/d)*push;b.y+=(dy/d)*push;
+    }
+  }
+  // Repulsione task↔tesi: la gravità tematica attira i task verso l'esagono,
+  // ma senza contro-forza finivano SOPRA la tesi (label illeggibili). Spinta
+  // solo sul task — le tesi hanno posizioni salvate e non si muovono.
+  for(const n of NODES) for(const mn of MEMORY_NODES){
+    const dx=n.x-mn.x, dy=n.y-mn.y, d=Math.sqrt(dx*dx+dy*dy)||1;
+    if(d<150){
+      const f=8000/(d*d);
+      n.vx+=(dx/d)*f; n.vy+=(dy/d)*f;
+      if(d<110){ const push=(110-d)/2+1; n.x+=(dx/d)*push; n.y+=(dy/d)*push; }
     }
   }
   for (const e of EDGES) {
@@ -2316,15 +2327,16 @@ async function runTask(){
   }
 }
 
-// Euristica v2 (modello additivo, cap 1.0, soglia 0.35). Pesi:
+// Euristica v3 (modello additivo, cap 1.0, soglia 0.35). Pesi:
 //   overlap ipotesi (≥2 parole >4 char)  +0.40
-//   asset exact (normAsset identici)     +0.22 cad., cap 0.44
+//   asset exact (normAsset identici)     +0.25 cad., cap 0.50
 //   asset fuzzy (includes, ≥4 char)      +0.08 cad., cap 0.16
 //   analysis_type uguale                 +0.10
 //   settore uguale (exact)               +0.12
 //   concetti in overlap                  +0.08 cad., cap 0.24
-// Razionale: due ticker identici da soli (0.44) creano un arco; il fuzzy da
-// solo no. Il vecchio settore via includes matchava "tech"⊂"biotech": ora exact.
+// Razionale: un ticker identico da solo (0.25) non basta, ma ticker+settore
+// (0.37) sì — in v2 valeva 0.34 e due domande sullo stesso titolo restavano
+// scollegate (grafi interi a 0 connessioni). Il fuzzy da solo non crea archi.
 function computeConns(newT,existing){
   const res=[];
   for(const old of existing){
@@ -2336,7 +2348,7 @@ function computeConns(newT,existing){
     const n1=(newT.intent?.assets||[]).map(normAsset).filter(Boolean);
     const n2=(old.intent?.assets||[]).map(normAsset).filter(Boolean);
     const exact=n1.filter(a=>n2.includes(a)).length;
-    if(exact>0)score+=Math.min(0.44,exact*0.22);
+    if(exact>0)score+=Math.min(0.50,exact*0.25);
     // Fuzzy solo su ciò che non ha già matchato exact, e solo stringhe ≥4 char
     // (evita che "AI"⊂"AIRBNB" crei relazioni spurie).
     const f1=n1.filter(a=>a.length>=4&&!n2.includes(a));
