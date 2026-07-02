@@ -12,7 +12,7 @@ export type Item = {
   author: string; authorName: string | null; authorRep: Rep;
   imports: number;
 };
-export type ImpState = 'idle' | 'loading' | 'done' | 'duplicate' | 'error';
+export type ImpState = 'idle' | 'loading' | 'done' | 'duplicate' | 'error' | 'already';
 
 export const ST: Record<string, { l: string; c: string }> = {
   confirmed: { l: 'confermata ✓', c: '#4ad68a' },
@@ -40,7 +40,7 @@ export function MarketTopbar({ isAuthed }: { isAuthed: boolean }) {
       <span style={{ fontSize: 10, padding: '3px 10px', borderRadius: 6, background: '#241a3a', color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '.06em' }}>marketplace</span>
       <span style={{ marginLeft: 'auto', display: 'flex', gap: 16 }}>
         {isAuthed && <a href="/market/mine" style={{ color: '#a78bfa', fontSize: 12, textDecoration: 'none' }}>le mie pubblicazioni</a>}
-        <a href="/synapse" style={{ color: '#5b9cf6', fontSize: 12, textDecoration: 'none' }}>il tuo grafo →</a>
+        <a href="/" style={{ color: '#5b9cf6', fontSize: 12, textDecoration: 'none' }}>il tuo grafo →</a>
       </span>
     </div>
   );
@@ -96,6 +96,7 @@ export function ThesisCard({ it, impState, onImport, isAuthed }: {
         </div>
         {isAuthed ? (
           s === 'done' ? <span style={{ fontSize: 11.5, color: '#4ad68a' }}>✓ importata</span>
+          : s === 'already' ? <span style={{ fontSize: 11.5, color: '#4ad68a' }} title="L'hai già importata: è nel tuo grafo">↘ già nel tuo grafo</span>
           : s === 'duplicate' ? <span style={{ fontSize: 11.5, color: '#f0a030' }}>hai già una tesi simile</span>
           : s === 'error' ? <button onClick={() => onImport(it.id)} style={btnStyle}>riprova</button>
           : <button onClick={() => onImport(it.id)} disabled={s === 'loading'} style={{ ...btnStyle, opacity: s === 'loading' ? 0.6 : 1 }}>{s === 'loading' ? 'importo…' : '+ salva nel mio grafo'}</button>

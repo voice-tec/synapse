@@ -1753,7 +1753,7 @@ function memSignalEntities(mn){
     for(const s of (mn.signals[side]||[])){
       // Segnali legacy = semplici stringhe: nessuna entità estraibile.
       if(!s||typeof s==='string') continue;
-      if((s.kind==='ticker'||s.kind==='fred')&&s.metric){ const n=normAsset(s.metric); if(n) out.push(n); }
+      if((s.kind==='ticker'||s.kind==='fred'||s.kind==='fund'||s.kind==='pe')&&s.metric){ const n=normAsset(s.metric); if(n) out.push(n); }
     }
   }
   return out;

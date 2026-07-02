@@ -44,7 +44,7 @@ export default function MinePage() {
         {state === 'error' && <div style={{ color: '#e05555', fontSize: 13 }}>Dati non disponibili al momento. Riprova tra poco.</div>}
         {state === 'empty' && (
           <div style={{ color: '#7a7a95', fontSize: 13 }}>
-            Non hai ancora pubblicato tesi. Apri una tesi nel <a href="/synapse" style={{ color: '#5b9cf6' }}>tuo grafo</a> e pubblicala dal drawer (serve confidenza ≥ 60).
+            Non hai ancora pubblicato tesi. Apri una tesi nel <a href="/" style={{ color: '#5b9cf6' }}>tuo grafo</a> e pubblicala dal drawer (serve confidenza ≥ 60).
           </div>
         )}
 
@@ -74,7 +74,7 @@ export default function MinePage() {
                       <span style={{ fontSize: 10, color: '#5a5a78' }}>
                         pubblicata il {new Date(t.created_at).toLocaleDateString('it-IT')}
                       </span>
-                      <a href="/synapse" style={{ ...btnStyle, background: '#241a3a', color: '#a78bfa', textDecoration: 'none' }}>gestisci nel grafo</a>
+                      <a href="/" style={{ ...btnStyle, background: '#241a3a', color: '#a78bfa', textDecoration: 'none' }}>gestisci nel grafo</a>
                     </div>
                   </div>
                 );

@@ -68,11 +68,27 @@ export default function MarketPage() {
   };
 
   useEffect(() => {
-    fetch('/api/market/stats').then(async (r) => {
+    // no-store: bypassa la cache del browser (quella CDN ha già TTL corto)
+    fetch('/api/market/stats', { cache: 'no-store' }).then(async (r) => {
       const j = await r.json().catch(() => ({}));
       if (r.ok && !j.error) { setStats(j.stats || null); setTrending(j.trending || []); }
     }).catch(() => {});
   }, []);
+
+  // Tesi già importate dal chiamante → badge "già nel tuo grafo" sulle card.
+  useEffect(() => {
+    if (!isAuthed) return;
+    fetch('/api/market/imported', { cache: 'no-store' }).then(async (r) => {
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && Array.isArray(j.ids)) {
+        setImp((m) => {
+          const next = { ...m };
+          for (const id of j.ids) if (!next[id] || next[id] === 'idle') next[id] = 'already';
+          return next;
+        });
+      }
+    }).catch(() => {});
+  }, [isAuthed]);
 
   const importThesis = async (id: string) => {
     setImp((m) => ({ ...m, [id]: 'loading' }));

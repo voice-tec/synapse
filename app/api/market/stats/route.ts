@@ -93,6 +93,8 @@ export async function GET() {
       },
       trending,
     },
-    { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } },
+    // TTL corto: il conteggio "tesi pubbliche" deve riflettere una nuova
+    // pubblicazione in secondi, non minuti (prima 60+300 → fino a ~6 min stale).
+    { headers: { 'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=60' } },
   );
 }
