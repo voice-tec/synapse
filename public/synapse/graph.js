@@ -351,17 +351,79 @@ function loop() {
     const fx=(dx/d)*f,fy=(dy/d)*f;
     a.vx+=fx;a.vy+=fy;b.vx-=fx;b.vy-=fy;
   }
+  // Gravità tematica: ogni task è attratto dolcemente verso la sua tesi →
+  // quartieri tematici visibili invece di una nuvola. Senza tesi, attrazione
+  // debolissima verso il centroide del proprio settore (se condiviso da ≥2
+  // nodi). Forze sotto la repulsione a corto raggio: i cluster si avvicinano
+  // ma non collassano. Ricalcolato per frame: N piccolo, costo trascurabile.
+  const taskThesis={};
+  for(const mn of MEMORY_NODES) for(const sid of (mn.source_ids||[])) if(!(sid in taskThesis)) taskThesis[sid]=mn;
+  const secSum={};
+  for(const n of NODES){
+    const sec=(n.task.fingerprint?.sector||'').toLowerCase().trim();
+    if(!sec) continue;
+    const s=secSum[sec]||(secSum[sec]={x:0,y:0,c:0});
+    s.x+=n.x; s.y+=n.y; s.c++;
+  }
   for (const n of NODES) {
     // Same gentle center pull on all screens — let the graph spread naturally.
     // On mobile we DON'T compress (that caused a cramped vertical column);
     // instead fitView zooms out to frame the whole spread.
-    n.vx+=(cx-n.x)*0.002;n.vy+=(cy-n.y)*0.002;
+    const mnT=taskThesis[n.id];
+    const sec=(n.task.fingerprint?.sector||'').toLowerCase().trim();
+    const sc=(!mnT&&sec&&secSum[sec]&&secSum[sec].c>=2)?secSum[sec]:null;
+    if(mnT){
+      n.vx+=(mnT.x-n.x)*0.004;n.vy+=(mnT.y-n.y)*0.004;
+      n.vx+=(cx-n.x)*0.0008;n.vy+=(cy-n.y)*0.0008;
+    } else if(sc){
+      n.vx+=(sc.x/sc.c-n.x)*0.0015;n.vy+=(sc.y/sc.c-n.y)*0.0015;
+      n.vx+=(cx-n.x)*0.002;n.vy+=(cy-n.y)*0.002;
+    } else {
+      n.vx+=(cx-n.x)*0.002;n.vy+=(cy-n.y)*0.002;
+    }
     n.vx*=0.76;n.vy*=0.76;
     n.x+=n.vx;n.y+=n.vy;
     const margin = Math.max(0, (NODES.length-6)) * 60;
     n.x=Math.max(120-margin,Math.min(W-120+margin,n.x));
     n.y=Math.max(100-margin,Math.min(graphH-80+margin,n.y));
   }
+
+  // ═══ FOCUS A 1 SALTO ═══
+  // Nodo attivo (selezionato o hover) → tutto ciò che non gli è connesso si
+  // attenua. _dim per-entità, interpolato per una transizione morbida; nessuno
+  // stato persistito: alla deselezione tutto torna a 1 da solo.
+  const activeId=selNode||hovNode;
+  let focusSet=null;
+  if(activeId){
+    focusSet=new Set([activeId]);
+    for(const e of EDGES){ if(e.from===activeId)focusSet.add(e.to); if(e.to===activeId)focusSet.add(e.from); }
+    for(const e of MEM_EDGES){ if(e.from===activeId)focusSet.add(e.to); if(e.to===activeId)focusSet.add(e.from); }
+    for(const mn of MEMORY_NODES){
+      const src=mn.source_ids||[];
+      if(mn.id===activeId){
+        src.forEach(id=>focusSet.add(id));
+        ACTION_NODES.forEach(a=>{ if(a.clusterId===mn.clusterId)focusSet.add(a.id); });
+        // provenance: domande nate da questa tesi (originRef=clusterId)
+        NODES.forEach(n=>{ if(n.task&&n.task.originKind==='thesis'&&n.task.originRef===mn.clusterId)focusSet.add(n.id); });
+      } else if(src.includes(activeId)) focusSet.add(mn.id);
+    }
+    const actTask=NODES.find(n=>n.id===activeId);
+    if(actTask&&actTask.task&&actTask.task.originKind==='thesis'){
+      const m=MEMORY_NODES.find(m=>m.clusterId===actTask.task.originRef);
+      if(m)focusSet.add(m.id);
+    }
+    const actAn=ACTION_NODES.find(a=>a.id===activeId);
+    if(actAn){ const m=MEMORY_NODES.find(m=>m.id===actAn.sourceMemId); if(m)focusSet.add(m.id); }
+  }
+  const stepDim=(ent,id)=>{
+    const t=(!focusSet||focusSet.has(id))?1:0.12;
+    if(ent._dim===undefined)ent._dim=1;
+    ent._dim+=(t-ent._dim)*0.15;
+    return ent._dim;
+  };
+  for(const n of NODES) stepDim(n,n.id);
+  for(const mn of MEMORY_NODES) stepDim(mn,mn.id);
+  for(const an of ACTION_NODES) stepDim(an,an.id);
 
   // Draw edges
   const ecmap={same_hypothesis:'#f0a030',complementary_data:'#5b9cf6',same_question_type:'#2ecf98',contradiction:'#e05555',supports:'#4ad68a'};
@@ -378,13 +440,15 @@ function loop() {
   }
   function drawRelEdge(e,a,b){
     const ec=ecmap[e.type]||'#5b9cf6';
+    // Focus: l'arco eredita l'attenuazione del capo più attenuato.
+    const ed=Math.min(a._dim||1,b._dim||1);
     const mx=(a.x+b.x)/2+(b.y-a.y)*0.18,my=(a.y+b.y)/2-(b.x-a.x)*0.18;
     ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(mx,my,b.x,b.y);
     // Contraddizione: tratteggiata + alpha minimo più alto, così salta all'occhio anche debole.
-    if(e.type==='contradiction'){ ctx.setLineDash([5,4]); ctx.globalAlpha=0.4+e.score*0.45; }
-    else { ctx.globalAlpha=0.1+e.score*0.55; }
+    if(e.type==='contradiction'){ ctx.setLineDash([5,4]); ctx.globalAlpha=(0.4+e.score*0.45)*ed; }
+    else { ctx.globalAlpha=(0.1+e.score*0.55)*ed; }
     ctx.strokeStyle=ec;ctx.lineWidth=0.6+e.score*3;ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
-    drawEdgeLabel(e,mx,my,ec);
+    if(ed>0.5) drawEdgeLabel(e,mx,my,ec);
   }
   for (const e of EDGES) {
     const a=NODES.find(n=>n.id===e.from),b=NODES.find(n=>n.id===e.to);
@@ -403,30 +467,33 @@ function loop() {
   for (const n of NODES) {
     const task=n.task,color=TC[task.intent?.analysis_type]||'#5b9cf6';
     const isSel=selNode===n.id,isHov=hovNode===n.id;
+    const dim=n._dim||1; // focus a 1 salto: attenua ciò che non è connesso all'attivo
     const r=(isSel||isHov)?28:20;
     const connCount=EDGES.filter(e=>e.from===n.id||e.to===n.id).length;
 
     // Glow
     ctx.beginPath();ctx.arc(n.x,n.y,r+14,0,Math.PI*2);
-    ctx.fillStyle=color;ctx.globalAlpha=isSel?0.18:isHov?0.1:0.04;ctx.fill();ctx.globalAlpha=1;
+    ctx.fillStyle=color;ctx.globalAlpha=(isSel?0.18:isHov?0.1:0.04)*dim;ctx.fill();ctx.globalAlpha=1;
 
     // Connection arc ring
     if(connCount>0){
       const arc=Math.min((connCount/6)*Math.PI*2,Math.PI*2);
       ctx.beginPath();ctx.arc(n.x,n.y,r+6,-Math.PI/2,-Math.PI/2+arc);
-      ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.globalAlpha=0.35;ctx.stroke();ctx.globalAlpha=1;
+      ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.globalAlpha=0.35*dim;ctx.stroke();ctx.globalAlpha=1;
     }
 
     // Circle
     ctx.beginPath();ctx.arc(n.x,n.y,r,0,Math.PI*2);
-    ctx.fillStyle='#0e0e12';ctx.fill();
+    ctx.fillStyle='#0e0e12';ctx.globalAlpha=dim;ctx.fill();
     ctx.strokeStyle=color;ctx.lineWidth=isSel?2.5:isHov?2:1.5;
-    ctx.globalAlpha=isSel?1:isHov?0.9:0.65;ctx.stroke();ctx.globalAlpha=1;
+    ctx.globalAlpha=(isSel?1:isHov?0.9:0.65)*dim;ctx.stroke();ctx.globalAlpha=1;
 
     // Letter
     ctx.fillStyle=color;ctx.font=`${isSel||isHov?13:11}px DM Mono`;
     ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.globalAlpha=dim;
     ctx.fillText((task.intent?.analysis_type||'?')[0].toUpperCase(),n.x,n.y);
+    ctx.globalAlpha=1;
 
     // Label — count how many nodes are crowding this one
     let crowdCount = 0;
@@ -456,13 +523,15 @@ function loop() {
       ctx.fillStyle=isSel?'#dddde8':'#b0b0c8';
       const ly=n.y+r+8;
       lines.forEach((l,i)=>ctx.fillText(l,n.x,ly+i*14));
-    } else if(!tooClose){
-      // SHORT single-line label for isolated nodes — truncated to avoid overlap
+    } else if(!tooClose && dim>0.35){
+      // SHORT single-line label for isolated nodes — truncated to avoid overlap.
+      // Sotto dim 0.35 (fuori focus) la label sparisce del tutto: meno rumore.
       const q=task.raw_query;
       const short = q.length>26 ? q.slice(0,26)+'…' : q;
       ctx.fillStyle='#5a5a78';ctx.font='10px DM Mono';
-      ctx.textAlign='center';ctx.textBaseline='top';ctx.globalAlpha=1;
+      ctx.textAlign='center';ctx.textBaseline='top';ctx.globalAlpha=dim;
       ctx.fillText(short,n.x,n.y+r+8);
+      ctx.globalAlpha=1;
     }
     // crowded + not focused → no label at all (hover to reveal)
 
@@ -501,6 +570,7 @@ function loop() {
     const color = mn.color || '#a78bfa';
     const colorDim = mn.colorDim || '#2a1a40';
     const isSel=selNode===mn.id, isHov=hovNode===mn.id;
+    const dim=mn._dim||1;
     const r=(isSel||isHov)?34:26;
     const pulse=0.6+0.4*Math.sin(Date.now()/1000+mn.phaseOffset);
 
@@ -511,39 +581,39 @@ function loop() {
       if(!sn)continue;
       ctx.beginPath();ctx.setLineDash([4,4]);
       ctx.moveTo(mn.x,mn.y);ctx.lineTo(sn.x,sn.y);
-      ctx.strokeStyle=color;ctx.lineWidth=1;ctx.globalAlpha=0.2;ctx.stroke();
+      ctx.strokeStyle=color;ctx.lineWidth=1;ctx.globalAlpha=0.2*Math.min(dim,sn._dim||1);ctx.stroke();
       ctx.setLineDash([]);ctx.globalAlpha=1;
     }
 
     // Outer glow
     ctx.save();
     drawHex(ctx,mn.x,mn.y,r+18);
-    ctx.fillStyle=color;ctx.globalAlpha=0.05*pulse;ctx.fill();ctx.restore();
+    ctx.fillStyle=color;ctx.globalAlpha=0.05*pulse*dim;ctx.fill();ctx.restore();
 
     // Second ring
     drawHex(ctx,mn.x,mn.y,r+8);
-    ctx.strokeStyle=color;ctx.lineWidth=1;ctx.globalAlpha=0.18+0.12*pulse;ctx.stroke();ctx.globalAlpha=1;
+    ctx.strokeStyle=color;ctx.lineWidth=1;ctx.globalAlpha=(0.18+0.12*pulse)*dim;ctx.stroke();ctx.globalAlpha=1;
 
     // Main hex
     drawHex(ctx,mn.x,mn.y,r);
-    ctx.fillStyle='#0d0a18';ctx.fill();
+    ctx.fillStyle='#0d0a18';ctx.globalAlpha=dim;ctx.fill();
     ctx.strokeStyle=color;ctx.lineWidth=isSel?2.5:1.5;
-    ctx.globalAlpha=isSel?1:0.8;ctx.stroke();ctx.globalAlpha=1;
+    ctx.globalAlpha=(isSel?1:0.8)*dim;ctx.stroke();ctx.globalAlpha=1;
 
     // Confidence arc
     const conf=mn.confidence/100;
     ctx.beginPath();ctx.arc(mn.x,mn.y,r+12,-Math.PI/2,-Math.PI/2+conf*Math.PI*2);
-    ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.globalAlpha=0.5;ctx.stroke();ctx.globalAlpha=1;
+    ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.globalAlpha=0.5*dim;ctx.stroke();ctx.globalAlpha=1;
 
     // Badge: tesi sfidata (ha una contro-tesi)
     if(mn.challenge){
       ctx.fillStyle='#e05577';ctx.font='10px DM Mono';
-      ctx.textAlign='center';ctx.textBaseline='middle';ctx.globalAlpha=0.9;
+      ctx.textAlign='center';ctx.textBaseline='middle';ctx.globalAlpha=0.9*dim;
       ctx.fillText('⚔',mn.x-r-10,mn.y-r+2);ctx.globalAlpha=1;
     }
 
-    // Badge: delta confidenza non ancora visto (dal refresh)
-    if(mn.confDelta){
+    // Badge: delta confidenza non ancora visto (dal refresh) — nascosto fuori focus
+    if(mn.confDelta && dim>0.35){
       const up=mn.confDelta>0;
       const dTxt=(up?'↑+':'↓')+mn.confDelta;
       ctx.font='9px DM Mono';
@@ -571,15 +641,16 @@ function loop() {
         const py=hy+hh-(v-hmin)/hrange*hh;
         i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
       });
-      ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.globalAlpha=0.6;ctx.stroke();ctx.globalAlpha=1;
+      ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.globalAlpha=0.6*dim;ctx.stroke();ctx.globalAlpha=1;
     } else {
       // Diamond symbol if no history yet
       ctx.fillStyle=color;ctx.font=`${isSel?14:11}px DM Mono`;
       ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.fillText('◆',mn.x,mn.y);
+      ctx.globalAlpha=dim;ctx.fillText('◆',mn.x,mn.y);ctx.globalAlpha=1;
     }
 
     // Label below
+    ctx.globalAlpha=dim;
     const lc=isSel?'#fff':isHov?'#d4bbff':'#7c5ab8';
     ctx.fillStyle=lc;ctx.font=`${isSel?11:10}px DM Mono`;
     ctx.textAlign='center';ctx.textBaseline='top';
@@ -594,6 +665,7 @@ function loop() {
     const trend=prevConf!==null?(lastConf>prevConf?'↑':lastConf<prevConf?'↓':'→'):null;
     ctx.fillStyle=color;ctx.font='9px DM Mono';
     ctx.fillText(`${lastConf}%${trend?' '+trend:''}`,mn.x,labelY+tLines.length*13+4);
+    ctx.globalAlpha=1;
 
     if(isHov&&!isSel){
       ctx.fillStyle=color;ctx.font='9px DM Mono';ctx.globalAlpha=0.7;
@@ -605,6 +677,7 @@ function loop() {
   for(const an of ACTION_NODES){
     const color=an.color||'#34d399';
     const isSel=selNode===an.id, isHov=hovNode===an.id;
+    const dim=an._dim||1;
     const s=(isSel||isHov)?30:24; // half-side
     const pulse=0.6+0.4*Math.sin(Date.now()/1000+(an.phaseOffset||0));
 
@@ -613,21 +686,23 @@ function loop() {
     if(srcMem){
       ctx.beginPath();ctx.setLineDash([3,3]);
       ctx.moveTo(an.x,an.y);ctx.lineTo(srcMem.x,srcMem.y);
-      ctx.strokeStyle=color;ctx.lineWidth=1;ctx.globalAlpha=0.3;ctx.stroke();
+      ctx.strokeStyle=color;ctx.lineWidth=1;ctx.globalAlpha=0.3*Math.min(dim,srcMem._dim||1);ctx.stroke();
       ctx.setLineDash([]);ctx.globalAlpha=1;
     }
 
     // Glow
-    ctx.fillStyle=color;ctx.globalAlpha=0.05*pulse;
+    ctx.fillStyle=color;ctx.globalAlpha=0.05*pulse*dim;
     ctx.fillRect(an.x-s-8,an.y-s-8,(s+8)*2,(s+8)*2);ctx.globalAlpha=1;
 
     // Square
     ctx.fillStyle='#0a1a14';
+    ctx.globalAlpha=dim;
     ctx.fillRect(an.x-s,an.y-s,s*2,s*2);
-    ctx.strokeStyle=color;ctx.lineWidth=isSel?2.5:1.5;ctx.globalAlpha=isSel?1:0.8;
+    ctx.strokeStyle=color;ctx.lineWidth=isSel?2.5:1.5;ctx.globalAlpha=(isSel?1:0.8)*dim;
     ctx.strokeRect(an.x-s,an.y-s,s*2,s*2);ctx.globalAlpha=1;
 
     // Icon (portfolio symbol)
+    ctx.globalAlpha=dim;
     ctx.fillStyle=color;ctx.font=`${isSel?16:13}px DM Mono`;
     ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText('▤',an.x,an.y);
@@ -648,6 +723,7 @@ function loop() {
       ctx.fillStyle=neg?'#e05555':'#4ad68a';ctx.font='11px DM Mono';
       ctx.fillText(an.performance.overall,an.x,an.y+s+8+aLines.length*13+15);
     }
+    ctx.globalAlpha=1;
 
     if(isHov&&!isSel){
       ctx.fillStyle=color;ctx.font='9px DM Mono';ctx.globalAlpha=0.7;
