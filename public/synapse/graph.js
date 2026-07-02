@@ -932,14 +932,21 @@ function closeDrawer(){
   selNode=null;
 }
 
+// Etichetta di banda: raggruppa le sezioni del drawer in una gerarchia di
+// lettura (es. risposta → perché → cosa può cambiare). Sibling diretto di
+// #dr-body, non wrapper: lo stagger secIn resta per-sezione. --c = tinta nodo.
+function bandHTML(txt,color){return `<div class="band-lbl" style="--c:${color}">${txt}</div>`;}
+
 function renderDrawerBody(task){
   const color=TC[task.intent?.analysis_type]||'#5b9cf6';
   const body=document.getElementById('dr-body');
   body.innerHTML='';
+  const band=(txt)=>body.insertAdjacentHTML('beforeend',bandHTML(txt,color));
 
   // Verdetto — la risposta secca alla domanda, prima di tutto
   const vd=task.output?.verdict;
   if(vd&&vd.label){
+    band('risposta');
     const VC={si:'#4ad68a',no:'#e05555',dipende:'#f0a030'};
     const vc=VC[vd.stance]||'#7a7a95';
     const vx=document.createElement('div');
@@ -956,20 +963,12 @@ function renderDrawerBody(task){
     setTimeout(()=>{ const wb=document.getElementById('watch-btn'); if(wb) wb.addEventListener('click',()=>toggleWatch(task,wb)); },100);
   }
 
-  // Scenari bull/base/bear — tre esiti con probabilità e trigger
-  if(task.output?.scenarios?.length){
-    const SCEN={bull:{c:'#4ad68a',l:'rialzista'},base:{c:'#5b9cf6',l:'base'},bear:{c:'#e05555',l:'ribassista'}};
-    const sc=document.createElement('div');
-    sc.innerHTML=`<div class="section-lbl">scenari</div><div class="scen-grid">
-    ${task.output.scenarios.slice(0,3).map(s=>{const m=SCEN[s.name]||{c:'#7a7a95',l:s.name||''};return `
-      <div class="scen-cell" style="border-top-color:${m.c}66">
-        <span class="scen-name" style="color:${m.c}">${m.l}</span>
-        <span class="scen-prob">${s.prob||'—'}</span>
-        <span class="scen-trigger">se ${s.trigger||'—'}</span>
-        <span class="scen-outcome">→ ${s.outcome||''}</span>
-      </div>`;}).join('')}
-    </div>`;
-    body.appendChild(sc);
+  // PERCHÉ — le prove che reggono la risposta, narrativa in testa
+  if(task.output?.insight||task.output?.takeaways?.length||task.output?.metrics?.length||task.output?.chart?.values?.length) band('perché');
+  if(task.output?.insight){
+    const ins=document.createElement('div');
+    ins.innerHTML=`<div class="section-lbl">il ragionamento</div><div class="insight-box">${task.output.insight}</div>`;
+    body.appendChild(ins);
   }
 
   // Punti chiave — i fatti che reggono la conclusione
@@ -979,14 +978,6 @@ function renderDrawerBody(task){
     ${task.output.takeaways.slice(0,3).map((t,i)=>`<div class="tk-row"><span class="tk-num" style="color:${color}">0${i+1}</span><span>${t}</span></div>`).join('')}
     </div>`;
     body.appendChild(tk);
-  }
-
-  // Collegamento al portafoglio — esposizione già presente al tema
-  if(task.output?.portfolio_link?.note){
-    const pf=document.createElement('div');
-    pf.innerHTML=`<div class="section-lbl">il tuo portafoglio</div>
-    <div class="pf-box"><span style="flex-shrink:0">◈</span><span>${task.output.portfolio_link.note}</span></div>`;
-    body.appendChild(pf);
   }
 
   // Metrics
@@ -1015,11 +1006,21 @@ function renderDrawerBody(task){
     setTimeout(()=>drawChart('dc-'+task.id,task.output.chart,color),60);
   }
 
-  // Insight
-  if(task.output?.insight){
-    const ins=document.createElement('div');
-    ins.innerHTML=`<div class="section-lbl">analisi AI</div><div class="insight-box">${task.output.insight}</div>`;
-    body.appendChild(ins);
+  // COSA PUÒ CAMBIARE — prospettiva: scenari alternativi e prossimi eventi
+  if(task.output?.scenarios?.length||task.output?.catalysts?.length) band('cosa può cambiare');
+  if(task.output?.scenarios?.length){
+    const SCEN={bull:{c:'#4ad68a',l:'rialzista'},base:{c:'#5b9cf6',l:'base'},bear:{c:'#e05555',l:'ribassista'}};
+    const sc=document.createElement('div');
+    sc.innerHTML=`<div class="section-lbl">scenari</div><div class="scen-grid">
+    ${task.output.scenarios.slice(0,3).map(s=>{const m=SCEN[s.name]||{c:'#7a7a95',l:s.name||''};return `
+      <div class="scen-cell" style="border-top-color:${m.c}66">
+        <span class="scen-name" style="color:${m.c}">${m.l}</span>
+        <span class="scen-prob">${s.prob||'—'}</span>
+        <span class="scen-trigger">se ${s.trigger||'—'}</span>
+        <span class="scen-outcome">→ ${s.outcome||''}</span>
+      </div>`;}).join('')}
+    </div>`;
+    body.appendChild(sc);
   }
 
   // Catalizzatori in arrivo — il "quando ricontrollare"
@@ -1035,23 +1036,30 @@ function renderDrawerBody(task){
     body.appendChild(ct);
   }
 
-  // Hypothesis — meta-info, dopo il contenuto
-  if(task.fingerprint?.hypothesis){
-    const s=document.createElement('div');
-    s.innerHTML=`<div class="section-lbl">ipotesi implicita</div><div class="hyp-box">"${task.fingerprint.hypothesis}"</div>`;
-    body.appendChild(s);
+  // TU E IL GRAFO — contesto personale e collocazione nel grafo
+  band('tu e il grafo');
+  // Collegamento al portafoglio — esposizione già presente al tema
+  if(task.output?.portfolio_link?.note){
+    const pf=document.createElement('div');
+    pf.innerHTML=`<div class="section-lbl">il tuo portafoglio</div>
+    <div class="pf-box"><span style="flex-shrink:0">◈</span><span>${task.output.portfolio_link.note}</span></div>`;
+    body.appendChild(pf);
   }
 
-  // Intent grid
-  const ig=document.createElement('div');
-  ig.innerHTML=`<div class="section-lbl">intent estratto</div>
-  <div class="intent-grid">
-    <div class="icell"><span class="icell-k">assets</span><span class="icell-v">${(task.intent?.assets||[]).slice(0,3).join(', ')||'—'}</span></div>
-    <div class="icell"><span class="icell-k">metriche</span><span class="icell-v">${(task.intent?.metrics||[]).slice(0,2).join(', ')||'—'}</span></div>
-    <div class="icell"><span class="icell-k">periodo</span><span class="icell-v">${task.intent?.timeframe||'—'}</span></div>
-    <div class="icell"><span class="icell-k">settore</span><span class="icell-v" style="color:${color}">${task.fingerprint?.sector||'—'}</span></div>
-  </div>`;
-  body.appendChild(ig);
+  // Ipotesi implicita + intent estratto: meta dell'analisi, compattata in un
+  // details chiuso di default. Wrappato in <div>: il selettore dello stagger
+  // (#dr-body>div) non matcha <details>.
+  const meta=document.createElement('div');
+  meta.innerHTML=`<details class="meta-fold"><summary>ipotesi e intent estratti</summary>
+    ${task.fingerprint?.hypothesis?`<div class="hyp-box">"${task.fingerprint.hypothesis}"</div>`:''}
+    <div class="intent-grid">
+      <div class="icell"><span class="icell-k">assets</span><span class="icell-v">${(task.intent?.assets||[]).slice(0,3).join(', ')||'—'}</span></div>
+      <div class="icell"><span class="icell-k">metriche</span><span class="icell-v">${(task.intent?.metrics||[]).slice(0,2).join(', ')||'—'}</span></div>
+      <div class="icell"><span class="icell-k">periodo</span><span class="icell-v">${task.intent?.timeframe||'—'}</span></div>
+      <div class="icell"><span class="icell-k">settore</span><span class="icell-v" style="color:${color}">${task.fingerprint?.sector||'—'}</span></div>
+    </div>
+  </details>`;
+  body.appendChild(meta);
 
   // Connections
   if(task.connections?.length){
@@ -1086,7 +1094,8 @@ function renderDrawerBody(task){
     body.appendChild(src);
   }
 
-  // Suggested questions — loads async after drawer opens
+  // ESPLORA — spunti per continuare, separati dal contesto del grafo
+  band('esplora');
   const sqSection = document.createElement('div');
   sqSection.id = 'sq-section';
   sqSection.innerHTML = `
@@ -1275,13 +1284,14 @@ function openMemoryDrawer(mn){
   tintDrawer(color);
   const impAuthor=mn.imported_from_author||null;
   const impBadge=impAuthor?`<span style="font-size:10px;color:#a78bfa;background:#241a3a;border-radius:6px;padding:2px 8px;margin-left:8px;vertical-align:middle">↘ importata · #${impAuthor}</span>`:'';
-  document.getElementById('dr-query').innerHTML=`<span style="font-size:13px;display:block;margin-bottom:4px;opacity:.6">◆ nodo memoria${impBadge}</span>${mn.thesis}`;
+  // Header compatto: il testo completo della tesi vive solo nell'hero
+  // (prima era duplicato qui e nell'hero).
+  document.getElementById('dr-query').innerHTML=`<span style="font-size:13px;opacity:.6">◆ tesi</span>${mn.sector?`<span style="font-size:10px;color:var(--text2);background:var(--bg4);border-radius:6px;padding:2px 8px;margin-left:8px;vertical-align:middle">${mn.sector}</span>`:''}${impBadge}`;
 
-  // History timeline HTML
-  const historyHTML = mn.history?.length>1 ? `
-    <div>
-      <div class="section-lbl">evoluzione della tesi</div>
-      <div style="display:flex;flex-direction:column;gap:8px">
+  // Timeline della history (senza wrapper/label: vive dentro la sezione
+  // "evoluzione della tesi" insieme alle stats).
+  const timelineHTML = mn.history?.length>1 ? `
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
         ${mn.history.map((h,i)=>{
           const isLatest=i===mn.history.length-1;
           const prev=mn.history[i-1];
@@ -1301,8 +1311,7 @@ function openMemoryDrawer(mn){
             </div>
           </div>`;
         }).reverse().join('')}
-      </div>
-    </div>` : '';
+      </div>` : '';
 
   const h0=mn.history&&mn.history[0], hN=mn.history&&mn.history[mn.history.length-1];
   const ageDays=(h0&&h0.date)?Math.max(0,Math.round((Date.now()-new Date(h0.date).getTime())/864e5)):null;
@@ -1312,8 +1321,11 @@ function openMemoryDrawer(mn){
     const t=TASKS.find(x=>x.id===sid);
     return t?[...(t.intent?.assets||[]).slice(0,2), t.fingerprint?.sector].filter(Boolean):[];
   }))].slice(0,8);
-  const statHTML=`
+  // Evoluzione: stats + esposizione + timeline della history in UNA sezione —
+  // come evolve nel tempo la convinzione, tutta in un posto solo.
+  const evoHTML=`
     <div>
+      <div class="section-lbl">evoluzione della tesi</div>
       <div class="intent-grid">
         <div class="icell"><span class="icell-k">sorgenti</span><span class="icell-v">${(mn.source_ids||[]).length} task</span></div>
         <div class="icell"><span class="icell-k">età</span><span class="icell-v">${ageDays!==null?ageDays+' giorni':'—'}</span></div>
@@ -1321,6 +1333,7 @@ function openMemoryDrawer(mn){
         <div class="icell"><span class="icell-k">Δ confidenza</span><span class="icell-v" style="color:${dTot>0?'var(--green)':dTot<0?'var(--red)':'var(--text2)'}">${dTot>0?'+':''}${dTot}%</span></div>
       </div>
       ${expo.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">${expo.map(e=>`<span style="font-size:10px;padding:3px 10px;border-radius:20px;background:${color}11;border:1px solid ${color}33;color:${color}cc">${e}</span>`).join('')}</div>`:''}
+      ${timelineHTML}
     </div>`;
   // Track record: stato di vita + accuratezza dedotti dai segnali reali (Fase 1).
   const stMap={active:{l:'in corso',c:'var(--text2)',bg:'var(--bg3)'},confirmed:{l:'confermata ✓',c:'var(--green)',bg:'#0f2a1c'},invalidated:{l:'invalidata ✕',c:'var(--red)',bg:'#2a0f0f'}};
@@ -1345,7 +1358,7 @@ function openMemoryDrawer(mn){
   // HERO: sintesi in cima (stato + confidenza ad anello + cosa la conferma).
   const heroHTML=`
     <div class="thesis-hero" style="--c:${color};--p:${mn.confidence||0}">
-      <div class="hero-top"><span class="hero-badge">◆ ${badgeLabel}</span>${impBadge}</div>
+      <div class="hero-top"><span class="hero-badge">◆ ${badgeLabel}</span></div>
       <div class="hero-thesis">"${mn.thesis}"</div>
       <div class="hero-metrics">
         <div class="hero-ring"><b>${mn.confidence||0}%</b><small>conf.</small></div>
@@ -1373,40 +1386,71 @@ function openMemoryDrawer(mn){
         <button id="mem-publish-${mn.id}" data-cluster="${mn.clusterId}" style="flex-shrink:0;background:${pub?color:'transparent'};color:${pub?'#08080a':'var(--text2)'};border:1px solid ${pub?color:'var(--border)'};border-radius:8px;padding:6px 12px;font-size:11px;font-weight:500;cursor:pointer">${pub?'pubblicata ✓':'pubblica'}</button>
       </div>
     </div>`;
+  // Segnali: una riga per segnale con stato esplicito. I segnali 'manual'
+  // (non misurabili sui dati) sono etichettati — prima erano indistinguibili
+  // dai testabili e rendevano opaco il denominatore del track record.
   const sg=mn.signals;
+  const sigRow=(s,side)=>{
+    const o=(typeof s==='string')?{text:s}:(s||{});
+    const c=side==='confirm'?'var(--green)':'var(--red)';
+    const testable=(o.kind==='fred'||o.kind==='ticker')&&o.metric&&o.op&&typeof o.threshold==='number';
+    let st;
+    if(!testable) st='<span class="sig-status" style="color:var(--text3)">non misurabile</span>';
+    else if(o.fired) st=`<span class="sig-status" style="color:${c}">● scattato</span>`;
+    else if(o.checked_at) st='<span class="sig-status">○ non ancora</span>';
+    else st='<span class="sig-status">○ in attesa</span>';
+    return `<div class="sig-row"><span class="sig-mark" style="color:${c}">${side==='confirm'?'✓':'✗'}</span><span class="sig-txt">${o.text||''}</span>${st}</div>`;
+  };
   const signalsHTML=(sg&&(((sg.confirm||[]).length)||((sg.invalidate||[]).length)))?`
     <div>
       <div class="section-lbl">segnali da monitorare</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div style="background:var(--bg3);border:1px solid #1f4a3366;border-radius:10px;padding:10px 12px">
-          <div style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">la rafforzano</div>
-          ${(sg.confirm||[]).map(s=>{const o=(typeof s==='string')?{text:s}:(s||{});const b=o.fired?` <span style="color:var(--green);font-size:9px">● scattato</span>`:(o.checked_at?` <span style="color:#6a6a88;font-size:9px">○ non ancora</span>`:'');return `<div style="font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:5px">✓ ${o.text||''}${b}</div>`;}).join('')}
+      <div class="sig-grid">
+        <div class="sig-col" style="border-color:#1f4a3366">
+          <div class="sig-head" style="color:var(--green)">la rafforzano</div>
+          ${(sg.confirm||[]).map(s=>sigRow(s,'confirm')).join('')||'<div class="sig-empty">nessun segnale</div>'}
         </div>
-        <div style="background:var(--bg3);border:1px solid #4a1f1f66;border-radius:10px;padding:10px 12px">
-          <div style="font-size:9px;color:var(--red);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">la indeboliscono</div>
-          ${(sg.invalidate||[]).map(s=>{const o=(typeof s==='string')?{text:s}:(s||{});const b=o.fired?` <span style="color:var(--red);font-size:9px">● scattato</span>`:(o.checked_at?` <span style="color:#6a6a88;font-size:9px">○ non ancora</span>`:'');return `<div style="font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:5px">✗ ${o.text||''}${b}</div>`;}).join('')}
+        <div class="sig-col" style="border-color:#4a1f1f66">
+          <div class="sig-head" style="color:var(--red)">la indeboliscono</div>
+          ${(sg.invalidate||[]).map(s=>sigRow(s,'invalidate')).join('')||'<div class="sig-empty">nessun segnale</div>'}
         </div>
       </div>
     </div>`:'';
-
-  body.innerHTML=`
-    ${heroHTML}
-    ${signalsHTML}
-    ${mn.explanation?`<div>
-      <div class="section-lbl">perché questa tesi</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.7">${mn.explanation}</div>
-    </div>`:''}
-    ${statHTML}
-    ${publishHTML}
+  // Perché + pattern insieme: il pattern è meta secondaria, collassato.
+  const whyHTML=(mn.explanation||mn.pattern)?`
     <div>
-      <div class="section-lbl">pattern rilevato</div>
-      <div style="background:var(--bg3);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--text2);line-height:1.7;font-family:'Fraunces',serif;font-weight:300">${mn.pattern||''}</div>
+      ${mn.explanation?`<div class="section-lbl">perché questa tesi</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7">${mn.explanation}</div>`:''}
+      ${mn.pattern?`<details class="meta-fold"${mn.explanation?' style="margin-top:14px"':''}><summary>pattern rilevato</summary>
+        <div style="background:var(--bg3);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--text2);line-height:1.7;font-family:'Fraunces',serif;font-weight:300">${mn.pattern}</div>
+      </details>`:''}
+    </div>`:'';
+
+  // Gerarchia di lettura: la tesi → le prove → evoluzione → metti alla prova
+  // → contesto. Stessa grammatica a bande della scheda task.
+  body.innerHTML=`
+    ${bandHTML('la tesi',color)}
+    ${heroHTML}
+    ${(signalsHTML||whyHTML)?bandHTML('le prove',color):''}
+    ${signalsHTML}
+    ${whyHTML}
+    ${bandHTML('evoluzione',color)}
+    ${evoHTML}
+    ${bandHTML('metti alla prova',color)}
+    <div>
+      <div class="section-lbl">avvocato del diavolo</div>
+      <div id="mem-challenge-area-${mn.id}"></div>
     </div>
     <div>
       <div class="section-lbl">portafoglio della tesi</div>
       <div id="mem-portfolio-area-${mn.id}"></div>
     </div>
-    ${historyHTML}
+    <div>
+      <div class="section-lbl">prossimo passo suggerito</div>
+      <div id="mem-suggested-q-${mn.id}" style="background:${color}11;border:1px dashed ${color}44;border-radius:12px;padding:14px 16px;font-size:12px;color:${color};cursor:pointer;line-height:1.5">
+        → ${mn.suggested_question||'—'}
+      </div>
+    </div>
+    ${bandHTML('contesto',color)}
     <div>
       <div class="section-lbl">task sorgente (${(mn.source_ids||[]).length})</div>
       <div class="memory-sources">
@@ -1419,16 +1463,7 @@ function openMemoryDrawer(mn){
         }).join('')}
       </div>
     </div>
-    <div>
-      <div class="section-lbl">avvocato del diavolo</div>
-      <div id="mem-challenge-area-${mn.id}"></div>
-    </div>
-    <div>
-      <div class="section-lbl">prossimo passo suggerito</div>
-      <div id="mem-suggested-q-${mn.id}" style="background:${color}11;border:1px dashed ${color}44;border-radius:12px;padding:14px 16px;font-size:12px;color:${color};cursor:pointer;line-height:1.5">
-        → ${mn.suggested_question||'—'}
-      </div>
-    </div>`;
+    ${publishHTML}`;
 
   setTimeout(()=>{
     const sq=document.getElementById(`mem-suggested-q-${mn.id}`);

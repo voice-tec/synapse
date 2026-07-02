@@ -96,6 +96,19 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);font
 
 /* Drawer sections */
 .section-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+/* Etichetta di banda: raggruppa più sezioni sotto un titolo (risposta, perché, …).
+   Sibling diretto in #dr-body (non wrapper) per non rompere lo stagger secIn.
+   --c = tinta del nodo, settata inline. Margin negativo: avvicina la prima
+   sezione della banda nonostante il gap flex del body. */
+.band-lbl{display:flex;align-items:center;gap:10px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.14em;font-family:'DM Mono',monospace;margin:6px 0 -10px}
+.band-lbl::before{content:'';width:14px;height:1px;background:var(--c,var(--border2));flex-shrink:0}
+.band-lbl::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border2),transparent)}
+/* Meta collassabile (details): riduce il rumore delle sezioni secondarie */
+details.meta-fold summary{list-style:none;cursor:pointer;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:8px;user-select:none}
+details.meta-fold summary::-webkit-details-marker{display:none}
+details.meta-fold summary::after{content:'+';margin-left:auto;color:var(--text3);font-size:13px}
+details.meta-fold[open] summary::after{content:'–'}
+details.meta-fold>*:not(summary){margin-top:10px}
 .hyp-box{background:var(--bg3);border-left:2px solid var(--blue);border-radius:0 10px 10px 0;padding:12px 16px;font-family:'Fraunces',serif;font-size:15px;font-weight:300;font-style:italic;color:var(--text);line-height:1.5}
 .intent-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .icell{background:var(--bg3);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:3px}
@@ -153,6 +166,17 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);font
 .hero-confirm{margin-top:8px;font-size:11.5px;color:var(--text);line-height:1.5}
 .hero-confirm b{color:var(--c);font-weight:500}
 .hero-note{margin-top:8px;font-size:10px;color:var(--text3);line-height:1.5}
+/* Segnali della tesi: due colonne (rafforzano/indeboliscono), una riga per
+   segnale con stato esplicito a destra (scattato / in attesa / non misurabile) */
+.sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sig-col{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.sig-head{font-size:9px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.sig-row{display:flex;gap:7px;align-items:baseline;font-size:11px;color:var(--text2);line-height:1.5;padding:6px 0}
+.sig-row+.sig-row{border-top:1px solid var(--border)}
+.sig-mark{flex-shrink:0}
+.sig-txt{flex:1;min-width:0}
+.sig-status{flex-shrink:0;font-size:9px;color:#6a6a88;white-space:nowrap}
+.sig-empty{font-size:10px;color:var(--text3);font-style:italic;padding:6px 0}
 .memory-sources{display:flex;flex-direction:column;gap:6px}
 .source-pill{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);border:1px solid #2a1a40;border-radius:10px}
 .source-num{font-size:10px;color:#7c3aed;min-width:20px}
@@ -234,6 +258,7 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);font
 #dr-body>div:nth-child(7){animation-delay:.34s}
 #dr-body>div:nth-child(8){animation-delay:.39s}
 #dr-body>div:nth-child(n+9){animation-delay:.44s}
+#dr-body>div:nth-child(n+12){animation-delay:.5s}
 .section-lbl{display:flex;align-items:center;gap:10px}
 .section-lbl::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border2),transparent)}
 .chart-box{position:relative}
@@ -269,7 +294,7 @@ body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);font
 .watch-btn:hover{border-color:var(--blue);color:var(--blue)}
 .watch-btn.on{border-style:solid;border-color:var(--teal);color:var(--teal);background:var(--teal-dim)}
 .chart-asof{font-size:9px;color:var(--text3);margin-top:8px;text-align:right;letter-spacing:.04em}
-@media (max-width:640px){.scen-grid{grid-template-columns:1fr;gap:8px}}
+@media (max-width:640px){.scen-grid{grid-template-columns:1fr;gap:8px}.sig-grid{grid-template-columns:1fr}}
 
 /* ═══ EDITOR PORTAFOGLIO REALE ═══ */
 .pfe-overlay{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(8,8,10,.82);backdrop-filter:blur(4px);padding:20px}
