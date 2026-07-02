@@ -230,12 +230,13 @@ function openPortfolioEditor(){
         window.__SYN_DISPLAY_NAME=dn;
       }
       ov.remove();
-      const notif=document.getElementById('mem-notif');
-      if(notif){
-        document.getElementById('mem-notif-text').textContent='◈ portafoglio salvato — le prossime analisi lo useranno';
-        notif.classList.add('show');
-        setTimeout(()=>notif.classList.remove('show'),5000);
-      }
+      // Grafo vuoto: genera subito gli spunti dai titoli appena dichiarati,
+      // così il primo ingresso non finisce davanti al vuoto.
+      const seeding = TASKS.length===0 && out.length>0;
+      if(seeding) seedFromPortfolio();
+      showNotif(seeding
+        ? '◈ portafoglio salvato — sto preparando alcuni spunti dai tuoi titoli'
+        : '◈ portafoglio salvato — le prossime analisi lo useranno', 5000);
     }catch(e){
       btn.disabled=false; btn.textContent='salva';
       const nm=document.getElementById('pfe-name-msg');
@@ -1783,15 +1784,20 @@ let SEED_SPUNTI=[];
 async function seedFromPortfolio(){
   const holdings=Array.isArray(window.__SYN_PORTFOLIO)?window.__SYN_PORTFOLIO:[];
   if(!holdings.length) return false;
+  // Guard anti-doppio-seed: spunti già generati o grafo non più vuoto → niente
+  // rigenerazione (ogni chiamata a /api/seed consuma quota AI accessoria).
+  if(SEED_SPUNTI.length||TASKS.length>0) return false;
   try{
     const res=await fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
     const json=await res.json();
     const qs=(json.result&&json.result.questions)||[];
     if(!qs.length) return false;
-    SEED_SPUNTI=qs.slice(1);            // gli altri restano come spunti cliccabili
+    SEED_SPUNTI=qs;                     // tutti spunti cliccabili nel pannello
     renderProtoTheses();
+    // Precompila la prima domanda: l'utente decide se lanciarla. Nessuna
+    // analisi automatica — consumerebbe quota task senza consenso.
     const qi=document.getElementById('qi');
-    if(qi){ qi.value=qs[0].q; runTask(); } // auto-analizza la prima → grafo non vuoto subito
+    if(qi){ qi.value=qs[0].q; qi.focus(); }
     return true;
   }catch(e){ console.warn('seed dal portafoglio fallito',e); return false; }
 }
@@ -1803,11 +1809,16 @@ async function runSpunto(i){
   if(qi){ qi.value=s.q; runTask(); }
 }
 window.runSpunto=runSpunto;
+window.seedFromPortfolio=seedFromPortfolio;
 
 function renderProtoTheses(){
   const panel=document.getElementById('proto-panel');
   if(!panel) return;
   const list=(PROTO_THESES||[]).slice(0,4);
+  // Titolo del pannello: "spunti" quando mostra i seed dal portafoglio,
+  // "tesi in formazione" altrimenti — prima era fuorviante.
+  const _pt=document.getElementById('proto-title');
+  if(_pt) _pt.textContent=(!list.length&&SEED_SPUNTI&&SEED_SPUNTI.length)?'◈ spunti dal tuo portafoglio':'◆ tesi in formazione';
   if(!list.length){
     // Spunti dal portafoglio (seed): mostrali finché non ci sono tesi vere.
     if(SEED_SPUNTI && SEED_SPUNTI.length){
@@ -2357,44 +2368,10 @@ function recomputeAllConns(){
   window.EDGES=EDGES;
 }
 
-// ═══ SESSION MIRROR — riflette a posteriori la modalità d'uso prevalente ═══
-const MODE_MAP = {causal:'explore', trend:'explore', risk:'allocate', compare:'allocate', screen:'screen'};
-const MODE_META = {
-  explore:  {label:'esplorazione di meccanismi', color:'#5b9cf6'},
-  allocate: {label:'costruzione di una strategia', color:'#2ecf98'},
-  screen:   {label:'ricerca di titoli specifici', color:'#f0a030'}
-};
-function computeSessionMode(){
-  if(TASKS.length<3) return null;
-  const counts={explore:0,allocate:0,screen:0};
-  TASKS.forEach(t=>{const m=MODE_MAP[t.intent?.analysis_type]; if(m)counts[m]++;});
-  const total=counts.explore+counts.allocate+counts.screen;
-  if(total===0) return null;
-  let best='explore',bestN=-1;
-  for(const k of ['explore','allocate','screen']){ if(counts[k]>bestN){bestN=counts[k];best=k;} }
-  const pct=Math.round(bestN/total*100);
-  return {mode:best, pct, ...MODE_META[best], isScreen:best==='screen'};
-}
-function updateSessionMirror(){
-  const el=document.getElementById('session-mirror');
-  if(!el) return;
-  const sm=computeSessionMode();
-  if(!sm){ el.style.opacity='0'; el.innerHTML=''; return; }
-  const screenBadge = sm.isScreen
-    ? ` <span style="color:#f0a030;border:1px solid #3a2800;background:#1a1505;border-radius:4px;padding:1px 6px;margin-left:6px;font-size:9px">solo educativo</span>`
-    : '';
-  el.innerHTML = `<span style="opacity:.5">questa sessione:</span> <span style="color:${sm.color}">${sm.label}</span> <span style="opacity:.4">· ${sm.pct}%</span>${screenBadge}`;
-  el.style.opacity='1';
-  el.title = sm.isScreen
-    ? 'Stai cercando titoli specifici. Symnaps mostra esempi a scopo puramente educativo, non raccomandazioni.'
-    : 'Modalità d\'uso prevalente, dedotta dalle tue domande. Cambia liberamente continuando a esplorare.';
-}
-
 function updateStats(){
   document.getElementById('st').textContent=TASKS.length;
   document.getElementById('sc').textContent=EDGES.length;
   document.getElementById('sh').textContent=uniqueHyp();
-  updateSessionMirror();
 }
 
 // Loading steps
@@ -2498,15 +2475,6 @@ document.getElementById('qi').addEventListener('input',function(){this.style.hei
 // Post-init: hydrate from preloaded DB data
 (function(){
   try{
-    // Create session-mirror element in the topbar (centered, discreet)
-    const tb=document.querySelector('.topbar');
-    const stats=document.querySelector('.topbar-stats');
-    if(tb && stats && !document.getElementById('session-mirror')){
-      const sm=document.createElement('div');
-      sm.id='session-mirror';
-      sm.style.cssText='flex:1;text-align:center;font-family:DM Mono,monospace;font-size:11px;color:#7a7a95;opacity:0;transition:opacity .4s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 16px';
-      tb.insertBefore(sm, stats);
-    }
     const pre = window.__SYN_PRELOAD;
     if(pre && pre.tasks.length){
       const W = canvas.width/(window.devicePixelRatio||1), graphH = (canvas.height/(window.devicePixelRatio||1))-110;
@@ -2590,7 +2558,6 @@ document.getElementById('qi').addEventListener('input',function(){this.style.hei
       else { setTimeout(()=>{ if(window.startTutorial) window.startTutorial(); }, 300); }
     }
     updateUsageLabel();
-    updateSessionMirror();
     refreshStaleData();
     loadWatches();
     const lb=document.getElementById('logout-btn');
@@ -2638,7 +2605,7 @@ window.openActionDrawer = openActionDrawer;
 window.deleteTask = deleteTask;
 // ── Tutorial: swipeable intro cards ──
 window.__tutStep = 0;
-window.__tutTotal = 4;
+window.__tutTotal = 5;
 window.startTutorial = function(){
   window.__tutStep = 0;
   const ov=document.getElementById('tutorial');
@@ -2664,6 +2631,11 @@ window.endTutorial = function(){
   const ov=document.getElementById('tutorial');
   if(ov) ov.style.display='none';
   const qi=document.getElementById('qi'); if(qi) qi.focus();
+};
+// Slide finale del tutorial: chiude e apre l'editor del portafoglio.
+window.tutOpenPortfolio = function(){
+  window.endTutorial();
+  openPortfolioEditor();
 };
 
 

@@ -216,7 +216,6 @@ details.meta-fold>*:not(summary){margin-top:10px}
   .logo{font-size:15px}
   .topbar-stats{gap:16px}
   .stat-val{font-size:14px}
-  .session-mirror,#session-mirror{display:none}
   /* Give the graph an EXPLICIT height (mobile only) so the canvas fills it.
      height:100% on a flex child collapses on mobile; an explicit dvh value
      based on the known topbar height is reliable. */

@@ -30,7 +30,7 @@ export const BODY = `
 
   <div class="proto-panel" id="proto-panel">
     <div class="proto-head" onclick="this.parentElement.classList.toggle('collapsed')">
-      <span>◆ tesi in formazione · <b id="proto-count">0</b></span>
+      <span><span id="proto-title">◆ tesi in formazione</span> · <b id="proto-count">0</b></span>
       <span class="proto-caret">▾</span>
     </div>
     <div style="font-size:9.5px;color:var(--text3);padding:0 12px 6px;letter-spacing:.03em">emergono dalle tue domande · maturano coi dati</div>
@@ -60,7 +60,13 @@ export const BODY = `
         <div class="tut-slide" data-i="3" style="display:none">
           <svg class="tut-shape" viewBox="0 0 120 80"><rect x="14" y="26" width="92" height="13" rx="6" fill="none" stroke="#5b9cf6" stroke-width="1.5" opacity="0.5"/><rect x="14" y="44" width="68" height="13" rx="6" fill="none" stroke="#5b9cf6" stroke-width="1.5" opacity="0.5"/><text x="98" y="36" fill="#5b9cf6" font-size="13">→</text><text x="76" y="54" fill="#5b9cf6" font-size="13">→</text></svg>
           <div class="tut-h">Approfondisci</div>
-          <div class="tut-p">Sotto ogni analisi trovi delle <b>domande suggerite</b>: sono spunti da <b>cliccare</b> per esplorare nuove direzioni — non domande a cui rispondere. Buona esplorazione!</div>
+          <div class="tut-p">Sotto ogni analisi trovi delle <b>domande suggerite</b>: sono spunti da <b>cliccare</b> per esplorare nuove direzioni — non domande a cui rispondere.</div>
+        </div>
+        <div class="tut-slide" data-i="4" style="display:none">
+          <svg class="tut-shape" viewBox="0 0 120 80"><rect x="35" y="14" width="50" height="52" rx="7" fill="#34d39918" stroke="#34d399" stroke-width="2.5"/><line x1="45" y1="30" x2="75" y2="30" stroke="#34d399" stroke-width="3" stroke-linecap="round"/><line x1="45" y1="41" x2="67" y2="41" stroke="#34d399" stroke-width="3" stroke-linecap="round" opacity="0.7"/><line x1="45" y1="52" x2="59" y2="52" stroke="#34d399" stroke-width="3" stroke-linecap="round" opacity="0.45"/></svg>
+          <div class="tut-h">Parti dal tuo portafoglio</div>
+          <div class="tut-p">Opzionale e privato: dichiara gli strumenti che <b>possiedi davvero</b> e le analisi ti diranno quanto sei già esposto a ogni tema — con spunti concreti da cui partire.</div>
+          <button onclick="tutOpenPortfolio()" style="background:#34d39915;border:1px solid #34d39955;border-radius:12px;padding:11px 18px;color:#34d399;font-family:DM Mono,monospace;font-size:12px;cursor:pointer">◈ carica il mio portafoglio</button>
         </div>
       </div>
       <div class="tut-dots" id="tut-dots"></div>
