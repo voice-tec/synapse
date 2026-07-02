@@ -6,8 +6,10 @@
 
 import { latestFredValue } from '@/lib/fred';
 import { fetchTickerPerformance } from '@/lib/quotes';
+import { fetchPeTTM } from '@/lib/fundamentals';
 
-export type SignalKind = 'fred' | 'ticker' | 'manual';
+// 'pe' = P/E trailing (TTM) del titolo in metric, via FMP (lib/fundamentals).
+export type SignalKind = 'fred' | 'ticker' | 'pe' | 'manual';
 
 export type Signal = {
   text?: string;
@@ -62,6 +64,8 @@ export async function verdictBase(supabase: any, userId: string, sourceIds: stri
 export type EvalDeps = {
   latestFredValue: (id: string) => Promise<number | null>;
   fetchTickerPerformance: (ticker: string, fromIso: string) => Promise<number | null>;
+  // Opzionale per non rompere gli stub esistenti nei test; il default lo include.
+  fetchPeTTM?: (ticker: string) => Promise<number | null>;
 };
 
 // Valuta i segnali testabili (fred/ticker) contro i dati di oggi; ritorna i
@@ -72,7 +76,7 @@ export type EvalDeps = {
 export async function evalSignals(
   signals: Signals | null | undefined,
   createdAt: string,
-  deps: EvalDeps = { latestFredValue, fetchTickerPerformance },
+  deps: EvalDeps = { latestFredValue, fetchTickerPerformance, fetchPeTTM },
 ) {
   const now = new Date().toISOString();
   const out: { confirm: Signal[]; invalidate: Signal[] } = { confirm: [], invalidate: [] };
@@ -81,11 +85,13 @@ export async function evalSignals(
     for (const raw of (signals?.[dir] || [])) {
       const s = normSig(raw);
       const testable = !!s.metric && !!s.op && typeof s.threshold === 'number'
-        && (s.kind === 'fred' || s.kind === 'ticker');
+        && (s.kind === 'fred' || s.kind === 'ticker' || s.kind === 'pe');
       if (testable) {
         const v = s.kind === 'fred'
           ? await deps.latestFredValue(s.metric as string)
-          : await deps.fetchTickerPerformance(s.metric as string, createdAt);
+          : s.kind === 'pe'
+            ? (deps.fetchPeTTM ? await deps.fetchPeTTM(s.metric as string) : null)
+            : await deps.fetchTickerPerformance(s.metric as string, createdAt);
         if (v !== null) {
           s.fired = cmp(v, s.op, s.threshold as number);
           s.checked_at = now;

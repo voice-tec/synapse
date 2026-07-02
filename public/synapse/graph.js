@@ -1419,7 +1419,7 @@ function openMemoryDrawer(mn){
   // Denominatore segnali: se la tesi è già valutata usa signals_total (autorevole,
   // esclude i dati mancanti); altrimenti conta i testabili definiti → mostra "0/N"
   // invece di un fuorviante "0/0" su una tesi appena nata.
-  const _testable=(arr)=>(arr||[]).filter(s=>{const o=(typeof s==='string')?{}:(s||{});return (o.kind==='fred'||o.kind==='ticker')&&o.metric&&o.op&&typeof o.threshold==='number';}).length;
+  const _testable=(arr)=>(arr||[]).filter(s=>{const o=(typeof s==='string')?{}:(s||{});return (o.kind==='fred'||o.kind==='ticker'||o.kind==='pe')&&o.metric&&o.op&&typeof o.threshold==='number';}).length;
   const denom=(mn.signals_total&&mn.signals_total>0)?mn.signals_total:(_testable(mn.signals&&mn.signals.confirm)+_testable(mn.signals&&mn.signals.invalidate));
   const evaluated=(mn.signals_total&&mn.signals_total>0)||((mn.signals?(mn.signals.confirm||[]).concat(mn.signals.invalidate||[]):[]).some(s=>s&&s.checked_at));
   // Riga esplicativa: rende leggibile lo stato "in corso · 0/N · —", la causa
@@ -1438,7 +1438,7 @@ function openMemoryDrawer(mn){
       <div class="hero-top"><span class="hero-badge">◆ ${badgeLabel}</span></div>
       <div class="hero-thesis">"${mn.thesis}"</div>
       <div class="hero-metrics">
-        <div class="hero-ring"><b>${mn.confidence||0}%</b><small>conf.</small></div>
+        <div class="hero-ring"><b>${mn.confidence||0}%</b></div>
         <div class="hero-track">
           <div class="hero-stato" style="color:${stt.c}">${stt.l}</div>
           <div class="hero-sub">accuratezza ${accStr} · ${mn.signals_hit||0}/${denom} segnali scattati</div>
@@ -1454,7 +1454,7 @@ function openMemoryDrawer(mn){
   const publishHTML=imported?`
     <div>
       <div class="section-lbl">marketplace</div>
-      <div style="font-size:11px;color:var(--text3);line-height:1.5;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px">Tesi importata — non ripubblicabile nel marketplace.</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.6;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px">↘ Importata dal marketplace${impAuthor?` da #${impAuthor}`:''} — il track record è azzerato e si ricostruisce sui dati da oggi in poi. Non ripubblicabile.</div>
     </div>`:`
     <div>
       <div class="section-lbl">marketplace</div>
@@ -1470,13 +1470,16 @@ function openMemoryDrawer(mn){
   const sigRow=(s,side)=>{
     const o=(typeof s==='string')?{text:s}:(s||{});
     const c=side==='confirm'?'var(--green)':'var(--red)';
-    const testable=(o.kind==='fred'||o.kind==='ticker')&&o.metric&&o.op&&typeof o.threshold==='number';
-    let st;
-    if(!testable) st='<span class="sig-status" style="color:var(--text3)">non misurabile</span>';
+    const testable=(o.kind==='fred'||o.kind==='ticker'||o.kind==='pe')&&o.metric&&o.op&&typeof o.threshold==='number';
+    let st,tip='';
+    if(!testable){
+      st='<span class="sig-status" style="color:var(--text3)">verifica manuale</span>';
+      tip=' title="Non misurabile automaticamente (misuriamo prezzi, P/E trailing e serie macro FRED): resta come nota, non conta nel track record."';
+    }
     else if(o.fired) st=`<span class="sig-status" style="color:${c}">● scattato</span>`;
     else if(o.checked_at) st='<span class="sig-status">○ non ancora</span>';
     else st='<span class="sig-status">○ in attesa</span>';
-    return `<div class="sig-row"><span class="sig-mark" style="color:${c}">${side==='confirm'?'✓':'✗'}</span><span class="sig-txt">${o.text||''}</span>${st}</div>`;
+    return `<div class="sig-row"${tip}><span class="sig-mark" style="color:${c}">${side==='confirm'?'✓':'✗'}</span><span class="sig-txt">${o.text||''}</span>${st}</div>`;
   };
   const signalsHTML=(sg&&(((sg.confirm||[]).length)||((sg.invalidate||[]).length)))?`
     <div>
@@ -1521,14 +1524,14 @@ function openMemoryDrawer(mn){
       <div class="section-lbl">portafoglio della tesi</div>
       <div id="mem-portfolio-area-${mn.id}"></div>
     </div>
-    <div>
+    ${mn.suggested_question?`<div>
       <div class="section-lbl">prossimo passo suggerito</div>
       <div id="mem-suggested-q-${mn.id}" style="background:${color}11;border:1px dashed ${color}44;border-radius:12px;padding:14px 16px;font-size:12px;color:${color};cursor:pointer;line-height:1.5">
-        → ${mn.suggested_question||'—'}
+        → ${mn.suggested_question}
       </div>
-    </div>
+    </div>`:''}
     ${bandHTML('contesto',color)}
-    <div>
+    ${(mn.source_ids||[]).length?`<div>
       <div class="section-lbl">task sorgente (${(mn.source_ids||[]).length})</div>
       <div class="memory-sources">
         ${(mn.source_ids||[]).map((sid,i)=>{
@@ -1539,7 +1542,7 @@ function openMemoryDrawer(mn){
           </div>`:'';
         }).join('')}
       </div>
-    </div>
+    </div>`:''}
     ${publishHTML}`;
 
   setTimeout(()=>{

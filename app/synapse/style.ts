@@ -159,7 +159,6 @@ details.meta-fold>*:not(summary){margin-top:10px}
 .hero-ring{width:74px;height:74px;flex-shrink:0;border-radius:50%;background:conic-gradient(var(--c) calc(var(--p)*1%),var(--border2) 0);display:grid;place-items:center;position:relative}
 .hero-ring::before{content:'';position:absolute;inset:7px;border-radius:50%;background:var(--bg2)}
 .hero-ring b{position:relative;font-size:17px;font-weight:600;color:var(--c)}
-.hero-ring small{position:relative;display:block;font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;text-align:center;margin-top:1px}
 .hero-track{flex:1;min-width:0}
 .hero-stato{font-size:16px;font-weight:500;margin-bottom:2px}
 .hero-sub{font-size:11px;color:var(--text2)}
@@ -211,11 +210,17 @@ details.meta-fold>*:not(summary){margin-top:10px}
 @media (max-width: 640px){
   html{height:100dvh}
   body{height:100dvh;font-size:13px}
-  /* Top bar on ONE line so its height is predictable (~54px) */
-  .topbar{padding:10px 14px;gap:10px;flex-wrap:nowrap;min-height:54px}
-  .logo{font-size:15px}
-  .topbar-stats{gap:16px}
-  .stat-val{font-size:14px}
+  /* Top bar on ONE line so its height is predictable (~54px).
+     Su mobile restano solo logo + bottoni icon-only: ricerca, stats e
+     usage escono (i conteggi sono già nel graph-hint), le label dei
+     bottoni collassano a icona (.tb-lbl) — prima condividi/marketplace
+     finivano fuori schermo. */
+  .topbar{padding:10px 14px;gap:6px;flex-wrap:nowrap;min-height:54px}
+  .logo{font-size:15px;flex:1}
+  #usage-label,#graph-search,.topbar-stats,.pulse{display:none}
+  .tb-lbl{display:none}
+  #share-btn,#market-btn,#logout-btn{margin-left:6px;padding:6px 10px}
+  #pf-edit-btn{margin-left:0}
   /* Give the graph an EXPLICIT height (mobile only) so the canvas fills it.
      height:100% on a flex child collapses on mobile; an explicit dvh value
      based on the known topbar height is reliable. */

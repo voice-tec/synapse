@@ -114,6 +114,22 @@ describe('evalSignals (dato disponibile vs mancante, deps iniettate)', () => {
     expect(r.testableTotal).toBe(0);
     expect(r.confirmFired).toBe(0);
   });
+
+  it('kind pe: usa fetchPeTTM e valuta contro la soglia', async () => {
+    const pe = sig({ kind: 'pe', metric: 'MSFT', op: '<', threshold: 25 });
+    const deps = { ...depsVal(null), fetchPeTTM: async () => 22.5 }; // 22.5 < 25 → fired
+    const r = await evalSignals({ confirm: [pe] }, '2020-01-01', deps);
+    expect(r.testableTotal).toBe(1);
+    expect(r.confirmFired).toBe(1);
+    expect(r.signals.confirm[0].fired).toBe(true);
+  });
+
+  it('kind pe senza fetchPeTTM nelle deps (stub legacy) → data_missing, non conteggiato', async () => {
+    const pe = sig({ kind: 'pe', metric: 'MSFT', op: '<', threshold: 25 });
+    const r = await evalSignals({ confirm: [pe] }, '2020-01-01', depsVal(99));
+    expect(r.testableTotal).toBe(0);
+    expect(r.signals.confirm[0].data_missing).toBe(true);
+  });
 });
 
 describe('deriveOutcome (barra rigorosa)', () => {

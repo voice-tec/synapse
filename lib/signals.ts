@@ -31,16 +31,18 @@ export async function validateSignals(
   for (const s of all) {
     if (s.kind === 'fred' && (!s.metric || !(s.metric in FRED_CATALOG))) demote(s);
   }
-  // Ticker: risolvi i simboli unici una sola volta; declassa solo i `false`
-  // definitivi (null = incerto → si tiene, per non punire errori transitori).
+  // Ticker e P/E (metric = simbolo in entrambi): risolvi i simboli unici una
+  // sola volta; declassa solo i `false` definitivi (null = incerto → si tiene,
+  // per non punire errori transitori).
+  const SYMBOL_KINDS = ['ticker', 'pe'];
   const tickers = Array.from(new Set(
-    all.filter((s) => s.kind === 'ticker' && s.metric).map((s) => String(s.metric)),
+    all.filter((s) => SYMBOL_KINDS.includes(s.kind) && s.metric).map((s) => String(s.metric)),
   ));
   const verdict = new Map<string, boolean | null>();
   await Promise.all(tickers.map(async (t) => {
     try { verdict.set(t, await resolve(t)); } catch { verdict.set(t, null); }
   }));
   for (const s of all) {
-    if (s.kind === 'ticker' && verdict.get(String(s.metric)) === false) demote(s);
+    if (SYMBOL_KINDS.includes(s.kind) && verdict.get(String(s.metric)) === false) demote(s);
   }
 }

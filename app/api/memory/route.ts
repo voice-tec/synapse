@@ -59,6 +59,7 @@ REGOLE:
 - Evita tesi quasi-identiche, ma NON fondere temi diversi in una sola tesi.
 - "new" richiede confidence >= 68 E almeno 2 task sorgente. Un tema distinto sotto questa soglia va in "forming" (confidence >= 50), non scartato.
 - Se le tesi esistenti sono già 10 o più, NON creare "new": solo update.
+- In "explanation" e "pattern" NON citare MAI gli indici delle task (es. "le task [5] e [6]"): l'utente non li vede e non significano nulla per lui. Riferisciti ai temi e ai contenuti delle domande.
 - COERENZA COI VERDETTI: ogni task può avere un verdetto (verdict:stance/confidence, es. si/alta, no/bassa, dipende/media). La confidence della tesi DEVE essere coerente con i verdetti delle sue task sorgente: se la maggioranza è negativa (no) o a bassa confidenza, la tesi NON può avere confidence alta. Verdetti concordi e ad alta confidenza → tesi più solida. 'dipende' o assenza di verdetto è neutro.
 
 Rispondi SOLO con JSON valido:
@@ -76,7 +77,7 @@ Rispondi SOLO con JSON valido:
       "source_indices": [indici 1-based, massimo 6],
       "suggested_question": "una domanda che completerebbe questa tesi",
       "signals": {
-        "confirm": [{ "text": "segnale osservabile che rafforza la tesi", "kind": "fred|ticker|manual", "metric": "id FRED o simbolo ticker, oppure null", "op": "<|>|<=|>=, oppure null", "threshold": "numero, oppure null" }],
+        "confirm": [{ "text": "segnale osservabile che rafforza la tesi", "kind": "fred|ticker|pe|manual", "metric": "id FRED o simbolo ticker, oppure null", "op": "<|>|<=|>=, oppure null", "threshold": "numero, oppure null" }],
         "invalidate": [{ "text": "segnale osservabile che indebolisce la tesi", "kind": "...", "metric": "...", "op": "...", "threshold": "..." }]
       }
     }
@@ -85,6 +86,7 @@ Rispondi SOLO con JSON valido:
 SEGNALI TESTABILI — dai 2 confirm e 2 invalidate. Quando un segnale è misurabile, aggancialo a un dato:
 - macro USA → kind:"fred", metric = UNA di queste serie (usa l'id esatto): ${FRED_KEYS}; op + threshold come numero nell'unità della serie (es. CPI/tassi in %).
 - prezzo di un titolo → kind:"ticker", metric = simbolo (es. AAPL, NVDA); threshold = variazione % attesa dalla creazione della tesi (es. 20 = +20%), op tipicamente > o <.
+- multiplo di valutazione di un titolo → kind:"pe", metric = simbolo; threshold = soglia sul P/E TRAILING (TTM), op < o >. NOTA: misuriamo SOLO il P/E trailing; se il segnale riguarda specificamente il forward P/E o altri multipli (EV/EBITDA, P/S…) → kind:"manual".
 - non misurabile con questi → kind:"manual", metric/op/threshold = null.
 Il "text" è SEMPRE presente e leggibile. Preferisci segnali fred/ticker quando il tema lo consente.
 SETTORE — "sector" DEVE essere ESATTAMENTE uno tra: ${SECTOR_KEYS}. Scegli il più pertinente al tema della tesi; se nessuno calza bene usa "Altro".
