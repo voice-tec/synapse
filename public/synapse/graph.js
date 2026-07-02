@@ -1419,7 +1419,14 @@ function openMemoryDrawer(mn){
   // Denominatore segnali: se la tesi è già valutata usa signals_total (autorevole,
   // esclude i dati mancanti); altrimenti conta i testabili definiti → mostra "0/N"
   // invece di un fuorviante "0/0" su una tesi appena nata.
-  const _testable=(arr)=>(arr||[]).filter(s=>{const o=(typeof s==='string')?{}:(s||{});return (o.kind==='fred'||o.kind==='ticker'||o.kind==='pe')&&o.metric&&o.op&&typeof o.threshold==='number';}).length;
+  // Testabile = misurabile sui dati reali: fred, ticker, fondamentale ('pe'
+  // legacy = fund/pe; 'fund' richiede anche field). Specchio di evalSignals.
+  const _sigTestable=(o)=>{
+    if(!(o.metric&&o.op&&typeof o.threshold==='number')) return false;
+    if(o.kind==='fred'||o.kind==='ticker'||o.kind==='pe') return true;
+    return o.kind==='fund'&&!!o.field;
+  };
+  const _testable=(arr)=>(arr||[]).filter(s=>_sigTestable((typeof s==='string')?{}:(s||{}))).length;
   const denom=(mn.signals_total&&mn.signals_total>0)?mn.signals_total:(_testable(mn.signals&&mn.signals.confirm)+_testable(mn.signals&&mn.signals.invalidate));
   const evaluated=(mn.signals_total&&mn.signals_total>0)||((mn.signals?(mn.signals.confirm||[]).concat(mn.signals.invalidate||[]):[]).some(s=>s&&s.checked_at));
   // Riga esplicativa: rende leggibile lo stato "in corso · 0/N · —", la causa
@@ -1470,11 +1477,11 @@ function openMemoryDrawer(mn){
   const sigRow=(s,side)=>{
     const o=(typeof s==='string')?{text:s}:(s||{});
     const c=side==='confirm'?'var(--green)':'var(--red)';
-    const testable=(o.kind==='fred'||o.kind==='ticker'||o.kind==='pe')&&o.metric&&o.op&&typeof o.threshold==='number';
+    const testable=_sigTestable(o);
     let st,tip='';
     if(!testable){
       st='<span class="sig-status" style="color:var(--text3)">verifica manuale</span>';
-      tip=' title="Non misurabile automaticamente (misuriamo prezzi, P/E trailing e serie macro FRED): resta come nota, non conta nel track record."';
+      tip=' title="Non misurabile automaticamente (misuriamo prezzi, fondamentali TTM e serie macro FRED): resta come nota, non conta nel track record."';
     }
     else if(o.fired) st=`<span class="sig-status" style="color:${c}">● scattato</span>`;
     else if(o.checked_at) st='<span class="sig-status">○ non ancora</span>';

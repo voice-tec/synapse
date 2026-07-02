@@ -6,10 +6,12 @@
 
 import { FRED_CATALOG } from '@/lib/fred';
 import { resolveTicker } from '@/lib/quotes';
+import { FUND_FIELDS } from '@/lib/fundamentals';
 
 function demote(s: any) {
   s.kind = 'manual';
   s.metric = null;
+  s.field = null;
   s.op = null;
   s.threshold = null;
 }
@@ -31,10 +33,14 @@ export async function validateSignals(
   for (const s of all) {
     if (s.kind === 'fred' && (!s.metric || !(s.metric in FRED_CATALOG))) demote(s);
   }
-  // Ticker e P/E (metric = simbolo in entrambi): risolvi i simboli unici una
-  // sola volta; declassa solo i `false` definitivi (null = incerto → si tiene,
-  // per non punire errori transitori).
-  const SYMBOL_KINDS = ['ticker', 'pe'];
+  // Fondamentali: field fuori catalogo → demote (a costo zero, prima dei fetch).
+  for (const s of all) {
+    if (s.kind === 'fund' && (!s.field || !(s.field in FUND_FIELDS))) demote(s);
+  }
+  // Ticker e fondamentali (metric = simbolo in tutti): risolvi i simboli unici
+  // una sola volta; declassa solo i `false` definitivi (null = incerto → si
+  // tiene, per non punire errori transitori).
+  const SYMBOL_KINDS = ['ticker', 'pe', 'fund'];
   const tickers = Array.from(new Set(
     all.filter((s) => SYMBOL_KINDS.includes(s.kind) && s.metric).map((s) => String(s.metric)),
   ));

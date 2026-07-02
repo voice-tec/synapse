@@ -77,7 +77,7 @@ Rispondi SOLO con JSON valido:
       "source_indices": [indici 1-based, massimo 6],
       "suggested_question": "una domanda che completerebbe questa tesi",
       "signals": {
-        "confirm": [{ "text": "segnale osservabile che rafforza la tesi", "kind": "fred|ticker|pe|manual", "metric": "id FRED o simbolo ticker, oppure null", "op": "<|>|<=|>=, oppure null", "threshold": "numero, oppure null" }],
+        "confirm": [{ "text": "segnale osservabile che rafforza la tesi", "kind": "fred|ticker|fund|manual", "metric": "id FRED o simbolo ticker, oppure null", "field": "solo per kind fund: quale fondamentale, oppure null", "op": "<|>|<=|>=, oppure null", "threshold": "numero, oppure null" }],
         "invalidate": [{ "text": "segnale osservabile che indebolisce la tesi", "kind": "...", "metric": "...", "op": "...", "threshold": "..." }]
       }
     }
@@ -86,7 +86,7 @@ Rispondi SOLO con JSON valido:
 SEGNALI TESTABILI — dai 2 confirm e 2 invalidate. Quando un segnale è misurabile, aggancialo a un dato:
 - macro USA → kind:"fred", metric = UNA di queste serie (usa l'id esatto): ${FRED_KEYS}; op + threshold come numero nell'unità della serie (es. CPI/tassi in %).
 - prezzo di un titolo → kind:"ticker", metric = simbolo (es. AAPL, NVDA); threshold = variazione % attesa dalla creazione della tesi (es. 20 = +20%), op tipicamente > o <.
-- multiplo di valutazione di un titolo → kind:"pe", metric = simbolo; threshold = soglia sul P/E TRAILING (TTM), op < o >. NOTA: misuriamo SOLO il P/E trailing; se il segnale riguarda specificamente il forward P/E o altri multipli (EV/EBITDA, P/S…) → kind:"manual".
+- fondamentale TTM di un titolo → kind:"fund", metric = simbolo, field = UNO tra: pe (P/E), ps (Price/Sales), pb (Price/Book), ev_ebitda (EV/EBITDA), peg (PEG), p_fcf (Price/FCF), div_yield (dividend yield in %), net_margin (margine netto in %), gross_margin (margine lordo in %), de (Debt/Equity); threshold numerico nell'unità del field (yield e margini in %, es. 2.5 = 2.5%), op < o >. NOTA: tutti i valori sono TRAILING (TTM); segnali su stime FORWARD (forward P/E, guidance, crescita attesa) → kind:"manual".
 - non misurabile con questi → kind:"manual", metric/op/threshold = null.
 Il "text" è SEMPRE presente e leggibile. Preferisci segnali fred/ticker quando il tema lo consente.
 SETTORE — "sector" DEVE essere ESATTAMENTE uno tra: ${SECTOR_KEYS}. Scegli il più pertinente al tema della tesi; se nessuno calza bene usa "Altro".

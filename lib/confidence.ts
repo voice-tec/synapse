@@ -6,15 +6,17 @@
 
 import { latestFredValue } from '@/lib/fred';
 import { fetchTickerPerformance } from '@/lib/quotes';
-import { fetchPeTTM } from '@/lib/fundamentals';
+import { fetchFundamental } from '@/lib/fundamentals';
 
-// 'pe' = P/E trailing (TTM) del titolo in metric, via FMP (lib/fundamentals).
-export type SignalKind = 'fred' | 'ticker' | 'pe' | 'manual';
+// 'fund' = fondamentale TTM (field dal catalogo FUND_FIELDS) del titolo in
+// metric, via FMP (lib/fundamentals). 'pe' = alias legacy di fund/pe.
+export type SignalKind = 'fred' | 'ticker' | 'fund' | 'pe' | 'manual';
 
 export type Signal = {
   text?: string;
   kind?: SignalKind | string;
   metric?: string | null;        // id FRED (es. CPIAUCSL) o simbolo ticker; null se manual
+  field?: string | null;         // per kind 'fund': quale fondamentale (FUND_FIELDS)
   op?: '<' | '>' | '<=' | '>=' | string | null;
   threshold?: number | null;
   // scritti dopo la valutazione:
@@ -65,7 +67,7 @@ export type EvalDeps = {
   latestFredValue: (id: string) => Promise<number | null>;
   fetchTickerPerformance: (ticker: string, fromIso: string) => Promise<number | null>;
   // Opzionale per non rompere gli stub esistenti nei test; il default lo include.
-  fetchPeTTM?: (ticker: string) => Promise<number | null>;
+  fetchFundamental?: (ticker: string, field: string) => Promise<number | null>;
 };
 
 // Valuta i segnali testabili (fred/ticker) contro i dati di oggi; ritorna i
@@ -76,7 +78,7 @@ export type EvalDeps = {
 export async function evalSignals(
   signals: Signals | null | undefined,
   createdAt: string,
-  deps: EvalDeps = { latestFredValue, fetchTickerPerformance, fetchPeTTM },
+  deps: EvalDeps = { latestFredValue, fetchTickerPerformance, fetchFundamental },
 ) {
   const now = new Date().toISOString();
   const out: { confirm: Signal[]; invalidate: Signal[] } = { confirm: [], invalidate: [] };
@@ -84,13 +86,16 @@ export async function evalSignals(
   for (const dir of ['confirm', 'invalidate'] as const) {
     for (const raw of (signals?.[dir] || [])) {
       const s = normSig(raw);
+      // 'pe' legacy = fund con field 'pe'; 'fund' richiede anche un field.
+      const isFund = s.kind === 'fund' || s.kind === 'pe';
+      const fundField = s.kind === 'pe' ? 'pe' : (s.field || null);
       const testable = !!s.metric && !!s.op && typeof s.threshold === 'number'
-        && (s.kind === 'fred' || s.kind === 'ticker' || s.kind === 'pe');
+        && (s.kind === 'fred' || s.kind === 'ticker' || (isFund && !!fundField));
       if (testable) {
         const v = s.kind === 'fred'
           ? await deps.latestFredValue(s.metric as string)
-          : s.kind === 'pe'
-            ? (deps.fetchPeTTM ? await deps.fetchPeTTM(s.metric as string) : null)
+          : isFund
+            ? (deps.fetchFundamental ? await deps.fetchFundamental(s.metric as string, fundField as string) : null)
             : await deps.fetchTickerPerformance(s.metric as string, createdAt);
         if (v !== null) {
           s.fired = cmp(v, s.op, s.threshold as number);

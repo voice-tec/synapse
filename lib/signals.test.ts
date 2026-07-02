@@ -4,6 +4,7 @@ import { validateSignals } from './signals';
 const cluster = (signals: any) => ({ signals });
 const fred = (metric: string) => ({ text: 'x', kind: 'fred', metric, op: '<', threshold: 3 });
 const ticker = (metric: string) => ({ text: 'x', kind: 'ticker', metric, op: '>', threshold: 20 });
+const fund = (metric: string, field: string | null) => ({ text: 'x', kind: 'fund', metric, field, op: '<', threshold: 25 });
 const yes = async () => true;
 
 describe('validateSignals', () => {
@@ -41,5 +42,31 @@ describe('validateSignals', () => {
     const c = cluster({ confirm: [ticker('NVDA')], invalidate: [] });
     await validateSignals([c], async () => null);
     expect(c.signals.confirm[0].kind).toBe('ticker');
+  });
+
+  it('fund con field nel catalogo e simbolo risolto → invariato', async () => {
+    const c = cluster({ confirm: [fund('MSFT', 'net_margin')], invalidate: [] });
+    await validateSignals([c], async () => true);
+    expect(c.signals.confirm[0].kind).toBe('fund');
+    expect(c.signals.confirm[0].field).toBe('net_margin');
+  });
+
+  it('fund con field fuori catalogo → manual (senza fetch del simbolo)', async () => {
+    const c = cluster({ confirm: [fund('MSFT', 'ev_sales')], invalidate: [] });
+    await validateSignals([c], async () => true);
+    expect(c.signals.confirm[0].kind).toBe('manual');
+    expect(c.signals.confirm[0].field).toBeNull();
+  });
+
+  it('fund senza field → manual', async () => {
+    const c = cluster({ confirm: [fund('MSFT', null)], invalidate: [] });
+    await validateSignals([c], async () => true);
+    expect(c.signals.confirm[0].kind).toBe('manual');
+  });
+
+  it('fund con simbolo non risolto (false) → manual', async () => {
+    const c = cluster({ confirm: [fund('ZZZZ', 'pe')], invalidate: [] });
+    await validateSignals([c], async () => false);
+    expect(c.signals.confirm[0].kind).toBe('manual');
   });
 });

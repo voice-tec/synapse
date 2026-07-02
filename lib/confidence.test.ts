@@ -115,18 +115,36 @@ describe('evalSignals (dato disponibile vs mancante, deps iniettate)', () => {
     expect(r.confirmFired).toBe(0);
   });
 
-  it('kind pe: usa fetchPeTTM e valuta contro la soglia', async () => {
-    const pe = sig({ kind: 'pe', metric: 'MSFT', op: '<', threshold: 25 });
-    const deps = { ...depsVal(null), fetchPeTTM: async () => 22.5 }; // 22.5 < 25 → fired
-    const r = await evalSignals({ confirm: [pe] }, '2020-01-01', deps);
+  it('kind fund: usa fetchFundamental col field e valuta contro la soglia', async () => {
+    const fund = sig({ kind: 'fund', metric: 'MSFT', field: 'net_margin', op: '>', threshold: 30 });
+    const seen: string[] = [];
+    const deps = { ...depsVal(null), fetchFundamental: async (_t: string, f: string) => { seen.push(f); return 39.3; } };
+    const r = await evalSignals({ confirm: [fund] }, '2020-01-01', deps); // 39.3 > 30 → fired
+    expect(seen).toEqual(['net_margin']);
     expect(r.testableTotal).toBe(1);
     expect(r.confirmFired).toBe(1);
     expect(r.signals.confirm[0].fired).toBe(true);
   });
 
-  it('kind pe senza fetchPeTTM nelle deps (stub legacy) → data_missing, non conteggiato', async () => {
+  it('kind pe legacy = alias di fund/pe', async () => {
     const pe = sig({ kind: 'pe', metric: 'MSFT', op: '<', threshold: 25 });
-    const r = await evalSignals({ confirm: [pe] }, '2020-01-01', depsVal(99));
+    const seen: string[] = [];
+    const deps = { ...depsVal(null), fetchFundamental: async (_t: string, f: string) => { seen.push(f); return 22.5; } };
+    const r = await evalSignals({ confirm: [pe] }, '2020-01-01', deps);
+    expect(seen).toEqual(['pe']);
+    expect(r.confirmFired).toBe(1);
+  });
+
+  it('kind fund senza field → non testabile (nessun fetch, nessun conteggio)', async () => {
+    const fund = sig({ kind: 'fund', metric: 'MSFT', field: null, op: '<', threshold: 25 });
+    const r = await evalSignals({ confirm: [fund] }, '2020-01-01', depsVal(99));
+    expect(r.testableTotal).toBe(0);
+    expect(r.signals.confirm[0].fired).toBe(undefined);
+  });
+
+  it('kind fund senza fetchFundamental nelle deps (stub legacy) → data_missing', async () => {
+    const fund = sig({ kind: 'fund', metric: 'MSFT', field: 'pe', op: '<', threshold: 25 });
+    const r = await evalSignals({ confirm: [fund] }, '2020-01-01', depsVal(99));
     expect(r.testableTotal).toBe(0);
     expect(r.signals.confirm[0].data_missing).toBe(true);
   });
