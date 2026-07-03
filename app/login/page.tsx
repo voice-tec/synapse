@@ -1,6 +1,24 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase-browser';
+import { usePublicLang, LangToggle } from '@/lib/i18n-public';
+
+const L = {
+  it: {
+    tag1: 'Le tue domande diventano un grafo.', tag2: 'Le tesi emergono da sole.',
+    welcome: 'bentornato', start: 'inizia da una domanda',
+    login: 'accedi →', signup: 'crea account →',
+    toSignup: 'non hai un account? registrati', toLogin: 'hai già un account? accedi',
+    f1: '● ogni domanda è un nodo', f2: '◆ le tesi si aggiornano da sole', f3: '▤ dalle tesi ai portafogli',
+  },
+  en: {
+    tag1: 'Your questions become a graph.', tag2: 'Theses emerge on their own.',
+    welcome: 'welcome back', start: 'start from a question',
+    login: 'log in →', signup: 'create account →',
+    toSignup: "don't have an account? sign up", toLogin: 'already have an account? log in',
+    f1: '● every question is a node', f2: '◆ theses update on their own', f3: '▤ from theses to portfolios',
+  },
+};
 
 // Sfondo: lo stesso flusso che racconta la landing, in sottofondo.
 // Non rumore casuale: domande blu a sinistra → tesi viola al centro →
@@ -119,6 +137,8 @@ export default function LoginPage() {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [lang, setLang] = usePublicLang();
+  const t = L[lang];
   const supabase = createClient();
 
   async function handleAuth() {
@@ -172,6 +192,7 @@ export default function LoginPage() {
         .lg-btn:active { transform: translateY(0); }
       `}</style>
 
+      <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 3 }}><LangToggle lang={lang} setLang={setLang} /></div>
       <GraphBackdrop />
 
       {/* Vignettatura: lascia respirare il centro, scurisce i bordi */}
@@ -185,13 +206,13 @@ export default function LoginPage() {
             <span style={{ fontFamily: "'Fraunces', serif", fontSize: 28, fontWeight: 300, color: '#fff', letterSpacing: '.02em' }}>Symnaps</span>
           </div>
           <div style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic', fontWeight: 300, fontSize: 15, color: '#7a7a95', textAlign: 'center', lineHeight: 1.5 }}>
-            Le tue domande diventano un grafo.<br />Le tesi emergono da sole.
+            {t.tag1}<br />{t.tag2}
           </div>
         </div>
 
         <div className="lg-in" style={{ background: '#0e0e12d9', backdropFilter: 'blur(10px)', border: '1px solid #2a2a36', borderRadius: 18, padding: 28, width: '100%', maxWidth: 350, display: 'flex', flexDirection: 'column', gap: 12, animationDelay: '.18s', boxShadow: '0 20px 60px #00000066' }}>
           <div style={{ fontSize: 10, color: '#3a3a50', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 2 }}>
-            {mode === 'login' ? 'bentornato' : 'inizia da una domanda'}
+            {mode === 'login' ? t.welcome : t.start}
           </div>
           <input
             type="email" placeholder="email" value={email}
@@ -209,21 +230,21 @@ export default function LoginPage() {
             onClick={handleAuth} disabled={loading}
             style={{ background: '#5b9cf6', color: '#08080a', border: 'none', borderRadius: 10, padding: '12px', fontFamily: "'DM Mono', monospace", fontSize: 13, fontWeight: 500, cursor: 'pointer', opacity: loading ? 0.5 : 1 }}
           >
-            {loading ? '...' : mode === 'login' ? 'accedi →' : 'crea account →'}
+            {loading ? '...' : mode === 'login' ? t.login : t.signup}
           </button>
           <button
             onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
             style={{ background: 'none', border: 'none', color: '#7a7a95', fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: 'pointer', padding: 4 }}
           >
-            {mode === 'login' ? 'non hai un account? registrati' : 'hai già un account? accedi'}
+            {mode === 'login' ? t.toSignup : t.toLogin}
           </button>
           {msg && <div style={{ fontSize: 11, color: '#f0a030', lineHeight: 1.5 }}>{msg}</div>}
         </div>
 
         <div className="lg-in" style={{ display: 'flex', gap: 18, fontSize: 10, color: '#3a3a50', letterSpacing: '.04em', animationDelay: '.32s', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <span>● ogni domanda è un nodo</span>
-          <span style={{ color: '#a78bfa66' }}>◆ le tesi si aggiornano da sole</span>
-          <span style={{ color: '#34d39966' }}>▤ dalle tesi ai portafogli</span>
+          <span>{t.f1}</span>
+          <span style={{ color: '#a78bfa66' }}>{t.f2}</span>
+          <span style={{ color: '#34d39966' }}>{t.f3}</span>
         </div>
 
       </div>

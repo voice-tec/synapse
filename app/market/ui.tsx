@@ -3,6 +3,39 @@
 // /market/mine). Stile: inline, tema scuro #08080a + Fraunces, coerente col resto.
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase-browser';
+import { usePublicLang, LangToggle, type Lang } from '@/lib/i18n-public';
+
+// ── Dizionario marketplace (condiviso dalle 3 pagine) ──
+export const MT = {
+  it: {
+    mine: 'le mie pubblicazioni', plans: 'piani', yourGraph: 'il tuo grafo →',
+    author: 'autore', confirmedWord: 'confermate', accuracyWord: 'accuratezza',
+    importsWord: 'import', importsTitle: 'quante volte è stata importata da altri utenti',
+    conf: 'confidenza', imported: '✓ importata', already: '↘ già nel tuo grafo',
+    alreadyTitle: "L'hai già importata: è nel tuo grafo", similar: 'hai già una tesi simile',
+    retry: 'riprova', importing: 'importo…', save: '+ salva nel mio grafo', loginToImport: 'accedi per importare',
+    stConfirmed: 'confermata ✓', stInvalid: 'invalidata ✕', stActive: 'in corso',
+  },
+  en: {
+    mine: 'my publications', plans: 'pricing', yourGraph: 'your graph →',
+    author: 'author', confirmedWord: 'confirmed', accuracyWord: 'accuracy',
+    importsWord: 'imports', importsTitle: 'how many times other users imported it',
+    conf: 'confidence', imported: '✓ imported', already: '↘ already in your graph',
+    alreadyTitle: 'You already imported it: it is in your graph', similar: 'you already have a similar thesis',
+    retry: 'retry', importing: 'importing…', save: '+ save to my graph', loginToImport: 'log in to import',
+    stConfirmed: 'confirmed ✓', stInvalid: 'invalidated ✕', stActive: 'active',
+  },
+};
+export type MTDict = typeof MT.it;
+export function useMarketLang(): [Lang, (l: Lang) => void, MTDict] {
+  const [lang, setLang] = usePublicLang();
+  return [lang, setLang, MT[lang]];
+}
+export const stFor = (t: MTDict): Record<string, { l: string; c: string }> => ({
+  confirmed: { l: t.stConfirmed, c: '#4ad68a' },
+  invalidated: { l: t.stInvalid, c: '#e05555' },
+  active: { l: t.stActive, c: '#7a7a95' },
+});
 
 export type Rep = { theses: number; confirmed: number; invalidated: number; accuracy: number | null };
 export type Item = {
@@ -34,38 +67,42 @@ export function useAuthed(): boolean {
 }
 
 export function MarketTopbar({ isAuthed }: { isAuthed: boolean }) {
+  const [lang, setLang, t] = useMarketLang();
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: '1px solid #1f1f28' }}>
       <a href="/market" style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 300, color: '#e8e8f0', textDecoration: 'none' }}>Symnaps</a>
       <span style={{ fontSize: 10, padding: '3px 10px', borderRadius: 6, background: '#241a3a', color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '.06em' }}>marketplace</span>
-      <span style={{ marginLeft: 'auto', display: 'flex', gap: 16 }}>
-        {isAuthed && <a href="/market/mine" style={{ color: '#a78bfa', fontSize: 12, textDecoration: 'none' }}>le mie pubblicazioni</a>}
-        <a href="/pricing" style={{ color: '#7a7a95', fontSize: 12, textDecoration: 'none' }}>piani</a>
-        <a href="/" style={{ color: '#5b9cf6', fontSize: 12, textDecoration: 'none' }}>il tuo grafo →</a>
+      <span style={{ marginLeft: 'auto', display: 'flex', gap: 16, alignItems: 'center' }}>
+        {isAuthed && <a href="/market/mine" style={{ color: '#a78bfa', fontSize: 12, textDecoration: 'none' }}>{t.mine}</a>}
+        <a href="/pricing" style={{ color: '#7a7a95', fontSize: 12, textDecoration: 'none' }}>{t.plans}</a>
+        <a href="/" style={{ color: '#5b9cf6', fontSize: 12, textDecoration: 'none' }}>{t.yourGraph}</a>
+        <LangToggle lang={lang} setLang={setLang} />
       </span>
     </div>
   );
 }
 
 export function RepLine({ authorRef, name, rep }: { authorRef: string; name: string | null; rep: Rep }) {
+  const [, , t] = useMarketLang();
   return (
     <span>
-      autore{' '}
+      {t.author}{' '}
       <a href={`/market/a/${authorRef}`}
         style={{ color: '#9a9ab2', fontFamily: name ? 'inherit' : 'monospace', textDecoration: 'underline', textDecorationColor: '#3a3a50', textUnderlineOffset: 3 }}>
         {name || `#${authorRef}`}
       </a>
-      {' '}· {rep.confirmed}/{rep.theses} confermate{rep.accuracy != null ? ` · ${rep.accuracy}% accuratezza` : ''}
+      {' '}· {rep.confirmed}/{rep.theses} {t.confirmedWord}{rep.accuracy != null ? ` · ${rep.accuracy}% ${t.accuracyWord}` : ''}
     </span>
   );
 }
 
 export function ImportsBadge({ n }: { n: number }) {
+  const [, , t] = useMarketLang();
   if (!n) return null;
   return (
     <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#12241a', color: '#4ad68a' }}
-      title="quante volte è stata importata da altri utenti">
-      ↘ {n} import
+      title={t.importsTitle}>
+      ↘ {n} {t.importsWord}
     </span>
   );
 }
@@ -73,12 +110,14 @@ export function ImportsBadge({ n }: { n: number }) {
 export function ThesisCard({ it, impState, onImport, isAuthed }: {
   it: Item; impState: ImpState; onImport: (id: string) => void; isAuthed: boolean;
 }) {
-  const st = ST[it.status] || ST.active;
+  const [, , t] = useMarketLang();
+  const STL = stFor(t);
+  const st = STL[it.status] || STL.active;
   const s = impState;
   return (
     <div style={{ background: '#0e0e12', border: '1px solid #2a2a36', borderRadius: 14, padding: '16px 18px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, fontSize: 10, color: '#5a5a78', flexWrap: 'wrap' }}>
-        <span style={{ color: '#a78bfa' }}>◆ confidenza {it.confidence}%</span>
+        <span style={{ color: '#a78bfa' }}>◆ {t.conf} {it.confidence}%</span>
         <span style={{ color: st.c }}>{st.l}</span>
         <ImportsBadge n={it.imports} />
         {it.sector && <span style={{ marginLeft: 'auto', padding: '2px 8px', borderRadius: 6, background: '#16161e', color: '#7a7a95', textTransform: 'uppercase', letterSpacing: '.05em' }}>{it.sector}</span>}
@@ -96,13 +135,13 @@ export function ThesisCard({ it, impState, onImport, isAuthed }: {
           <RepLine authorRef={it.author} name={it.authorName} rep={it.authorRep} />
         </div>
         {isAuthed ? (
-          s === 'done' ? <span style={{ fontSize: 11.5, color: '#4ad68a' }}>✓ importata</span>
-          : s === 'already' ? <span style={{ fontSize: 11.5, color: '#4ad68a' }} title="L'hai già importata: è nel tuo grafo">↘ già nel tuo grafo</span>
-          : s === 'duplicate' ? <span style={{ fontSize: 11.5, color: '#f0a030' }}>hai già una tesi simile</span>
-          : s === 'error' ? <button onClick={() => onImport(it.id)} style={btnStyle}>riprova</button>
-          : <button onClick={() => onImport(it.id)} disabled={s === 'loading'} style={{ ...btnStyle, opacity: s === 'loading' ? 0.6 : 1 }}>{s === 'loading' ? 'importo…' : '+ salva nel mio grafo'}</button>
+          s === 'done' ? <span style={{ fontSize: 11.5, color: '#4ad68a' }}>{t.imported}</span>
+          : s === 'already' ? <span style={{ fontSize: 11.5, color: '#4ad68a' }} title={t.alreadyTitle}>{t.already}</span>
+          : s === 'duplicate' ? <span style={{ fontSize: 11.5, color: '#f0a030' }}>{t.similar}</span>
+          : s === 'error' ? <button onClick={() => onImport(it.id)} style={btnStyle}>{t.retry}</button>
+          : <button onClick={() => onImport(it.id)} disabled={s === 'loading'} style={{ ...btnStyle, opacity: s === 'loading' ? 0.6 : 1 }}>{s === 'loading' ? t.importing : t.save}</button>
         ) : (
-          <a href="/login" style={{ ...btnStyle, textDecoration: 'none' }}>accedi per importare</a>
+          <a href="/login" style={{ ...btnStyle, textDecoration: 'none' }}>{t.loginToImport}</a>
         )}
       </div>
     </div>

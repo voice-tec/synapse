@@ -3,7 +3,32 @@
 // paginata (sort server-side). Da loggato si importano nel proprio grafo.
 import { useEffect, useState } from 'react';
 import { SECTORS } from '@/lib/sectors';
-import { type Item, type ImpState, ST, btnStyle, useAuthed, MarketTopbar, ThesisCard, StatBox } from './ui';
+import { type Item, type ImpState, stFor, btnStyle, useAuthed, MarketTopbar, ThesisCard, StatBox, useMarketLang } from './ui';
+
+const P = {
+  it: {
+    title: 'Tesi della community',
+    desc: "Tesi pubblicate da altri, ordinate per track record dell'autore. Importane una: entra nel tuo grafo con accuratezza azzerata e i suoi segnali ri-valutati sui dati di oggi.",
+    stTheses: 'tesi pubbliche', stAuthors: 'autori attivi', stConfirmed: 'confermate', stAcc: 'accuratezza media', stAccOf: 'accuratezza',
+    featured: '◆ in evidenza', loading: 'caricamento…', error: 'Marketplace non disponibile al momento. Riprova tra poco.',
+    searchPh: 'cerca tra le tesi caricate…', allSectors: 'tutti i settori',
+    sortRep: 'reputazione', sortRecent: 'recenti', sortAcc: 'accuratezza',
+    emptySector: (x: string) => `Nessuna tesi pubblica nel settore ${x}.`,
+    empty: 'Ancora nessuna tesi pubblica. Pubblica le tue dal drawer di una tesi nel grafo.',
+    more: 'carica altre', loadingMore: 'carico…',
+  },
+  en: {
+    title: 'Community theses',
+    desc: "Theses published by others, ranked by the author's track record. Import one: it enters your graph with accuracy reset and its signals re-evaluated on today's data.",
+    stTheses: 'public theses', stAuthors: 'active authors', stConfirmed: 'confirmed', stAcc: 'average accuracy', stAccOf: 'accuracy',
+    featured: '◆ featured', loading: 'loading…', error: 'Marketplace unavailable right now. Try again shortly.',
+    searchPh: 'search loaded theses…', allSectors: 'all sectors',
+    sortRep: 'reputation', sortRecent: 'recent', sortAcc: 'accuracy',
+    emptySector: (x: string) => `No public theses in the ${x} sector.`,
+    empty: 'No public theses yet. Publish yours from a thesis drawer in the graph.',
+    more: 'load more', loadingMore: 'loading…',
+  },
+};
 
 type Stats = {
   publicTheses: number; activeAuthors: number; confirmed: number;
@@ -29,6 +54,9 @@ export default function MarketPage() {
   const [q, setQ] = useState('');
   const [sort, setSort] = useState<Sort>('rep');
   const [sector, setSector] = useState<string>('');
+  const [mlang, , mt] = useMarketLang();
+  const lp = P[mlang];
+  const ST = stFor(mt);
 
   const listUrl = (off: number) => {
     const p = new URLSearchParams({ sort, offset: String(off), limit: String(PAGE) });
@@ -127,23 +155,23 @@ export default function MarketPage() {
       <MarketTopbar isAuthed={isAuthed} />
 
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px 18px 60px' }}>
-        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 300, marginBottom: 6 }}>Tesi della community</div>
+        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 300, marginBottom: 6 }}>{lp.title}</div>
         <div style={{ fontSize: 12.5, color: '#7a7a95', marginBottom: 20, lineHeight: 1.6 }}>
-          Tesi pubblicate da altri, ordinate per track record dell'autore. Importane una: entra nel tuo grafo con accuratezza azzerata e i suoi segnali ri-valutati sui dati di oggi.
+          {lp.desc}
         </div>
 
         {stats && (
           <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-            <StatBox value={stats.publicTheses} label="tesi pubbliche" />
-            <StatBox value={stats.activeAuthors} label="autori attivi" />
-            <StatBox value={stats.confirmed} label="confermate" />
-            <StatBox value={accStat != null ? `${accStat}%` : '—'} label={sector ? `accuratezza ${sector}` : 'accuratezza media'} />
+            <StatBox value={stats.publicTheses} label={lp.stTheses} />
+            <StatBox value={stats.activeAuthors} label={lp.stAuthors} />
+            <StatBox value={stats.confirmed} label={lp.stConfirmed} />
+            <StatBox value={accStat != null ? `${accStat}%` : '—'} label={sector ? `${lp.stAccOf} ${sector}` : lp.stAcc} />
           </div>
         )}
 
         {trending.length > 0 && (
           <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 10, color: '#7a7a95', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>◆ in evidenza</div>
+            <div style={{ fontSize: 10, color: '#7a7a95', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{lp.featured}</div>
             <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
               {trending.map((t) => {
                 const st = ST[t.status] || ST.active;
@@ -165,30 +193,30 @@ export default function MarketPage() {
           </div>
         )}
 
-        {state === 'loading' && <div style={{ color: '#3a3a50', fontSize: 12 }}>caricamento…</div>}
-        {state === 'error' && <div style={{ color: '#e05555', fontSize: 13 }}>Marketplace non disponibile al momento. Riprova tra poco.</div>}
+        {state === 'loading' && <div style={{ color: '#3a3a50', fontSize: 12 }}>{lp.loading}</div>}
+        {state === 'error' && <div style={{ color: '#e05555', fontSize: 13 }}>{lp.error}</div>}
 
         {(state === 'ok' || state === 'empty') && (
           <div style={{ display: 'flex', gap: 10, marginBottom: 18, alignItems: 'center', flexWrap: 'wrap' }}>
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="cerca tra le tesi caricate…"
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={lp.searchPh}
               style={{ flex: 1, minWidth: 200, background: '#0e0e12', border: '1px solid #2a2a36', borderRadius: 9, padding: '8px 12px', color: '#e8e8f0', fontSize: 12.5 }} />
             <select value={sector} onChange={(e) => setSector(e.target.value)}
               style={{ background: '#0e0e12', border: '1px solid #2a2a36', borderRadius: 9, padding: '8px 12px', color: sector ? '#a78bfa' : '#7a7a95', fontSize: 12 }}>
-              <option value="">tutti i settori</option>
+              <option value="">{lp.allSectors}</option>
               {SECTORS.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
             <div style={{ display: 'flex', gap: 4, background: '#0e0e12', border: '1px solid #2a2a36', borderRadius: 9, padding: 3 }}>
               {(['rep', 'recent', 'accuracy'] as const).map((s) => (
                 <button key={s} onClick={() => setSort(s)}
                   style={{ background: sort === s ? '#241a3a' : 'transparent', color: sort === s ? '#a78bfa' : '#7a7a95', border: 'none', borderRadius: 7, padding: '6px 12px', fontSize: 11.5, cursor: 'pointer' }}>
-                  {s === 'rep' ? 'reputazione' : s === 'recent' ? 'recenti' : 'accuratezza'}
+                  {s === 'rep' ? lp.sortRep : s === 'recent' ? lp.sortRecent : lp.sortAcc}
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {state === 'empty' && <div style={{ color: '#7a7a95', fontSize: 13 }}>{sector ? `Nessuna tesi pubblica nel settore ${sector}.` : 'Ancora nessuna tesi pubblica. Pubblica le tue dal drawer di una tesi nel grafo.'}</div>}
+        {state === 'empty' && <div style={{ color: '#7a7a95', fontSize: 13 }}>{sector ? lp.emptySector(sector) : lp.empty}</div>}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {shown.map((it) => (
@@ -200,7 +228,7 @@ export default function MarketPage() {
           <div style={{ textAlign: 'center', marginTop: 20 }}>
             <button onClick={loadMore} disabled={loadingMore}
               style={{ ...btnStyle, background: '#241a3a', color: '#a78bfa', opacity: loadingMore ? 0.6 : 1 }}>
-              {loadingMore ? 'carico…' : 'carica altre'}
+              {loadingMore ? lp.loadingMore : lp.more}
             </button>
           </div>
         )}
