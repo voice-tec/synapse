@@ -28,10 +28,11 @@ async function dedupClusters(clusters: any[], theses: any[]) {
     const existingBlock = existing.map((t: any) => `[${t.id}] "${t.thesis}"`).join('\n');
     const candidatesBlock = news.map((c: any, i: number) => `${i}: "${c.thesis}"`).join('\n');
     const { json } = await askClaudeJSON({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-sonnet-5',
       system: DEDUP_SYS,
       user: `TESI ESISTENTI:\n${existingBlock}\n\nTESI CANDIDATE:\n${candidatesBlock}`,
-      maxTokens: 1000,
+      maxTokens: 1300, // +30% per il tokenizer di Sonnet 5
+      thinking: { type: 'disabled' },
     });
     const validIds = new Set(existing.map((t: any) => t.id));
     for (const v of json?.verdicts || []) {

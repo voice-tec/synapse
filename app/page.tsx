@@ -132,9 +132,11 @@ export default function SynapsePage() {
       (window as any).__SYN_PRELOAD = { tasks: tasks || [], conns: conns || [], theses: theses || [], actions: actions || [] };
 
       const { data: profile } = await supabase.from('profiles').select('plan, tasks_this_month, portfolio, display_name').eq('id', user.id).single();
-      if (profile) { (window as any).__SYN_USAGE = { used: profile.tasks_this_month, limit: profile.plan === 'free' ? 10 : 99999, plan: profile.plan }; }
+      // Limiti allineati a PLAN_LIMITS di /api/analyze (free 10, pro/team 150)
+      if (profile) { (window as any).__SYN_USAGE = { used: profile.tasks_this_month, limit: profile.plan === 'free' ? 10 : 150, plan: profile.plan }; }
       (window as any).__SYN_PORTFOLIO = (profile as any)?.portfolio || [];
       (window as any).__SYN_DISPLAY_NAME = (profile as any)?.display_name || '';
+      (window as any).__SYN_EMAIL = user.email || '';
 
       // Portafoglio reale: salvato su profiles.portfolio, iniettato nei prompt
       // da /api/analyze e /api/portfolio per il collegamento esposizione.
@@ -157,7 +159,7 @@ export default function SynapsePage() {
       // Full reload, NON router.push: azzera lo stato globale dello script
       // iniettato (TASKS, NODES, __SYN_INITIALIZED) — altrimenti il prossimo
       // utente sulla stessa scheda vede i dati di quello precedente
-      (window as any).__synLogout = async () => { await supabase.auth.signOut(); window.location.href = '/login'; };
+      (window as any).__synLogout = async () => { await supabase.auth.signOut(); window.location.href = '/welcome'; };
 
       // lightweight-charts: caricata qui (import dinamico, niente SSR) ed esposta
       // allo script vanilla via window. Se fallisce, drawChart usa il canvas custom.

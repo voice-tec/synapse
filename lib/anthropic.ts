@@ -67,6 +67,9 @@ export async function askClaudeJSON(opts: {
   user: string;
   maxTokens: number;
   tools?: any[];
+  // Sonnet 5+: adaptive thinking è ON di default se omesso — le route JSON lo
+  // disabilitano esplicitamente per non consumare max_tokens in ragionamento.
+  thinking?: { type: string };
 }): Promise<{ json: any; citations: Citation[] }> {
   const messages: any[] = [{ role: 'user', content: opts.user }];
   const citations: Citation[] = [];
@@ -79,6 +82,7 @@ export async function askClaudeJSON(opts: {
       body: JSON.stringify({
         model: opts.model,
         max_tokens: opts.maxTokens,
+        ...(opts.thinking ? { thinking: opts.thinking } : {}),
         system: typeof opts.system === 'string' ? [{ type: 'text', text: opts.system }] : opts.system,
         ...(opts.tools ? { tools: opts.tools, tool_choice: { type: 'auto' } } : {}),
         messages,

@@ -24,14 +24,14 @@ const LOGO =
 // ─── Copy bilingue (IT/EN) — solo testi; struttura e motion invariati ────────
 const L = {
   it: {
-    nav: { login: 'accedi' },
+    nav: { login: 'accedi', pricing: 'prezzi', market: 'marketplace' },
     hero: {
       eyebrow: 'sistema di pensiero visivo · ricerca finanziaria',
       p: 'Mappa la tua ricerca finanziaria in un grafo dinamico. Symnaps collega le tue ipotesi a macro-scenari e dati ufficiali, organizzando visivamente la tua intelligenza.',
       cta: 'Inizia da una domanda', how: 'Vedi come funziona',
       legend: ['domande', 'tesi', 'portafogli'],
     },
-    marquee: ['FRED macro', 'Twelve Data', 'CPI', 'tassi FED', 'NVDA', 'spread high-yield', 'VWCE', 'mega-cap tech', 'oro', 'curva dei rendimenti', 'utili trimestrali', 'volatilità'],
+    marquee: ['FRED macro', 'Twelve Data', 'CPI', 'tassi FED', 'NVDA', 'spread high-yield', 'VWCE', 'mega-cap tech', 'oro', 'curva dei rendimenti', 'utili trimestrali', 'volatilità', 'marketplace di tesi'],
     howTitle: { pre: 'Tre tipi di nodo, costruiti sui ', em: 'dati', post: '.' },
     steps: [
       { k: 'domanda', h: 'Interroga dati reali, non opinioni', b: 'Ogni domanda è un nodo. Symnaps risponde con dati ufficiali — serie FRED e prezzi Twelve Data, niente numeri inventati — e prende posizione con un verdetto netto: sì, no o dipende.' },
@@ -59,19 +59,34 @@ const L = {
       { h: 'Carica il tuo portafoglio', b: 'Inserisci gli strumenti che possiedi davvero (ticker e peso). Ogni portafoglio di tesi segnala cosa hai già coperto — es. "già coperto in parte da VWCE".' },
       { h: 'Condividi il grafo', b: 'Pubblica un link al grafo: responsive, pinch-zoom, leggibile da chiunque — senza account.' },
     ],
-    stats: ['tipi di nodo nel grafo', 'fonti dati ufficiali (FRED · Twelve Data)', 'numeri inventati'],
+    marketTitle: { pre: 'Le tesi migliori non restano ', em: 'private', post: '.' },
+    market: {
+      badge: 'marketplace',
+      sub: 'Pubblica le tue tesi, importa quelle degli altri. Il track record è misurato sui dati — non si compra e non si gonfia.',
+      cards: [
+        { thesis: "L'oro protegge quando i tassi scendono", conf: 78, status: 'confermata ✓', author: '#a3f21c09', rep: '5/6 confermate · 82% accuratezza', imports: '↘ 12 import', btn: '+ salva nel mio grafo' },
+        { thesis: 'Le mega-cap tech reggono i tassi alti', conf: 72, status: 'in corso', author: 'marco_fin', rep: '3/4 confermate', imports: '↘ 5 import', btn: '+ salva nel mio grafo' },
+      ],
+      points: [
+        { h: 'Pubblichi solo tesi solide', b: 'Serve confidenza ≥60% e segnali misurabili: il track record è calcolato dai dati reali, non dichiarato. Non si può gonfiare.' },
+        { h: 'Importi col contatore a zero', b: 'Una tesi importata riparte con track record azzerato: si dimostra sui dati da oggi in poi, dentro il tuo grafo.' },
+        { h: 'Gli autori hanno una reputazione', b: 'Classifica per accuratezza reale: tesi confermate contro invalidate. Identità anonima (#hash) o nome pubblico — scegli tu.' },
+      ],
+      cta: 'esplora il marketplace',
+    },
+    stats: ['tipi di nodo nel grafo', 'fonti dati ufficiali (FRED · Twelve Data · FMP)', 'numeri inventati'],
     final: { h1: 'Inizia da una domanda.', h2: 'Al resto pensa la struttura.', sub: 'Gratis per iniziare. Nessuna carta richiesta.', cta: 'Inizia da una domanda' },
     footer: { tag: 'un sistema di pensiero visivo per la ricerca finanziaria', pricing: 'piani', privacy: 'privacy', login: 'accedi →' },
   },
   en: {
-    nav: { login: 'log in' },
+    nav: { login: 'log in', pricing: 'pricing', market: 'marketplace' },
     hero: {
       eyebrow: 'visual thinking system · financial research',
       p: 'Map your financial research as a living graph. Symnaps connects your hypotheses to macro scenarios and official data, organizing your intelligence visually.',
       cta: 'Start from a question', how: 'See how it works',
       legend: ['questions', 'theses', 'portfolios'],
     },
-    marquee: ['FRED macro', 'Twelve Data', 'CPI', 'FED rates', 'NVDA', 'high-yield spreads', 'VWCE', 'mega-cap tech', 'gold', 'yield curve', 'quarterly earnings', 'volatility'],
+    marquee: ['FRED macro', 'Twelve Data', 'CPI', 'FED rates', 'NVDA', 'high-yield spreads', 'VWCE', 'mega-cap tech', 'gold', 'yield curve', 'quarterly earnings', 'volatility', 'thesis marketplace'],
     howTitle: { pre: 'Three node types, built on ', em: 'data', post: '.' },
     steps: [
       { k: 'question', h: 'Query real data, not opinions', b: 'Every question becomes a node. Symnaps answers with official data — FRED series and Twelve Data prices, no made-up numbers — and takes a stance with a clear verdict: yes, no, or it depends.' },
@@ -99,7 +114,22 @@ const L = {
       { h: 'Upload your portfolio', b: 'Declare the instruments you actually own (ticker and weight). Every thesis portfolio flags what you already cover — e.g. "partly covered by VWCE".' },
       { h: 'Share the graph', b: 'Publish a link to your graph: responsive, pinch-zoom, readable by anyone — no account needed.' },
     ],
-    stats: ['node types in the graph', 'official data sources (FRED · Twelve Data)', 'invented numbers'],
+    marketTitle: { pre: 'The best theses don\'t stay ', em: 'private', post: '.' },
+    market: {
+      badge: 'marketplace',
+      sub: 'Publish your theses, import from others. The track record is measured on data — it can\'t be bought or inflated.',
+      cards: [
+        { thesis: 'Gold protects when rates come down', conf: 78, status: 'confirmed ✓', author: '#a3f21c09', rep: '5/6 confirmed · 82% accuracy', imports: '↘ 12 imports', btn: '+ save to my graph' },
+        { thesis: 'Mega-cap tech hold up with high rates', conf: 72, status: 'active', author: 'marco_fin', rep: '3/4 confirmed', imports: '↘ 5 imports', btn: '+ save to my graph' },
+      ],
+      points: [
+        { h: 'You only publish solid theses', b: 'Confidence ≥60% and measurable signals required: the track record is computed from real data, not declared. It can\'t be inflated.' },
+        { h: 'You import with the counter at zero', b: 'An imported thesis restarts with a clean track record: it proves itself on data from today onward, inside your graph.' },
+        { h: 'Authors carry a reputation', b: 'Ranked by real accuracy: confirmed vs invalidated theses. Anonymous identity (#hash) or public name — your call.' },
+      ],
+      cta: 'explore the marketplace',
+    },
+    stats: ['node types in the graph', 'official data sources (FRED · Twelve Data · FMP)', 'invented numbers'],
     final: { h1: 'Start from a question.', h2: 'The structure handles the rest.', sub: 'Free to start. No card required.', cta: 'Start from a question' },
     footer: { tag: 'a visual thinking system for financial research', pricing: 'plans', privacy: 'privacy', login: 'log in →' },
   },
@@ -549,9 +579,81 @@ function CountUp({ to, suffix = '' }: { to: number; suffix?: string }) {
 
 const STATS_META = [
   { n: 3, c: C.q },
-  { n: 2, c: C.p },
+  { n: 3, c: C.p },
   { n: 0, c: C.t },
 ];
+
+// ─── Sezione marketplace: due card mock in stile /market + i 3 principi ─────
+// Colori di stato fuori dal dizionario (indipendenti dalla lingua).
+const MARKET_CARDS_META = [
+  { stC: '#4ad68a' },
+  { stC: C.muted },
+];
+
+function MarketShowcase({ t }: { t: Dict }) {
+  const m = t.market;
+  return (
+    <section style={{ position: 'relative', zIndex: 5, maxWidth: 1040, margin: '0 auto', padding: '60px 24px 20px' }}>
+      <Reveal>
+        <div style={{ textAlign: 'center', marginBottom: 14 }}>
+          <span style={{ fontSize: 10, padding: '4px 12px', borderRadius: 6, background: '#241a3a', color: C.t, textTransform: 'uppercase', letterSpacing: '.08em' }}>{m.badge}</span>
+        </div>
+        <div style={{ textAlign: 'center', marginBottom: 12 }}>
+          <h2 style={{ fontFamily: serif, fontWeight: 300, fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', letterSpacing: '-.01em' }}>
+            {t.marketTitle.pre}<span style={{ fontStyle: 'italic', color: C.t }}>{t.marketTitle.em}</span>{t.marketTitle.post}
+          </h2>
+        </div>
+        <p style={{ textAlign: 'center', fontSize: 13, lineHeight: 1.7, color: C.muted, maxWidth: 560, margin: '0 auto 44px' }}>{m.sub}</p>
+      </Reveal>
+
+      <div className="w-mkt" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.15fr) minmax(0,1fr)', gap: 'clamp(24px,4vw,48px)', alignItems: 'center' }}>
+        {/* Card mock — la grafica vera di /market, in miniatura */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {m.cards.map((c, i) => (
+            <Reveal key={i} delay={i * 0.1}>
+              <div className="w-card" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '15px 17px', transform: i === 1 ? 'translateX(clamp(0px,3vw,28px))' : undefined }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, fontSize: 10, color: '#5a5a78', flexWrap: 'wrap' }}>
+                  <span style={{ color: C.t }}>◆ {c.conf}%</span>
+                  <span style={{ color: MARKET_CARDS_META[i].stC }}>{c.status}</span>
+                  <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#12241a', color: '#4ad68a' }}>{c.imports}</span>
+                </div>
+                <div style={{ fontFamily: serif, fontStyle: 'italic', fontSize: 15.5, fontWeight: 300, lineHeight: 1.5, color: '#d4bbff', marginBottom: 10 }}>"{c.thesis}"</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderTop: `1px solid ${C.border}55`, paddingTop: 10 }}>
+                  <span style={{ fontSize: 10.5, color: C.muted }}>
+                    <span style={{ fontFamily: c.author.startsWith('#') ? mono : 'inherit', textDecoration: 'underline', textDecorationColor: C.faint, textUnderlineOffset: 3 }}>{c.author}</span>
+                    {' '}· {c.rep}
+                  </span>
+                  <span style={{ flexShrink: 0, background: C.t, color: C.bg, borderRadius: 9, padding: '6px 12px', fontSize: 10.5, fontWeight: 500 }}>{c.btn}</span>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        {/* I 3 principi che rendono il marketplace affidabile */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+          {m.points.map((p, i) => (
+            <Reveal key={i} delay={0.08 + i * 0.08}>
+              <div style={{ display: 'flex', gap: 14 }}>
+                <span style={{ flexShrink: 0, width: 30, height: 30, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.t + '1a', border: `1px solid ${C.t}3a`, color: C.t, fontSize: 13 }}>{['◆', '↘', '✓'][i]}</span>
+                <div>
+                  <h3 style={{ fontFamily: serif, fontWeight: 400, fontSize: 16.5, color: '#fff', marginBottom: 6 }}>{p.h}</h3>
+                  <p style={{ fontSize: 12.5, lineHeight: 1.65, color: C.muted, margin: 0 }}>{p.b}</p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+          <Reveal delay={0.34}>
+            <a href="/market" className="w-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 4, color: C.t, fontFamily: mono, fontSize: 12.5, borderRadius: 12, padding: '11px 18px', border: `1px solid ${C.t}55`, width: 'max-content' }}>
+              {m.cta} <span>→</span>
+            </a>
+          </Reveal>
+        </div>
+      </div>
+      <style dangerouslySetInnerHTML={{ __html: `@media (max-width: 760px){ .w-mkt{ grid-template-columns: 1fr !important; } }` }} />
+    </section>
+  );
+}
 
 export default function Welcome() {
   const [lang, setLang] = usePublicLang();
@@ -661,6 +763,8 @@ export default function Welcome() {
           .w-bentoF > * { grid-column: auto !important; }
           .w-stats { grid-template-columns: 1fr !important; }
         }
+        .wnav-lnk:hover { color: #fff; }
+        @media (max-width: 620px){ .wnav-lnk{ display: none; } }
         ::selection { background: ${C.q}33; }
         @media (prefers-reduced-motion: reduce){
           .w-in, .w-rise { animation: none !important; }
@@ -676,6 +780,8 @@ export default function Welcome() {
           <img src={LOGO} alt="Symnaps" style={{ height: 20 }} />
           <span style={{ fontFamily: serif, fontWeight: 300, fontSize: 18, color: '#fff', letterSpacing: '.02em' }}>Symnaps</span>
         </div>
+        <a href="/market" className="wnav-lnk" style={{ fontFamily: mono, fontSize: 12, color: C.muted }}>{t.nav.market}</a>
+        <a href="/pricing" className="wnav-lnk" style={{ fontFamily: mono, fontSize: 12, color: C.muted }}>{t.nav.pricing}</a>
         <LangToggle lang={lang} setLang={setLang} />
         <a href="/login" className="w-btn" style={{ fontFamily: mono, fontSize: 12, fontWeight: 500, color: C.bg, background: C.q, borderRadius: 999, padding: '8px 16px' }}>{t.nav.login}</a>
       </nav>
@@ -775,6 +881,9 @@ export default function Welcome() {
           <FlowDemo d={t.demo} />
         </Reveal>
       </section>
+
+      {/* ── Marketplace ── */}
+      <MarketShowcase t={t} />
 
       {/* ── Features ── */}
       <section style={{ position: 'relative', zIndex: 5, maxWidth: 1040, margin: '0 auto', padding: '50px 24px 40px' }}>

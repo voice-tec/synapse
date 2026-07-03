@@ -121,8 +121,10 @@ export async function POST(req: NextRequest) {
         const batch = await createBatch(stale.map((th) => ({
           custom_id: th.id,
           params: {
-            model: 'claude-sonnet-4-6',
-            max_tokens: 500,
+            model: 'claude-sonnet-5',
+            max_tokens: 650, // +30% per il tokenizer di Sonnet 5
+            // Thinking adattivo di default su Sonnet 5: disabilitato, consumerebbe il budget
+            thinking: { type: 'disabled' },
             system,
             tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }],
             messages: [{

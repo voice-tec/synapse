@@ -21,6 +21,7 @@ export const BODY = `
   <button id="pf-edit-btn" style="background:none;border:1px solid #1a4a38;border-radius:8px;padding:6px 12px;color:#34d399;font-family:DM Mono;font-size:11px;cursor:pointer;margin-left:12px">◈<span class="pf-btn-lbl"> portafoglio</span></button>
   <button id="share-btn" style="background:#1a2a4a;border:1px solid #5b9cf655;border-radius:8px;padding:6px 12px;color:#5b9cf6;font-family:DM Mono;font-size:11px;cursor:pointer;margin-left:12px">↗<span class="tb-lbl"> condividi</span></button>
   <a id="market-btn" href="/market" style="background:#241a3a;border:1px solid #a78bfa55;border-radius:8px;padding:6px 12px;color:#a78bfa;font-family:DM Mono;font-size:11px;cursor:pointer;margin-left:12px;text-decoration:none">◆<span class="tb-lbl"> marketplace</span></a>
+  <button id="settings-btn" title="Impostazioni" style="background:none;border:1px solid #2a2a36;border-radius:8px;padding:6px 12px;color:#7a7a95;font-family:DM Mono;font-size:11px;cursor:pointer;margin-left:12px">⚙<span class="tb-lbl"> impostazioni</span></button>
   <button id="logout-btn" style="background:none;border:1px solid #2a2a36;border-radius:8px;padding:6px 12px;color:#7a7a95;font-family:DM Mono;font-size:11px;cursor:pointer;margin-left:12px">⏻<span class="tb-lbl"> esci</span></button>
 </div>
 

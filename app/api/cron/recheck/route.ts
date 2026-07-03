@@ -48,11 +48,12 @@ export async function GET(req: NextRequest) {
   for (const w of watches) {
     try {
       const { json: v } = await askClaudeJSON({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-sonnet-5',
         system,
         user: `Question: "${w.query}"\nPrevious verdict: stance=${w.last_stance || '—'}, label="${w.last_label || '—'}"\n\nRe-evaluate the verdict now.`,
-        maxTokens: 600,
+        maxTokens: 800, // +30% per il tokenizer di Sonnet 5
         tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }],
+        thinking: { type: 'disabled' },
       });
 
       const update: any = {

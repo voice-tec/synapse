@@ -37,11 +37,12 @@ export async function POST(req: NextRequest) {
 
   try {
     const { json: parsed, citations } = await askClaudeJSON({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-sonnet-5',
       system: SYS,
       user: `Tesi: "${thesis}"\nContesto: "${explanation || ''}"\n\nCostruisci il caso contrario.`,
-      maxTokens: 2000,
+      maxTokens: 2600, // +30% per il tokenizer di Sonnet 5
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }],
+      thinking: { type: 'disabled' },
     });
 
     // sources = citazioni vere dall'API web_search (mai auto-dichiarate dal modello)

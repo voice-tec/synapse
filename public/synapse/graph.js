@@ -8,7 +8,9 @@ if (window.__SYN_INITIALIZED) {
 
 
 // ═══ BACKEND INTEGRATION HELPERS ═══
-window.__SYN_USAGE = null;
+// NON azzerare: page.tsx la preload PRIMA di iniettare questo script — azzerarla
+// lasciava la label utilizzo vuota fino alla prima analisi.
+window.__SYN_USAGE = window.__SYN_USAGE || null;
 function updateUsageLabel(){
   const u = window.__SYN_USAGE;
   const el = document.getElementById('usage-label');
@@ -240,6 +242,67 @@ function openPortfolioEditor(){
     }catch(e){
       btn.disabled=false; btn.textContent='salva';
       const nm=document.getElementById('pfe-name-msg');
+      if(e&&e.message==='name_taken'&&nm){ nm.textContent='Questo nome è già in uso, scegline un altro.'; nm.style.color='var(--red,#e05555)'; }
+      else alert('Salvataggio fallito, riprova.');
+    }
+  });
+}
+
+// ═══ IMPOSTAZIONI — account, nome pubblico, piano ═══
+// Riusa lo stile del modale portafoglio (pfe-*). Il nome pubblico è editabile
+// anche qui (oltre che nell'editor portafoglio): stessa __synSaveProfile,
+// stesso trattamento di name_taken.
+function openSettingsModal(){
+  const u=window.__SYN_USAGE;
+  const ov=document.createElement('div');
+  ov.className='pfe-overlay';
+  ov.innerHTML=`
+  <div class="pfe-card">
+    <div class="pfe-title">Impostazioni</div>
+    <div>
+      <label style="display:block;font-size:11px;color:#7a7a95;margin-bottom:5px">Account</label>
+      <div style="font-size:12px;color:#b8b8cc;font-family:'DM Mono',monospace;word-break:break-all">${window.__SYN_EMAIL||'—'}</div>
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#7a7a95;margin-bottom:5px">Nome pubblico (marketplace) — richiesto per pubblicare</label>
+      <input id="set-display-name" placeholder="scegli un nome unico" maxlength="40" style="width:100%;background:#141418;border:1px solid #2a2a36;border-radius:8px;padding:8px 10px;color:#e8e8f0;font-family:inherit;font-size:12px;box-sizing:border-box">
+      <div id="set-name-msg" style="font-size:10px;color:#5a5a78;margin-top:4px">Mostrato sulle tue tesi pubblicate al posto di #hash anonimo. Vuoto = anonimo (niente pubblicazioni).</div>
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#7a7a95;margin-bottom:5px">Piano</label>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#141418;border:1px solid #2a2a36;border-radius:8px;padding:9px 12px">
+        <span style="font-size:12px;color:#b8b8cc">${u?u.plan+' · '+u.used+'/'+u.limit+' analisi questo mese':'—'}</span>
+        <a href="/pricing" style="font-size:11px;color:#a78bfa;text-decoration:none;flex-shrink:0">vedi piani →</a>
+      </div>
+    </div>
+    <div class="pfe-actions">
+      <span style="display:flex;gap:14px;align-items:center">
+        <a href="/privacy" style="font-size:11px;color:#5a5a78;text-decoration:none">privacy</a>
+        <button id="set-logout" style="background:none;border:none;color:#e05555;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;padding:8px 0">⏻ esci</button>
+      </span>
+      <span><button class="pfe-cancel" id="set-cancel">chiudi</button>
+      <button class="pfe-save" id="set-save">salva</button></span>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  const inp=document.getElementById('set-display-name');
+  inp.value=window.__SYN_DISPLAY_NAME||'';
+  document.getElementById('set-cancel').addEventListener('click',()=>ov.remove());
+  ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
+  document.getElementById('set-logout').addEventListener('click',()=>{ window.__synLogout&&window.__synLogout(); });
+  document.getElementById('set-save').addEventListener('click',async()=>{
+    const btn=document.getElementById('set-save');
+    const dn=inp.value.trim().slice(0,40);
+    if(dn===(window.__SYN_DISPLAY_NAME||'')){ ov.remove(); return; }
+    btn.disabled=true; btn.textContent='…';
+    try{
+      if(window.__synSaveProfile) await window.__synSaveProfile({display_name:dn||null});
+      window.__SYN_DISPLAY_NAME=dn;
+      ov.remove();
+      showNotif('◈ impostazioni salvate');
+    }catch(e){
+      btn.disabled=false; btn.textContent='salva';
+      const nm=document.getElementById('set-name-msg');
       if(e&&e.message==='name_taken'&&nm){ nm.textContent='Questo nome è già in uso, scegline un altro.'; nm.style.color='var(--red,#e05555)'; }
       else alert('Salvataggio fallito, riprova.');
     }
@@ -2584,6 +2647,8 @@ document.getElementById('qi').addEventListener('input',function(){this.style.hei
     loadWatches();
     const lb=document.getElementById('logout-btn');
     if(lb) lb.addEventListener('click', async()=>{ window.__synLogout && window.__synLogout(); });
+    const stb=document.getElementById('settings-btn');
+    if(stb) stb.addEventListener('click',()=>openSettingsModal());
     const pfb=document.getElementById('pf-edit-btn');
     if(pfb) pfb.addEventListener('click',()=>openPortfolioEditor());
     const shb=document.getElementById('share-btn');

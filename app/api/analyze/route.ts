@@ -99,11 +99,15 @@ export async function POST(req: NextRequest) {
   // (it used to fire 2-3 times and re-read huge page content — that was the
   // real cost driver, not the model). max_tokens trimmed to 3000 (real
   // answers were already under that, so no quality loss).
-  const model = 'claude-sonnet-4-6';
+  // Sonnet 5: listino identico al 4.6 ($3/$15, intro $2/$10 fino al 2026-08-31)
+  // ma tokenizer nuovo ~+30% token — max_tokens alzato di conseguenza.
+  // Thinking disabilitato esplicitamente: su Sonnet 5 è adattivo di default e
+  // consumerebbe il budget di output (JSON troncato) fatturando ragionamento.
+  const model = 'claude-sonnet-5';
   const webTools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }];
-  // 3600 (era 3000): scenari + catalizzatori + portfolio_link aggiungono
-  // ~400 token di output; il recupero JSON troncato resta solo rete di sicurezza.
-  const MAX_TOKENS = 3600;
+  // 4800 (era 3600 su 4.6): stesso contenuto, +30% dal tokenizer nuovo;
+  // il recupero JSON troncato resta solo rete di sicurezza.
+  const MAX_TOKENS = 4800;
 
   // Snapshot macro ufficiale (FRED) nel system: ~150 token che ancorano ogni
   // affermazione macro a numeri veri e risparmiano web_search inutili.
@@ -143,6 +147,7 @@ export async function POST(req: NextRequest) {
       user: query,
       maxTokens: MAX_TOKENS,
       tools: webTools,
+      thinking: { type: 'disabled' },
     });
 
     // Fonti: SOLO citazioni vere estratte dalla risposta API (web_search).
