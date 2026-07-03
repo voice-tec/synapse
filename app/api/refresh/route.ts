@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { extractJSON, createBatch, getBatch, getBatchResults } from '@/lib/anthropic';
-import { normLang, langDirective } from '@/lib/lang';
+import { normLang, localizeSystem } from '@/lib/lang';
 import { fetchTickerPerformance, formatPerf } from '@/lib/quotes';
 import { macroSnapshot } from '@/lib/fred';
 import { verdictBase, evalSignals, computeConfidence, deriveOutcome } from '@/lib/confidence';
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
-  const langDir = langDirective(normLang((await req.json().catch(() => ({} as any)))?.lang));
+  const reqLang = normLang((await req.json().catch(() => ({} as any)))?.lang);
 
   const staleCutoff = new Date(Date.now() - STALE_MS).toISOString();
   const updatedTheses: any[] = [];
@@ -117,9 +117,8 @@ export async function POST(req: NextRequest) {
       try {
         const macro = await macroSnapshot();
         const system = [
-          { type: 'text', text: REFRESH_SYS },
+          { type: 'text', text: localizeSystem(REFRESH_SYS, reqLang) },
           ...(macro ? [{ type: 'text', text: macro }] : []),
-          ...(langDir ? [{ type: 'text', text: langDir }] : []),
         ];
         const batch = await createBatch(stale.map((th) => ({
           custom_id: th.id,
