@@ -12,7 +12,7 @@ if (window.__SYN_INITIALIZED) {
 const SYN_LANG = (window.__SYN_LANG==='en') ? 'en' : 'it';
 // ═══ i18n: TT('stringa italiana') → traduzione EN se SYN_LANG='en' ═══
 // Chiave = testo italiano corrente (stile gettext): niente chiavi inventate.
-const SYN_EN = {" tesi ri-valutate": " theses re-evaluated", " con dati aggiornati": " with fresh data", "vedi →": "view →", "Limite di ": "Limit of ", " avvisi attivi per il piano ": " active alerts for plan ", ". Disattiva un avviso o passa a Pro.": ". Turn one off or upgrade to Pro.", "Questa domanda non ha un verdetto da osservare: il watch serve per domande con risposta si/no/dipende.": "This question has no verdict to watch: alerts are for questions answered yes/no/depends.", "◈ portafoglio salvato — sto preparando alcuni spunti dai tuoi titoli": "◈ portfolio saved — preparing a few prompts from your holdings", "◈ portafoglio salvato — le prossime analisi lo useranno": "◈ portfolio saved — future analyses will use it", "salva": "save", "Questo nome è già in uso, scegline un altro.": "This name is already taken, pick another one.", "Salvataggio fallito, riprova.": "Save failed, try again.", "◈ impostazioni salvate": "◈ settings saved", "clicca per aprire": "tap to open", "ipotesi implicita": "implicit hypothesis", "▤ portafoglio tesi": "▤ thesis portfolio", "symnaps-grafo.png": "symnaps-graph.png", "Esportazione non riuscita, riprova.": "Export failed, try again.", "risposta": "answer", "perché": "why", "cosa può cambiare": "what could change", "tu e il grafo": "you and the graph", "esplora": "explore", "🔔 avvisami se il verdetto cambia": "🔔 alert me if the verdict changes", "✓ avviso attivo — ricontrollo ogni settimana": "✓ alert active — re-checked weekly", "⚡ Verdetto cambiato: ": "⚡ Verdict changed: ", "sì": "yes", "dipende": "depends", "convinzione": "conviction", "⚡ contraddice": "⚡ contradicts", "✓ rafforza": "✓ reinforces", "stessa ipotesi": "same hypothesis", "dato complementare": "complementary data", "stesso tipo": "same type", "Eliminare questa task? Verranno rimosse anche le sue connessioni.": "Delete this task? Its connections will be removed too.", "portafoglio tesi": "thesis portfolio", "Portafoglio della tesi": "Thesis portfolio", "tesi confermata ✓": "thesis confirmed ✓", "tesi invalidata ✕": "thesis invalidated ✕", "tesi emergente": "emerging thesis", " giorni": " days", "in corso": "active", "confermata ✓": "confirmed ✓", "invalidata ✕": "invalidated ✕", "Segnali non ancora valutati — vengono controllati sui dati reali alla prossima apertura.": "Signals not yet evaluated — they are checked against real data on the next open.", "Servono almeno 2 segnali scattati per un verdetto e una percentuale di accuratezza.": "A verdict and an accuracy score require at least 2 fired signals.", "tesi confermata": "thesis confirmed", "tesi invalidata": "thesis invalidated", "Pubblica: altri possono trovarla e importarla": "Public: others can find and import it", "Privata: visibile solo a te": "Private: visible only to you", "pubblicata ✓": "published ✓", "pubblica": "publish", "○ non ancora": "○ not yet", "○ in attesa": "○ waiting", "la tesi": "the thesis", "le prove": "the evidence", "evoluzione": "evolution", "metti alla prova": "put it to the test", "contesto": "context", "Serve confidenza ≥60% per pubblicarla": "Needs ≥60% confidence to be published", "Tesi importata: non ripubblicabile": "Imported thesis: cannot be republished", "Hai raggiunto il massimo di tesi pubbliche (20)": "You reached the maximum of public theses (20)", "Tesi non ancora salvata, riprova tra un istante": "Thesis not saved yet, retry in a moment", "Scegli un nome pubblico (profilo) prima di pubblicare": "Pick a public name (settings) before publishing", "riprova": "retry", "generazione in corso…": "generating…", "Limite mensile di chiamate AI raggiunto.": "Monthly AI call limit reached.", "◈ spunti dal tuo portafoglio": "◈ prompts from your portfolio", "◆ tesi in formazione": "◆ theses forming", "esplora →": "explore →", "serve 1 domanda in più": "needs 1 more question", "tesi in formazione": "theses forming", "Hai raggiunto il limite di ": "You reached the limit of ", " analisi del piano ": " analyses on the plan ", " questo mese. Scopri il piano Pro su /pricing.": " this month. Check out the Pro plan at /pricing.", "parsing intent semantico": "parsing semantic intent", "ricerca web se necessaria": "web search if needed", "analizzando contesto macro": "analyzing macro context", "costruendo fingerprint e output": "building fingerprint and output", "🔗 link copiato negli appunti": "🔗 link copied to clipboard", "🔗 grafo pubblico creato": "🔗 public graph created", "apri →": "open →", "Fai almeno una domanda prima di condividere il grafo.": "Ask at least one question before sharing the graph.", "⚠ salvataggio non riuscito — la domanda potrebbe non essere conservata. Controlla la connessione e riprova.": "⚠ save failed — the question may not be stored. Check your connection and retry.", "Errore: ": "Error: ", "verdetto": "verdict", "scenari": "scenarios", "catalizzatori in arrivo": "upcoming catalysts", "il tuo portafoglio": "your portfolio", "ipotesi e intent estratti": "extracted hypothesis and intent", "settore": "sector", "fonti": "sources", "tocca una domanda per esplorarla →": "tap a question to explore it →", "Symnaps sta leggendo il tuo grafo...": "Symnaps is reading your graph...", "elimina questa task": "delete this task", "▤ nodo azione": "▤ action node", "logica del portafoglio": "portfolio logic", "◆ tesi": "◆ thesis", "evoluzione della tesi": "thesis evolution", "Δ confidenza": "Δ confidence", "verifica manuale": "manual check", "● scattato": "● fired", "segnali da monitorare": "signals to monitor", "la rafforzano": "strengthen it", "nessun segnale": "no signals", "la indeboliscono": "weaken it", "perché questa tesi": "why this thesis", "portafoglio della tesi": "thesis portfolio", "prossimo passo suggerito": "suggested next step", "⊞ genera portafoglio da questa tesi": "⊞ generate a portfolio from this thesis", "Traduce la tesi in categorie di asset e strumenti, con taglio educativo.": "Translates the thesis into asset categories and instruments, educational by design.", "⚔ sfida questa tesi": "⚔ challenge this thesis", "Il mio portafoglio": "My portfolio", "+ aggiungi strumento": "+ add instrument", "annulla": "cancel", "chiudi": "close", "Nome pubblico (marketplace) — richiesto per pubblicare": "Public name (marketplace) — required to publish", "Impostazioni": "Settings", "Piano": "Plan", "vedi piani →": "see plans →", "⏻ esci": "⏻ log out", "Mostrato sulle tue tesi pubblicate al posto di #hash anonimo. Lascia vuoto per restare anonimo (ma non potrai pubblicare).": "Shown on your published theses instead of the anonymous #hash. Leave empty to stay anonymous (but you will not be able to publish).", "Mostrato sulle tue tesi pubblicate al posto di #hash anonimo. Vuoto = anonimo (niente pubblicazioni).": "Shown on your published theses instead of the anonymous #hash. Empty = anonymous (no publishing).", "scegli un nome unico (serve per pubblicare)": "pick a unique name (needed to publish)", "scegli un nome unico": "pick a unique name", " analisi questo mese": " analyses this month", " analisi": " analyses", "totale: ": "total: ", "nodi": "nodes", "connessioni": "connections", "ipotesi": "hypotheses", "tesi": "theses", "conferma ": "conf. ", "sviluppa →": "develop →", "Ancora poche domande. Le tesi emergono da ~5 domande collegate: continua a esplorare e qui vedrai quelle che stanno maturando.": "Still few questions. Theses emerge from ~5 linked questions: keep exploring and the ones maturing will show up here.", "il ragionamento": "the reasoning", "punti chiave": "key points", "metriche chiave": "key metrics", "grafico": "chart", "performance dal lancio": "performance since launch", "categorie e strumenti": "categories and instruments", "avvocato del diavolo": "devil's advocate", "⊙ centra": "⊙ center", "↓ esporta": "↓ export", "alta": "high", "media": "medium", "bassa": "low", "↘ importata": "↘ imported", "↘ Importata dal marketplace": "↘ Imported from the marketplace", " — il track record è azzerato e si ricostruisce sui dati da oggi in poi. Non ripubblicabile.": " — the track record starts from zero and rebuilds on data from today onward. Cannot be republished.", " da #": " by #"};
+const SYN_EN = {" tesi ri-valutate": " theses re-evaluated", " con dati aggiornati": " with fresh data", "vedi →": "view →", "Limite di ": "Limit of ", " avvisi attivi per il piano ": " active alerts for plan ", ". Disattiva un avviso o passa a Pro.": ". Turn one off or upgrade to Pro.", "Questa domanda non ha un verdetto da osservare: il watch serve per domande con risposta si/no/dipende.": "This question has no verdict to watch: alerts are for questions answered yes/no/depends.", "◈ portafoglio salvato — sto preparando alcuni spunti dai tuoi titoli": "◈ portfolio saved — preparing a few prompts from your holdings", "◈ portafoglio salvato — le prossime analisi lo useranno": "◈ portfolio saved — future analyses will use it", "salva": "save", "Questo nome è già in uso, scegline un altro.": "This name is already taken, pick another one.", "Salvataggio fallito, riprova.": "Save failed, try again.", "◈ impostazioni salvate": "◈ settings saved", "clicca per aprire": "tap to open", "ipotesi implicita": "implicit hypothesis", "▤ portafoglio tesi": "▤ thesis portfolio", "symnaps-grafo.png": "symnaps-graph.png", "Esportazione non riuscita, riprova.": "Export failed, try again.", "risposta": "answer", "perché": "why", "cosa può cambiare": "what could change", "tu e il grafo": "you and the graph", "esplora": "explore", "🔔 avvisami se il verdetto cambia": "🔔 alert me if the verdict changes", "✓ avviso attivo — ricontrollo ogni settimana": "✓ alert active — re-checked weekly", "⚡ Verdetto cambiato: ": "⚡ Verdict changed: ", "sì": "yes", "dipende": "depends", "convinzione": "conviction", "⚡ contraddice": "⚡ contradicts", "✓ rafforza": "✓ reinforces", "stessa ipotesi": "same hypothesis", "dato complementare": "complementary data", "stesso tipo": "same type", "Eliminare questa task? Verranno rimosse anche le sue connessioni.": "Delete this task? Its connections will be removed too.", "portafoglio tesi": "thesis portfolio", "Portafoglio della tesi": "Thesis portfolio", "tesi confermata ✓": "thesis confirmed ✓", "tesi invalidata ✕": "thesis invalidated ✕", "tesi emergente": "emerging thesis", " giorni": " days", "in corso": "active", "confermata ✓": "confirmed ✓", "invalidata ✕": "invalidated ✕", "Segnali non ancora valutati — vengono controllati sui dati reali alla prossima apertura.": "Signals not yet evaluated — they are checked against real data on the next open.", "Servono almeno 2 segnali scattati per un verdetto e una percentuale di accuratezza.": "A verdict and an accuracy score require at least 2 fired signals.", "tesi confermata": "thesis confirmed", "tesi invalidata": "thesis invalidated", "Pubblica: altri possono trovarla e importarla": "Public: others can find and import it", "Privata: visibile solo a te": "Private: visible only to you", "pubblicata ✓": "published ✓", "pubblica": "publish", "○ non ancora": "○ not yet", "○ in attesa": "○ waiting", "la tesi": "the thesis", "le prove": "the evidence", "evoluzione": "evolution", "metti alla prova": "put it to the test", "contesto": "context", "Serve confidenza ≥60% per pubblicarla": "Needs ≥60% confidence to be published", "Tesi importata: non ripubblicabile": "Imported thesis: cannot be republished", "Hai raggiunto il massimo di tesi pubbliche (20)": "You reached the maximum of public theses (20)", "Tesi non ancora salvata, riprova tra un istante": "Thesis not saved yet, retry in a moment", "Scegli un nome pubblico (profilo) prima di pubblicare": "Pick a public name (settings) before publishing", "riprova": "retry", "generazione in corso…": "generating…", "Limite mensile di chiamate AI raggiunto.": "Monthly AI call limit reached.", "◈ spunti dal tuo portafoglio": "◈ prompts from your portfolio", "◆ tesi in formazione": "◆ theses forming", "esplora →": "explore →", "serve 1 domanda in più": "needs 1 more question", "tesi in formazione": "theses forming", "Hai raggiunto il limite di ": "You reached the limit of ", " analisi del piano ": " analyses on the plan ", " questo mese. Scopri il piano Pro su /pricing.": " this month. Check out the Pro plan at /pricing.", "parsing intent semantico": "parsing semantic intent", "ricerca web se necessaria": "web search if needed", "analizzando contesto macro": "analyzing macro context", "costruendo fingerprint e output": "building fingerprint and output", "🔗 link copiato negli appunti": "🔗 link copied to clipboard", "🔗 grafo pubblico creato": "🔗 public graph created", "apri →": "open →", "Fai almeno una domanda prima di condividere il grafo.": "Ask at least one question before sharing the graph.", "⚠ salvataggio non riuscito — la domanda potrebbe non essere conservata. Controlla la connessione e riprova.": "⚠ save failed — the question may not be stored. Check your connection and retry.", "Errore: ": "Error: ", "verdetto": "verdict", "scenari": "scenarios", "catalizzatori in arrivo": "upcoming catalysts", "il tuo portafoglio": "your portfolio", "ipotesi e intent estratti": "extracted hypothesis and intent", "settore": "sector", "fonti": "sources", "tocca una domanda per esplorarla →": "tap a question to explore it →", "Symnaps sta leggendo il tuo grafo...": "Symnaps is reading your graph...", "elimina questa task": "delete this task", "▤ nodo azione": "▤ action node", "logica del portafoglio": "portfolio logic", "◆ tesi": "◆ thesis", "evoluzione della tesi": "thesis evolution", "Δ confidenza": "Δ confidence", "verifica manuale": "manual check", "● scattato": "● fired", "segnali da monitorare": "signals to monitor", "la rafforzano": "strengthen it", "nessun segnale": "no signals", "la indeboliscono": "weaken it", "perché questa tesi": "why this thesis", "portafoglio della tesi": "thesis portfolio", "prossimo passo suggerito": "suggested next step", "⊞ genera portafoglio da questa tesi": "⊞ generate a portfolio from this thesis", "Traduce la tesi in categorie di asset e strumenti, con taglio educativo.": "Translates the thesis into asset categories and instruments, educational by design.", "⚔ sfida questa tesi": "⚔ challenge this thesis", "Il mio portafoglio": "My portfolio", "+ aggiungi strumento": "+ add instrument", "annulla": "cancel", "chiudi": "close", "Nome pubblico (marketplace) — richiesto per pubblicare": "Public name (marketplace) — required to publish", "Impostazioni": "Settings", "Piano": "Plan", "vedi piani →": "see plans →", "⏻ esci": "⏻ log out", "Mostrato sulle tue tesi pubblicate al posto di #hash anonimo. Lascia vuoto per restare anonimo (ma non potrai pubblicare).": "Shown on your published theses instead of the anonymous #hash. Leave empty to stay anonymous (but you will not be able to publish).", "Mostrato sulle tue tesi pubblicate al posto di #hash anonimo. Vuoto = anonimo (niente pubblicazioni).": "Shown on your published theses instead of the anonymous #hash. Empty = anonymous (no publishing).", "scegli un nome unico (serve per pubblicare)": "pick a unique name (needed to publish)", "scegli un nome unico": "pick a unique name", " analisi questo mese": " analyses this month", " analisi": " analyses", "totale: ": "total: ", "nome (opzionale)": "name (optional)", "rimuovi": "remove", "Privato — mai visibile ad altri utenti. Le analisi lo usano per dirti quanto sei già esposto a ogni tema.": "Private — never visible to other users. Analyses use it to tell you how exposed you already are to each theme.", "pesi uguali": "equal weights", "completa a 100%": "fill to 100%", "manca ": "missing ", " oltre": " over", "nodi": "nodes", "connessioni": "connections", "ipotesi": "hypotheses", "tesi": "theses", "conferma ": "conf. ", "sviluppa →": "develop →", "Ancora poche domande. Le tesi emergono da ~5 domande collegate: continua a esplorare e qui vedrai quelle che stanno maturando.": "Still few questions. Theses emerge from ~5 linked questions: keep exploring and the ones maturing will show up here.", "il ragionamento": "the reasoning", "punti chiave": "key points", "metriche chiave": "key metrics", "grafico": "chart", "performance dal lancio": "performance since launch", "categorie e strumenti": "categories and instruments", "avvocato del diavolo": "devil's advocate", "⊙ centra": "⊙ center", "↓ esporta": "↓ export", "alta": "high", "media": "medium", "bassa": "low", "↘ importata": "↘ imported", "↘ Importata dal marketplace": "↘ Imported from the marketplace", " — il track record è azzerato e si ricostruisce sui dati da oggi in poi. Non ripubblicabile.": " — the track record starts from zero and rebuilds on data from today onward. Cannot be republished.", " da #": " by #"};
 function TT(t){ return (SYN_LANG==='en' && SYN_EN[t]!==undefined) ? SYN_EN[t] : t; }
 
 // NON azzerare: page.tsx la preload PRIMA di iniettare questo script — azzerarla
@@ -178,17 +178,47 @@ function pfeRow(h){
   const r=document.createElement('div');
   r.className='pfe-row';
   r.innerHTML=`<input class="pfe-ticker" placeholder="VWCE" maxlength="12" value="${String(h&&h.ticker||'').replace(/["<>]/g,'')}">
-  <input class="pfe-name" placeholder="nome (opzionale)" maxlength="60" value="${String(h&&h.name||'').replace(/["<>]/g,'')}">
+  <input class="pfe-name" placeholder="${TT('nome (opzionale)')}" maxlength="60" value="${String(h&&h.name||'').replace(/["<>]/g,'')}">
   <input class="pfe-weight" placeholder="%" inputmode="decimal" maxlength="6" value="${h&&h.weight!=null?h.weight:''}">
-  <button class="pfe-del" title="rimuovi">×</button>`;
+  <button class="pfe-del" title="${TT('rimuovi')}">×</button>`;
   r.querySelector('.pfe-del').addEventListener('click',()=>{ r.remove(); pfeUpdateTotal(); });
   r.querySelector('.pfe-weight').addEventListener('input',pfeUpdateTotal);
+  r.querySelector('.pfe-ticker').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase(); pfeUpdateTotal(); });
+  // Enter sull'ultimo peso → nuova riga (flusso di inserimento continuo)
+  r.querySelector('.pfe-weight').addEventListener('keydown',e=>{
+    if(e.key==='Enter'){ e.preventDefault(); const rows=document.getElementById('pfe-rows');
+      if(rows&&rows.lastElementChild===r){ const nr=pfeRow({}); rows.appendChild(nr); nr.querySelector('.pfe-ticker').focus(); } }
+  });
   return r;
 }
+const PFE_PALETTE=['#34d399','#5b9cf6','#a78bfa','#f0a030','#2ecf98','#e08fd0','#7dd3fc','#fbbf24'];
 function pfeUpdateTotal(){
-  const tot=[...document.querySelectorAll('.pfe-weight')].reduce((s,i)=>s+(parseFloat(String(i.value).replace(',','.'))||0),0);
+  const rows=[...document.querySelectorAll('.pfe-row')].map(r=>({
+    t:(r.querySelector('.pfe-ticker').value||'').trim(),
+    w:parseFloat(String(r.querySelector('.pfe-weight').value).replace(',','.'))||0,
+  }));
+  const tot=rows.reduce((s,r)=>s+r.w,0);
+  // Chip stato: verde a 100, neutro sotto (con quanto manca), rosso sopra
   const el=document.getElementById('pfe-total');
-  if(el) el.innerHTML=TT('totale: ')+'<b style="color:'+(Math.abs(tot-100)<0.5?'#34d399':tot>100?'#e05555':'#dddde8')+'">'+(Math.round(tot*10)/10)+'%</b>';
+  if(el){
+    const t1=Math.round(tot*10)/10;
+    if(Math.abs(tot-100)<0.5) el.innerHTML='<span class="pfe-chip ok">✓ '+t1+'%</span>';
+    else if(tot>100) el.innerHTML='<span class="pfe-chip over">'+t1+'% · +'+(Math.round((tot-100)*10)/10)+TT(' oltre')+'</span>';
+    else el.innerHTML='<span class="pfe-chip under">'+t1+'%'+(tot>0?' · '+TT('manca ')+(Math.round((100-tot)*10)/10)+'%':'')+'</span>';
+  }
+  // Barra di distribuzione: un segmento colorato per strumento, resto in grigio
+  const bar=document.getElementById('pfe-dist');
+  if(bar){
+    const scale=Math.max(tot,100);
+    let html='';
+    rows.forEach((r,i)=>{ if(r.w>0) html+='<i style="width:'+(r.w/scale*100)+'%;background:'+PFE_PALETTE[i%PFE_PALETTE.length]+'" title="'+(r.t||'?')+' '+r.w+'%"></i>'; });
+    if(tot<100) html+='<i class="pfe-rest" style="width:'+((100-tot)/scale*100)+'%"></i>';
+    bar.innerHTML=html;
+    bar.classList.toggle('over',tot>100.4);
+    // Legenda mini sotto la barra: TICKER peso%, coi colori dei segmenti
+    const leg=document.getElementById('pfe-legend');
+    if(leg) leg.innerHTML=rows.filter(r=>r.w>0&&r.t).map((r,i)=>'<span><b style="color:'+PFE_PALETTE[rows.indexOf(r)%PFE_PALETTE.length]+'">●</b> '+r.t+' '+r.w+'%</span>').join('');
+  }
 }
 function openPortfolioEditor(){
   if(document.getElementById('pfe-overlay')) return;
@@ -196,19 +226,33 @@ function openPortfolioEditor(){
   const ov=document.createElement('div');
   ov.className='pfe-overlay'; ov.id='pfe-overlay';
   ov.innerHTML=`<div class="pfe-card">
-    <div class="pfe-title">${TT('Il mio portafoglio')}</div>
-    <div class="pfe-sub">Gli strumenti che possiedi davvero, col peso in %. Le analisi li useranno per dirti quanto sei già esposto a un tema ("sei già esposto ~12% via VWCE"). Restano privati nel tuo profilo.</div>
-    <div style="margin:4px 0 14px">
+    <div class="pfe-head">
+      <span class="pfe-glyph">◈</span>
+      <div>
+        <div class="pfe-title">${TT('Il mio portafoglio')}</div>
+        <div class="pfe-sub">${TT('Privato — mai visibile ad altri utenti. Le analisi lo usano per dirti quanto sei già esposto a ogni tema.')}</div>
+      </div>
+    </div>
+    <div class="pfe-dist" id="pfe-dist"></div>
+    <div class="pfe-legend" id="pfe-legend"></div>
+    <div class="pfe-rows" id="pfe-rows"></div>
+    <div class="pfe-toolrow">
+      <button class="pfe-add" id="pfe-add">${TT('+ aggiungi strumento')}</button>
+      <span class="pfe-quick">
+        <button id="pfe-eq" type="button">${TT('pesi uguali')}</button>
+        <button id="pfe-fill" type="button">${TT('completa a 100%')}</button>
+      </span>
+      <span class="pfe-total" id="pfe-total"></span>
+    </div>
+    <div class="pfe-divider"></div>
+    <div>
       <label style="display:block;font-size:11px;color:#7a7a95;margin-bottom:5px">${TT('Nome pubblico (marketplace) — richiesto per pubblicare')}</label>
       <input id="pfe-display-name" placeholder="${TT('scegli un nome unico (serve per pubblicare)')}" maxlength="40" style="width:100%;background:#141418;border:1px solid #2a2a36;border-radius:8px;padding:8px 10px;color:#e8e8f0;font-family:inherit;font-size:12px;box-sizing:border-box">
       <div id="pfe-name-msg" style="font-size:10px;color:#5a5a78;margin-top:4px">${TT('Mostrato sulle tue tesi pubblicate al posto di #hash anonimo. Lascia vuoto per restare anonimo (ma non potrai pubblicare).')}</div>
     </div>
-    <div class="pfe-rows" id="pfe-rows"></div>
-    <div class="pfe-total" id="pfe-total"></div>
     <div class="pfe-actions">
-      <button class="pfe-add" id="pfe-add">${TT('+ aggiungi strumento')}</button>
       <span><button class="pfe-cancel" id="pfe-cancel">${TT('annulla')}</button>
-      <button class="pfe-save" id="pfe-save">salva</button></span>
+      <button class="pfe-save" id="pfe-save">${TT('salva')}</button></span>
     </div>
   </div>`;
   document.body.appendChild(ov);
@@ -217,7 +261,27 @@ function openPortfolioEditor(){
   const rows=document.getElementById('pfe-rows');
   (holdings.length?holdings:[{}]).forEach(h=>rows.appendChild(pfeRow(h)));
   pfeUpdateTotal();
-  document.getElementById('pfe-add').addEventListener('click',()=>{ rows.appendChild(pfeRow({})); });
+  document.getElementById('pfe-add').addEventListener('click',()=>{ const nr=pfeRow({}); rows.appendChild(nr); nr.querySelector('.pfe-ticker').focus(); });
+  // Azioni rapide sui pesi
+  document.getElementById('pfe-eq').addEventListener('click',()=>{
+    const ws=[...rows.querySelectorAll('.pfe-weight')];
+    if(!ws.length) return;
+    const q=Math.floor(1000/ws.length)/10;
+    ws.forEach((w,i)=>{ w.value=i===ws.length-1?Math.round((100-q*(ws.length-1))*10)/10:q; });
+    pfeUpdateTotal();
+  });
+  document.getElementById('pfe-fill').addEventListener('click',()=>{
+    const ws=[...rows.querySelectorAll('.pfe-weight')];
+    const tot=ws.reduce((s,i)=>s+(parseFloat(String(i.value).replace(',','.'))||0),0);
+    const rest=Math.round((100-tot)*10)/10;
+    if(rest<=0||!ws.length) return;
+    const empty=ws.filter(w=>!parseFloat(String(w.value).replace(',','.')));
+    const targets=empty.length?empty:[ws[ws.length-1]];
+    const q=Math.floor(rest/targets.length*10)/10;
+    targets.forEach((w,i)=>{ const base=parseFloat(String(w.value).replace(',','.'))||0;
+      w.value=Math.round((base+(i===targets.length-1?rest-q*(targets.length-1):q))*10)/10; });
+    pfeUpdateTotal();
+  });
   document.getElementById('pfe-cancel').addEventListener('click',()=>ov.remove());
   ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
   document.getElementById('pfe-save').addEventListener('click',async()=>{
