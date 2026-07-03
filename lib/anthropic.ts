@@ -71,40 +71,54 @@ export async function askClaudeJSON(opts: {
   // disabilitano esplicitamente per non consumare max_tokens in ragionamento.
   thinking?: { type: string };
 }): Promise<{ json: any; citations: Citation[] }> {
-  const messages: any[] = [{ role: 'user', content: opts.user }];
-  const citations: Citation[] = [];
-  const seenUrls = new Set<string>();
+  const runOnce = async () => {
+    const messages: any[] = [{ role: 'user', content: opts.user }];
+    const citations: Citation[] = [];
+    const seenUrls = new Set<string>();
 
-  const call = async () => {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: apiHeaders(),
-      body: JSON.stringify({
-        model: opts.model,
-        max_tokens: opts.maxTokens,
-        ...(opts.thinking ? { thinking: opts.thinking } : {}),
-        system: typeof opts.system === 'string' ? [{ type: 'text', text: opts.system }] : opts.system,
-        ...(opts.tools ? { tools: opts.tools, tool_choice: { type: 'auto' } } : {}),
-        messages,
-      }),
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    return data;
+    const call = async () => {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: apiHeaders(),
+        body: JSON.stringify({
+          model: opts.model,
+          max_tokens: opts.maxTokens,
+          ...(opts.thinking ? { thinking: opts.thinking } : {}),
+          system: typeof opts.system === 'string' ? [{ type: 'text', text: opts.system }] : opts.system,
+          ...(opts.tools ? { tools: opts.tools, tool_choice: { type: 'auto' } } : {}),
+          messages,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      return data;
+    };
+
+    let data = await call();
+    collectCitations(data.content, seenUrls, citations);
+    let continuations = 0;
+    while (data.stop_reason === 'pause_turn' && continuations < 3) {
+      messages.push({ role: 'assistant', content: data.content });
+      data = await call();
+      collectCitations(data.content, seenUrls, citations);
+      continuations++;
+    }
+
+    const finalText = data.content.filter((b: any) => b.type === 'text').map((b: any) => b.text).join('');
+    return { json: extractJSON(finalText), citations };
   };
 
-  let data = await call();
-  collectCitations(data.content, seenUrls, citations);
-  let continuations = 0;
-  while (data.stop_reason === 'pause_turn' && continuations < 3) {
-    messages.push({ role: 'assistant', content: data.content });
-    data = await call();
-    collectCitations(data.content, seenUrls, citations);
-    continuations++;
+  // Il modello ogni tanto produce JSON irrecuperabile anche per il riparatore
+  // (visto in produzione, non deterministico): UN retry pulito risolve quasi
+  // sempre e costa solo nei casi rari di fallimento.
+  try {
+    return await runOnce();
+  } catch (e: any) {
+    if (typeof e?.message === 'string' && e.message.startsWith('JSON non parsabile')) {
+      return await runOnce();
+    }
+    throw e;
   }
-
-  const finalText = data.content.filter((b: any) => b.type === 'text').map((b: any) => b.text).join('');
-  return { json: extractJSON(finalText), citations };
 }
 
 // ── Message Batches API — -50% sul prezzo dei token, per lavori non urgenti ──
