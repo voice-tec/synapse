@@ -180,6 +180,7 @@ details.meta-fold>*:not(summary){margin-top:10px}
 .source-pill{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);border:1px solid #2a1a40;border-radius:10px}
 .source-num{font-size:10px;color:#7c3aed;min-width:20px}
 .source-q{font-size:12px;color:var(--text2)}
+.source-fx{margin-left:auto;flex-shrink:0;font-size:9.5px;font-family:'DM Mono',monospace;letter-spacing:.02em;white-space:nowrap}
 .memory-notification{position:fixed;bottom:120px;left:50%;transform:translateX(-50%) translateY(20px);background:#16102a;border:1px solid #a78bfa;border-radius:14px;padding:14px 20px;display:flex;align-items:center;gap:12px;z-index:50;opacity:0;transition:all .4s cubic-bezier(.32,1,.32,1);pointer-events:none;white-space:nowrap}
 .memory-notification.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:all}
 .mem-notif-icon{font-size:18px}
