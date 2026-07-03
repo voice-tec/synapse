@@ -18,7 +18,9 @@ const SYS = `You are the analysis engine of Synapse, a financial intelligence pl
 You previously answered an investment question with a verdict. Re-evaluate ONLY the verdict with today's data. Use web_search if current data is needed.
 
 Return ONLY valid JSON, no extra text:
-{"stance":"si|no|dipende","label":"the direct answer in ONE Italian sentence, max 12 words","confidence":"alta|media|bassa","changed_because":"if your stance differs from the previous one, ONE Italian sentence explaining what changed; null otherwise"}`;
+{"stance":"si|no|dipende","label":"the direct answer in ONE sentence, max 12 words","confidence":"alta|media|bassa","changed_because":"if your stance differs from the previous one, ONE sentence explaining what changed; null otherwise"}
+
+Write "label" and "changed_because" in the SAME LANGUAGE as the previous verdict label quoted in the user message (Italian stays Italian, English stays English).`;
 
 export async function GET(req: NextRequest) {
   if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {

@@ -8,6 +8,8 @@ if (window.__SYN_INITIALIZED) {
 
 
 // ═══ BACKEND INTEGRATION HELPERS ═══
+// Lingua dell'utente ('it'|'en'): decisa da page.tsx (localStorage syn-lang).
+const SYN_LANG = (window.__SYN_LANG==='en') ? 'en' : 'it';
 // NON azzerare: page.tsx la preload PRIMA di iniettare questo script — azzerarla
 // lasciava la label utilizzo vuota fino alla prima analisi.
 window.__SYN_USAGE = window.__SYN_USAGE || null;
@@ -76,7 +78,7 @@ function computeConfDelta(mn){
 // (via batch, ingerito all'apertura successiva) e aggiornare le performance.
 async function refreshStaleData(){
   try{
-    const res=await fetch('/api/refresh',{method:'POST'});
+    const res=await fetch('/api/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lang:SYN_LANG})});
     const json=await res.json();
     if(json.error) return;
     let touched=0;
@@ -1734,7 +1736,7 @@ async function genChallengeForThesis(mn){
     const res=await fetch('/api/challenge',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({thesis:mn.thesis, explanation:mn.explanation, clusterId:mn.clusterId})
+      body:JSON.stringify({thesis:mn.thesis, explanation:mn.explanation, clusterId:mn.clusterId, lang:SYN_LANG})
     });
     const json=await res.json();
     if(json.error||!json.result){
@@ -1770,7 +1772,7 @@ async function genActionForThesis(mn){
     const res=await fetch('/api/portfolio',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({thesis:mn.thesis, pattern:mn.pattern})
+      body:JSON.stringify({thesis:mn.thesis, pattern:mn.pattern, lang:SYN_LANG})
     });
     const json=await res.json();
     if(json.error||!json.result) return;
@@ -1872,7 +1874,7 @@ async function seedFromPortfolio(){
   // rigenerazione (ogni chiamata a /api/seed consuma quota AI accessoria).
   if(SEED_SPUNTI.length||TASKS.length>0) return false;
   try{
-    const res=await fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    const res=await fetch('/api/seed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lang:SYN_LANG})});
     const json=await res.json();
     const qs=(json.result&&json.result.questions)||[];
     if(!qs.length) return false;
@@ -1952,6 +1954,7 @@ async function checkMemoryNode(){
       body:JSON.stringify({
         summary,
         taskCount: TASKS.length,
+        lang: SYN_LANG,
         theses: MEMORY_NODES.map(m=>({id:m.clusterId, thesis:m.thesis, confidence:m.confidence}))
       })
     });
@@ -2128,7 +2131,7 @@ ${connContext}${memContext}${graphContext}`;
     const res=await fetch('/api/suggest',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({userMsg})
+      body:JSON.stringify({userMsg, lang:SYN_LANG})
     });
     const json=await res.json();
     if(json.error)throw new Error(json.error);
@@ -2322,7 +2325,7 @@ async function runTask(){
     const res = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, priorContext: prevCtx })
+      body: JSON.stringify({ query, priorContext: prevCtx, lang: SYN_LANG })
     });
     const json = await res.json();
     if (json.error === 'limit_reached') { stopLoading(); alert('Hai raggiunto il limite di ' + json.limit + ' analisi del piano ' + json.plan + ' questo mese. Scopri il piano Pro su /pricing.'); isLoading=false; document.getElementById('sb').disabled=false; return; }

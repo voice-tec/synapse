@@ -1,6 +1,75 @@
 // Markup HTML del grafo, iniettato via innerHTML da app/page.tsx.
-// Estratto dalla stringa gigante per renderlo editabile.
-export const BODY = `
+// Bilingue: BODY_FOR(lang) interpola il dizionario UI (l'italiano è il default).
+type UiLang = 'it' | 'en';
+
+const UI = {
+  it: {
+    search: 'cerca nel grafo…',
+    stTask: 'task', stConn: 'conn.', stHyp: 'ipotesi',
+    btnPortfolio: ' portafoglio', btnShare: ' condividi', btnMarket: ' marketplace', btnSettings: ' impostazioni', btnLogout: ' esci',
+    ghint: 'la tua rete semantica apparirà qui',
+    protoTitle: '◆ tesi in formazione', protoSub: 'emergono dalle tue domande · maturano coi dati',
+    tut0h: 'Le domande sono nodi',
+    tut0p: 'Scrivi una domanda di analisi e premi <b>analizza</b>. Diventa un <b>cerchio</b> colorato nel grafo, con la sua analisi, i dati e le fonti. Il colore indica il tipo: causale, confronto, rischio, trend.',
+    tut1h: 'Si collegano tra loro',
+    tut1p: 'Fai <b>4-5 domande sullo stesso tema</b>: Symnaps le collega automaticamente con dei fili. È qui che il grafo prende vita e mostra come ragioni.',
+    tut2h: 'Emergono tesi e portafogli',
+    tut2p: 'Dalle domande nascono le <b>tesi</b> (esagoni colorati): convinzioni con una percentuale di confidenza. Da una tesi forte germoglia un <b>portafoglio</b> (quadrato verde). Tocca le forme per aprirle.',
+    tut3h: 'Approfondisci',
+    tut3p: 'Sotto ogni analisi trovi delle <b>domande suggerite</b>: sono spunti da <b>cliccare</b> per esplorare nuove direzioni — non domande a cui rispondere.',
+    tut4h: 'Parti dal tuo portafoglio',
+    tut4p: 'Opzionale e privato: dichiara gli strumenti che <b>possiedi davvero</b> e le analisi ti diranno quanto sei già esposto a ogni tema — con spunti concreti da cui partire.',
+    tutPortfolioBtn: '◈ carica il mio portafoglio', tutSkip: 'salta', tutNext: 'Avanti →',
+    legSame: 'stessa ipotesi', legComp: 'dati complementari', legType: 'stesso tipo di domanda', legContra: 'contraddizione', legReinf: 'si rafforzano',
+    ex: [
+      ['perché i titoli tech hanno perso così tanto nel 2022?', 'perché tech giù nel 2022', 'explore'],
+      ['come influiscono i rialzi dei tassi Fed sulle growth stocks?', 'tassi Fed e growth', 'explore'],
+      ['quali settori reggono meglio in una recessione economica?', 'difendersi in recessione', 'allocate'],
+      ["come costruire un'allocazione bilanciata contro l'inflazione?", 'allocazione anti-inflazione', 'allocate'],
+      ["quali aziende con forte potere di prezzo storicamente reggono l'inflazione?", 'aziende con pricing power', 'screen'],
+      ['quali società value con bassi multipli e basso debito nel settore industriale?', 'value a basso debito', 'screen'],
+    ],
+    qiPh: 'Scrivi qualsiasi domanda di analisi finanziaria...', analyze: 'analizza →',
+    disclaimer: 'solo a scopo informativo — non consulenza finanziaria',
+    memNotif: 'nuova tesi emergente rilevata', memSee: 'vedi →',
+    loading: 'parsing intent semantico',
+  },
+  en: {
+    search: 'search the graph…',
+    stTask: 'tasks', stConn: 'conn.', stHyp: 'theses',
+    btnPortfolio: ' portfolio', btnShare: ' share', btnMarket: ' marketplace', btnSettings: ' settings', btnLogout: ' log out',
+    ghint: 'your semantic network will appear here',
+    protoTitle: '◆ theses forming', protoSub: 'they emerge from your questions · mature with data',
+    tut0h: 'Questions are nodes',
+    tut0p: 'Write an analysis question and hit <b>analyze</b>. It becomes a colored <b>circle</b> in the graph, with its analysis, data and sources. The color is the type: causal, compare, risk, trend.',
+    tut1h: 'They connect to each other',
+    tut1p: 'Ask <b>4-5 questions on the same theme</b>: Symnaps links them automatically. That is when the graph comes alive and shows how you reason.',
+    tut2h: 'Theses and portfolios emerge',
+    tut2p: 'Questions give rise to <b>theses</b> (colored hexagons): convictions with a confidence score. A strong thesis sprouts a <b>portfolio</b> (green square). Tap the shapes to open them.',
+    tut3h: 'Go deeper',
+    tut3p: 'Under every analysis you will find <b>suggested questions</b>: prompts to <b>click</b> and explore new directions — not questions to answer.',
+    tut4h: 'Start from your portfolio',
+    tut4p: 'Optional and private: declare the instruments you <b>actually own</b> and analyses will tell you how exposed you already are to each theme — with concrete starting points.',
+    tutPortfolioBtn: '◈ load my portfolio', tutSkip: 'skip', tutNext: 'Next →',
+    legSame: 'same hypothesis', legComp: 'complementary data', legType: 'same question type', legContra: 'contradiction', legReinf: 'reinforce each other',
+    ex: [
+      ['why did tech stocks fall so hard in 2022?', 'why tech fell in 2022', 'explore'],
+      ['how do Fed rate hikes affect growth stocks?', 'Fed rates and growth', 'explore'],
+      ['which sectors hold up best in an economic recession?', 'defending in a recession', 'allocate'],
+      ['how to build a balanced allocation against inflation?', 'anti-inflation allocation', 'allocate'],
+      ['which companies with strong pricing power historically withstand inflation?', 'pricing power companies', 'screen'],
+      ['which value companies with low multiples and low debt in the industrial sector?', 'low-debt value', 'screen'],
+    ],
+    qiPh: 'Ask any financial analysis question...', analyze: 'analyze →',
+    disclaimer: 'for informational purposes only — not financial advice',
+    memNotif: 'new emerging thesis detected', memSee: 'view →',
+    loading: 'parsing semantic intent',
+  },
+} as const;
+
+export const BODY_FOR = (lang: UiLang): string => {
+  const t = UI[lang] || UI.it;
+  return `
 
 <div class="topbar">
   <div class="logo">
@@ -9,32 +78,32 @@ export const BODY = `
   </div>
   <span id="usage-label" style="font-size:10px;color:#5a5a78;margin-left:8px"></span>
   <div id="graph-search" style="position:relative;margin-left:14px">
-    <input id="gs-input" type="text" placeholder="cerca nel grafo…" autocomplete="off" spellcheck="false" style="background:#0f0f1e;border:1px solid #2a2a44;border-radius:8px;padding:6px 10px;color:#cfcfe8;font-family:DM Mono;font-size:11px;width:150px;outline:none" />
+    <input id="gs-input" type="text" placeholder="${t.search}" autocomplete="off" spellcheck="false" style="background:#0f0f1e;border:1px solid #2a2a44;border-radius:8px;padding:6px 10px;color:#cfcfe8;font-family:DM Mono;font-size:11px;width:150px;outline:none" />
     <div id="gs-results" style="display:none;position:absolute;top:36px;left:0;width:340px;max-height:320px;overflow-y:auto;background:#12121f;border:1px solid #2a2a44;border-radius:10px;box-shadow:0 12px 40px #000000aa;z-index:50;padding:4px"></div>
   </div>
   <div class="topbar-stats">
-    <div class="stat"><span class="stat-val" id="st">0</span><span class="stat-key">task</span></div>
-    <div class="stat"><span class="stat-val" id="sc">0</span><span class="stat-key">conn.</span></div>
-    <div class="stat"><span class="stat-val" id="sh">0</span><span class="stat-key">ipotesi</span></div>
+    <div class="stat"><span class="stat-val" id="st">0</span><span class="stat-key">${t.stTask}</span></div>
+    <div class="stat"><span class="stat-val" id="sc">0</span><span class="stat-key">${t.stConn}</span></div>
+    <div class="stat"><span class="stat-val" id="sh">0</span><span class="stat-key">${t.stHyp}</span></div>
   </div>
   <div class="pulse" id="pdot"></div>
-  <button id="pf-edit-btn" style="background:none;border:1px solid #1a4a38;border-radius:8px;padding:6px 12px;color:#34d399;font-family:DM Mono;font-size:11px;cursor:pointer;margin-left:12px">◈<span class="pf-btn-lbl"> portafoglio</span></button>
-  <button id="share-btn" style="background:#1a2a4a;border:1px solid #5b9cf655;border-radius:8px;padding:6px 12px;color:#5b9cf6;font-family:DM Mono;font-size:11px;cursor:pointer;margin-left:12px">↗<span class="tb-lbl"> condividi</span></button>
-  <a id="market-btn" href="/market" style="background:#241a3a;border:1px solid #a78bfa55;border-radius:8px;padding:6px 12px;color:#a78bfa;font-family:DM Mono;font-size:11px;cursor:pointer;margin-left:12px;text-decoration:none">◆<span class="tb-lbl"> marketplace</span></a>
-  <button id="settings-btn" title="Impostazioni" style="background:none;border:1px solid #2a2a36;border-radius:8px;padding:6px 12px;color:#7a7a95;font-family:DM Mono;font-size:11px;cursor:pointer;margin-left:12px">⚙<span class="tb-lbl"> impostazioni</span></button>
-  <button id="logout-btn" style="background:none;border:1px solid #2a2a36;border-radius:8px;padding:6px 12px;color:#7a7a95;font-family:DM Mono;font-size:11px;cursor:pointer;margin-left:12px">⏻<span class="tb-lbl"> esci</span></button>
+  <button id="pf-edit-btn" style="background:none;border:1px solid #1a4a38;border-radius:8px;padding:6px 12px;color:#34d399;font-family:DM Mono;font-size:11px;cursor:pointer;margin-left:12px">◈<span class="pf-btn-lbl">${t.btnPortfolio}</span></button>
+  <button id="share-btn" style="background:#1a2a4a;border:1px solid #5b9cf655;border-radius:8px;padding:6px 12px;color:#5b9cf6;font-family:DM Mono;font-size:11px;cursor:pointer;margin-left:12px">↗<span class="tb-lbl">${t.btnShare}</span></button>
+  <a id="market-btn" href="/market" style="background:#241a3a;border:1px solid #a78bfa55;border-radius:8px;padding:6px 12px;color:#a78bfa;font-family:DM Mono;font-size:11px;cursor:pointer;margin-left:12px;text-decoration:none">◆<span class="tb-lbl">${t.btnMarket}</span></a>
+  <button id="settings-btn" title="Impostazioni" style="background:none;border:1px solid #2a2a36;border-radius:8px;padding:6px 12px;color:#7a7a95;font-family:DM Mono;font-size:11px;cursor:pointer;margin-left:12px">⚙<span class="tb-lbl">${t.btnSettings}</span></button>
+  <button id="logout-btn" style="background:none;border:1px solid #2a2a36;border-radius:8px;padding:6px 12px;color:#7a7a95;font-family:DM Mono;font-size:11px;cursor:pointer;margin-left:12px">⏻<span class="tb-lbl">${t.btnLogout}</span></button>
 </div>
 
 <div class="graph-wrap">
   <canvas id="gc"></canvas>
-  <div class="graph-hint" id="ghint">la tua rete semantica apparirà qui</div>
+  <div class="graph-hint" id="ghint">${t.ghint}</div>
 
   <div class="proto-panel" id="proto-panel">
     <div class="proto-head" onclick="this.parentElement.classList.toggle('collapsed')">
-      <span><span id="proto-title">◆ tesi in formazione</span> · <b id="proto-count">0</b></span>
+      <span><span id="proto-title">${t.protoTitle}</span> · <b id="proto-count">0</b></span>
       <span class="proto-caret">▾</span>
     </div>
-    <div style="font-size:9.5px;color:var(--text3);padding:0 12px 6px;letter-spacing:.03em">emergono dalle tue domande · maturano coi dati</div>
+    <div style="font-size:9.5px;color:var(--text3);padding:0 12px 6px;letter-spacing:.03em">${t.protoSub}</div>
     <div class="proto-body" id="proto-body"></div>
   </div>
 
@@ -45,35 +114,35 @@ export const BODY = `
       <div class="tut-slide-wrap">
         <div class="tut-slide" data-i="0">
           <svg class="tut-shape" viewBox="0 0 80 80"><circle cx="40" cy="40" r="20" fill="#5b9cf622" stroke="#5b9cf6" stroke-width="2.5"/><circle cx="40" cy="40" r="30" fill="none" stroke="#5b9cf6" stroke-width="1" opacity="0.4"/><text x="40" y="46" text-anchor="middle" fill="#5b9cf6" font-size="16" font-family="monospace">?</text></svg>
-          <div class="tut-h">Le domande sono nodi</div>
-          <div class="tut-p">Scrivi una domanda di analisi e premi <b>analizza</b>. Diventa un <b>cerchio</b> colorato nel grafo, con la sua analisi, i dati e le fonti. Il colore indica il tipo: causale, confronto, rischio, trend.</div>
+          <div class="tut-h">${t.tut0h}</div>
+          <div class="tut-p">${t.tut0p}</div>
         </div>
         <div class="tut-slide" data-i="1" style="display:none">
           <svg class="tut-shape" viewBox="0 0 120 80"><circle cx="25" cy="40" r="13" fill="#5b9cf622" stroke="#5b9cf6" stroke-width="2"/><circle cx="95" cy="25" r="13" fill="#2ecf9822" stroke="#2ecf98" stroke-width="2"/><circle cx="90" cy="60" r="13" fill="#f0a03022" stroke="#f0a030" stroke-width="2"/><line x1="38" y1="38" x2="82" y2="27" stroke="#6a6a82" stroke-width="1.5" stroke-dasharray="3 3"/><line x1="37" y1="44" x2="77" y2="58" stroke="#6a6a82" stroke-width="1.5" stroke-dasharray="3 3"/></svg>
-          <div class="tut-h">Si collegano tra loro</div>
-          <div class="tut-p">Fai <b>4-5 domande sullo stesso tema</b>: Symnaps le collega automaticamente con dei fili. È qui che il grafo prende vita e mostra come ragioni.</div>
+          <div class="tut-h">${t.tut1h}</div>
+          <div class="tut-p">${t.tut1p}</div>
         </div>
         <div class="tut-slide" data-i="2" style="display:none">
           <svg class="tut-shape" viewBox="0 0 120 80"><polygon points="40,18 58,29 58,51 40,62 22,51 22,29" fill="#a78bfa22" stroke="#a78bfa" stroke-width="2.5"/><text x="40" y="45" text-anchor="middle" fill="#a78bfa" font-size="14">◆</text><rect x="78" y="30" width="28" height="28" rx="4" fill="#34d39922" stroke="#34d399" stroke-width="2.5"/><line x1="58" y1="40" x2="78" y2="44" stroke="#34d399" stroke-width="1.5" stroke-dasharray="3 3"/></svg>
-          <div class="tut-h">Emergono tesi e portafogli</div>
-          <div class="tut-p">Dalle domande nascono le <b>tesi</b> (esagoni colorati): convinzioni con una percentuale di confidenza. Da una tesi forte germoglia un <b>portafoglio</b> (quadrato verde). Tocca le forme per aprirle.</div>
+          <div class="tut-h">${t.tut2h}</div>
+          <div class="tut-p">${t.tut2p}</div>
         </div>
         <div class="tut-slide" data-i="3" style="display:none">
           <svg class="tut-shape" viewBox="0 0 120 80"><rect x="14" y="26" width="92" height="13" rx="6" fill="none" stroke="#5b9cf6" stroke-width="1.5" opacity="0.5"/><rect x="14" y="44" width="68" height="13" rx="6" fill="none" stroke="#5b9cf6" stroke-width="1.5" opacity="0.5"/><text x="98" y="36" fill="#5b9cf6" font-size="13">→</text><text x="76" y="54" fill="#5b9cf6" font-size="13">→</text></svg>
-          <div class="tut-h">Approfondisci</div>
-          <div class="tut-p">Sotto ogni analisi trovi delle <b>domande suggerite</b>: sono spunti da <b>cliccare</b> per esplorare nuove direzioni — non domande a cui rispondere.</div>
+          <div class="tut-h">${t.tut3h}</div>
+          <div class="tut-p">${t.tut3p}</div>
         </div>
         <div class="tut-slide" data-i="4" style="display:none">
           <svg class="tut-shape" viewBox="0 0 120 80"><rect x="35" y="14" width="50" height="52" rx="7" fill="#34d39918" stroke="#34d399" stroke-width="2.5"/><line x1="45" y1="30" x2="75" y2="30" stroke="#34d399" stroke-width="3" stroke-linecap="round"/><line x1="45" y1="41" x2="67" y2="41" stroke="#34d399" stroke-width="3" stroke-linecap="round" opacity="0.7"/><line x1="45" y1="52" x2="59" y2="52" stroke="#34d399" stroke-width="3" stroke-linecap="round" opacity="0.45"/></svg>
-          <div class="tut-h">Parti dal tuo portafoglio</div>
-          <div class="tut-p">Opzionale e privato: dichiara gli strumenti che <b>possiedi davvero</b> e le analisi ti diranno quanto sei già esposto a ogni tema — con spunti concreti da cui partire.</div>
-          <button onclick="tutOpenPortfolio()" style="background:#34d39915;border:1px solid #34d39955;border-radius:12px;padding:11px 18px;color:#34d399;font-family:DM Mono,monospace;font-size:12px;cursor:pointer">◈ carica il mio portafoglio</button>
+          <div class="tut-h">${t.tut4h}</div>
+          <div class="tut-p">${t.tut4p}</div>
+          <button onclick="tutOpenPortfolio()" style="background:#34d39915;border:1px solid #34d39955;border-radius:12px;padding:11px 18px;color:#34d399;font-family:DM Mono,monospace;font-size:12px;cursor:pointer">${t.tutPortfolioBtn}</button>
         </div>
       </div>
       <div class="tut-dots" id="tut-dots"></div>
       <div class="tut-actions">
-        <button class="tut-skip" onclick="endTutorial()">salta</button>
-        <button class="tut-next" id="tut-next" onclick="tutNext()">Avanti →</button>
+        <button class="tut-skip" onclick="endTutorial()">${t.tutSkip}</button>
+        <button class="tut-next" id="tut-next" onclick="tutNext()">${t.tutNext}</button>
       </div>
     </div>
   </div>
@@ -86,38 +155,33 @@ export const BODY = `
       <div class="leg-item"><div class="leg-dot" style="background:#4ad68a"></div>trend</div>
     </div>
     <div class="leg-row">
-      <div class="leg-item"><div class="leg-line" style="border-color:#f0a030"></div>stessa ipotesi</div>
-      <div class="leg-item"><div class="leg-line" style="border-color:#5b9cf6"></div>dati complementari</div>
-      <div class="leg-item"><div class="leg-line" style="border-color:#2ecf98"></div>stesso tipo di domanda</div>
-      <div class="leg-item"><div class="leg-line dash" style="border-color:#e05555"></div>contraddizione</div>
-      <div class="leg-item"><div class="leg-line" style="border-color:#4ad68a"></div>si rafforzano</div>
+      <div class="leg-item"><div class="leg-line" style="border-color:#f0a030"></div>${t.legSame}</div>
+      <div class="leg-item"><div class="leg-line" style="border-color:#5b9cf6"></div>${t.legComp}</div>
+      <div class="leg-item"><div class="leg-line" style="border-color:#2ecf98"></div>${t.legType}</div>
+      <div class="leg-item"><div class="leg-line dash" style="border-color:#e05555"></div>${t.legContra}</div>
+      <div class="leg-item"><div class="leg-line" style="border-color:#4ad68a"></div>${t.legReinf}</div>
     </div>
   </div>
 
   <!-- INPUT BAR -->
   <div class="input-bar">
     <div class="examples">
-      <span class="ex-pill" data-cat="explore" data-q="perché i titoli tech hanno perso così tanto nel 2022?">perché tech giù nel 2022</span>
-      <span class="ex-pill" data-cat="explore" data-q="come influiscono i rialzi dei tassi Fed sulle growth stocks?">tassi Fed e growth</span>
-      <span class="ex-pill" data-cat="allocate" data-q="quali settori reggono meglio in una recessione economica?">difendersi in recessione</span>
-      <span class="ex-pill" data-cat="allocate" data-q="come costruire un'allocazione bilanciata contro l'inflazione?">allocazione anti-inflazione</span>
-      <span class="ex-pill" data-cat="screen" data-q="quali aziende con forte potere di prezzo storicamente reggono l'inflazione?">aziende con pricing power</span>
-      <span class="ex-pill" data-cat="screen" data-q="quali società value con bassi multipli e basso debito nel settore industriale?">value a basso debito</span>
+      ${t.ex.map(([q, label, cat]) => `<span class="ex-pill" data-cat="${cat}" data-q="${q.replace(/"/g, '&quot;')}">${label}</span>`).join('\n      ')}
     </div>
     <div class="input-row">
-      <textarea id="qi" rows="1" placeholder="Scrivi qualsiasi domanda di analisi finanziaria..."></textarea>
-      <button id="sb" onclick="runTask()">analizza →</button>
+      <textarea id="qi" rows="1" placeholder="${t.qiPh}"></textarea>
+      <button id="sb" onclick="runTask()">${t.analyze}</button>
     </div>
   </div>
 
-  <div class="disclaimer">solo a scopo informativo — non consulenza finanziaria</div>
+  <div class="disclaimer">${t.disclaimer}</div>
 </div>
 
 <!-- MEMORY NODE NOTIFICATION -->
 <div class="memory-notification" id="mem-notif">
   <span class="mem-notif-icon">◆</span>
-  <span class="mem-notif-text" id="mem-notif-text">nuova tesi emergente rilevata</span>
-  <button class="mem-notif-btn" onclick="openMemoryDrawer()">vedi →</button>
+  <span class="mem-notif-text" id="mem-notif-text">${t.memNotif}</span>
+  <button class="mem-notif-btn" onclick="openMemoryDrawer()">${t.memSee}</button>
 </div>
 
 <!-- DRAWER -->
@@ -138,8 +202,12 @@ export const BODY = `
   <div class="loading-canvas-wrap">
     <canvas id="loading-canvas" width="400" height="400"></canvas>
   </div>
-  <div class="loading-label" id="loading-label">parsing intent semantico</div>
+  <div class="loading-label" id="loading-label">${t.loading}</div>
   <div class="loading-query-preview" id="loading-query-preview"></div>
 </div>
 
 `;
+};
+
+// Compat: default italiano.
+export const BODY = BODY_FOR('it');

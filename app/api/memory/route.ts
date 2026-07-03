@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { askClaudeJSON } from '@/lib/anthropic';
+import { normLang, withLang } from '@/lib/lang';
 import { validateSignals } from '@/lib/signals';
 import { checkAiCall, bumpAiCall } from '@/lib/ai-usage';
 import { FRED_CATALOG } from '@/lib/fred';
@@ -103,7 +104,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'limit_reached', plan: gate.plan, limit: gate.limit }, { status: 429 });
   }
 
-  const { summary, taskCount, theses } = await req.json();
+  const { summary, taskCount, theses, lang: rawLang } = await req.json();
+  const lang = normLang(rawLang);
 
   const thesesBlock = (theses || []).length
     ? `TESI ESISTENTI:\n${theses.map((t: any) => `- [${t.id}] "${t.thesis}" (confidenza ${t.confidence})`).join('\n')}`
@@ -112,7 +114,7 @@ export async function POST(req: NextRequest) {
   try {
     const { json: parsed } = await askClaudeJSON({
       model: 'claude-haiku-4-5', // clustering semplice: Haiku basta, ~10x più economico
-      system: SYS,
+      system: withLang(SYS, lang),
       user: `${thesesBlock}\n\nAnalizza queste ${taskCount} task:\n${summary}`,
       // 8000 (era 3000): fino a 4 cluster, ognuno con 2 confirm + 2 invalidate,
       // superano facilmente 3000 token di output → JSON troncato → parse fallita.

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { askClaudeJSON } from '@/lib/anthropic';
+import { normLang, withLang } from '@/lib/lang';
 import { checkAiCall, bumpAiCall } from '@/lib/ai-usage';
 
 const SYS = `Sei il motore di Synapse, una piattaforma di financial intelligence.
@@ -20,12 +21,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'limit_reached', plan: gate.plan, limit: gate.limit }, { status: 429 });
   }
 
-  const { userMsg } = await req.json();
+  const { userMsg, lang: rawLang } = await req.json();
+  const lang = normLang(rawLang);
 
   try {
     const { json: parsed } = await askClaudeJSON({
       model: 'claude-haiku-4-5',
-      system: SYS,
+      system: withLang(SYS, lang),
       user: userMsg,
       maxTokens: 1024,
     });

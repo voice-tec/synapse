@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { askClaudeJSON } from '@/lib/anthropic';
+import { normLang, withLang } from '@/lib/lang';
 import { checkAiCall, bumpAiCall } from '@/lib/ai-usage';
 
 const SYS = `Sei il motore di Synapse, una piattaforma di financial intelligence.
@@ -43,7 +44,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'limit_reached', plan: gate.plan, limit: gate.limit }, { status: 429 });
   }
 
-  const { thesis, pattern } = await req.json();
+  const { thesis, pattern, lang: rawLang } = await req.json();
+  const lang = normLang(rawLang);
 
   // Holdings reali: il portafoglio generato segnala cosa è già coperto
   const { data: profile } = await supabase
@@ -60,7 +62,7 @@ export async function POST(req: NextRequest) {
   try {
     const { json: parsed, citations } = await askClaudeJSON({
       model: 'claude-sonnet-5',
-      system: SYS + holdingsCtx,
+      system: withLang(SYS + holdingsCtx, lang),
       user: `Tesi: "${thesis}"\nPattern: "${pattern || ''}"\n\nGenera il portafoglio della tesi.`,
       maxTokens: 4000, // +30% per il tokenizer di Sonnet 5
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }],

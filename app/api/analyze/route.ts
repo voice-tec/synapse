@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { askClaudeJSON } from '@/lib/anthropic';
+import { normLang, langDirective } from '@/lib/lang';
 import { enrichChartWithRealData } from '@/lib/quotes';
 import { macroSnapshot } from '@/lib/fred';
 
@@ -92,7 +93,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { query, priorContext } = await req.json();
+  const { query, priorContext, lang: rawLang } = await req.json();
+  const lang = normLang(rawLang);
+  const langDir = langDirective(lang);
 
   // Quality stays as before: ALWAYS Sonnet + web search available.
   // The only cost control is capping web search to 1 use per question
@@ -138,6 +141,7 @@ export async function POST(req: NextRequest) {
     ...(macro ? [{ type: 'text', text: macro }] : []),
     ...(portfolioCtx ? [{ type: 'text', text: portfolioCtx }] : []),
     ...(priorContext ? [{ type: 'text', text: priorContext }] : []),
+    ...(langDir ? [{ type: 'text', text: langDir }] : []),
   ];
 
   try {

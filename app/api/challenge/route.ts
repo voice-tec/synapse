@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { askClaudeJSON } from '@/lib/anthropic';
+import { normLang, withLang } from '@/lib/lang';
 import { checkAiCall, bumpAiCall } from '@/lib/ai-usage';
 
 const SYS = `Sei l'avvocato del diavolo di Synapse, una piattaforma di financial intelligence.
@@ -32,13 +33,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'limit_reached', plan: gate.plan, limit: gate.limit }, { status: 429 });
   }
 
-  const { thesis, explanation, clusterId } = await req.json();
+  const { thesis, explanation, clusterId, lang: rawLang } = await req.json();
+  const lang = normLang(rawLang);
   if (!thesis) return NextResponse.json({ error: 'Tesi mancante' }, { status: 400 });
 
   try {
     const { json: parsed, citations } = await askClaudeJSON({
       model: 'claude-sonnet-5',
-      system: SYS,
+      system: withLang(SYS, lang),
       user: `Tesi: "${thesis}"\nContesto: "${explanation || ''}"\n\nCostruisci il caso contrario.`,
       maxTokens: 2600, // +30% per il tokenizer di Sonnet 5
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }],

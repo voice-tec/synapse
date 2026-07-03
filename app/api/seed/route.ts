@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { askClaudeJSON } from '@/lib/anthropic';
+import { normLang, withLang } from '@/lib/lang';
 import { checkAiCall, bumpAiCall } from '@/lib/ai-usage';
 
 // Seed del grafo al primo accesso: dal portafoglio reale dell'utente propone
@@ -18,6 +19,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
 
+  const lang = normLang((await req.json().catch(() => ({} as any)))?.lang);
   const { data: profile } = await supabase.from('profiles').select('portfolio').eq('id', user.id).single();
   const holdings: any[] = Array.isArray(profile?.portfolio) ? profile!.portfolio : [];
   if (!holdings.length) return NextResponse.json({ result: { questions: [] } });
@@ -34,7 +36,7 @@ export async function POST(req: NextRequest) {
   try {
     const { json: parsed } = await askClaudeJSON({
       model: 'claude-haiku-4-5',
-      system: SYS,
+      system: withLang(SYS, lang),
       user: `PORTAFOGLIO:\n${list}`,
       maxTokens: 1024,
     });

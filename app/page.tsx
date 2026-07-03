@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
 import { STYLE } from './synapse/style';
-import { BODY } from './synapse/body';
+import { BODY_FOR } from './synapse/body';
 
 
 export default function SynapsePage() {
@@ -21,10 +21,20 @@ export default function SynapsePage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/login'); return; }
 
+      // Lingua UI/AI: stessa chiave delle pagine pubbliche (syn-lang), fallback
+      // sulla lingua del browser. graph.js la legge da __SYN_LANG.
+      let lang: 'it' | 'en' = 'it';
+      try {
+        const saved = localStorage.getItem('syn-lang');
+        if (saved === 'en' || saved === 'it') lang = saved;
+        else if ((navigator.language || '').toLowerCase().startsWith('en')) lang = 'en';
+      } catch {}
+      (window as any).__SYN_LANG = lang;
+
       // Inject BODY into the container. If the ref isn't ready yet, the canvas
       // won't exist — the waitForCanvas polling below handles that safely.
       if (containerRef.current) {
-        containerRef.current.innerHTML = BODY;
+        containerRef.current.innerHTML = BODY_FOR(lang);
       }
       const styleEl = document.createElement('style');
       styleEl.textContent = STYLE;
