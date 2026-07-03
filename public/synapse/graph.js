@@ -10,13 +10,18 @@ if (window.__SYN_INITIALIZED) {
 // ═══ BACKEND INTEGRATION HELPERS ═══
 // Lingua dell'utente ('it'|'en'): decisa da page.tsx (localStorage syn-lang).
 const SYN_LANG = (window.__SYN_LANG==='en') ? 'en' : 'it';
+// ═══ i18n: TT('stringa italiana') → traduzione EN se SYN_LANG='en' ═══
+// Chiave = testo italiano corrente (stile gettext): niente chiavi inventate.
+const SYN_EN = {" tesi ri-valutate": " theses re-evaluated", " con dati aggiornati": " with fresh data", "vedi →": "view →", "Limite di ": "Limit of ", " avvisi attivi per il piano ": " active alerts for plan ", ". Disattiva un avviso o passa a Pro.": ". Turn one off or upgrade to Pro.", "Questa domanda non ha un verdetto da osservare: il watch serve per domande con risposta si/no/dipende.": "This question has no verdict to watch: alerts are for questions answered yes/no/depends.", "◈ portafoglio salvato — sto preparando alcuni spunti dai tuoi titoli": "◈ portfolio saved — preparing a few prompts from your holdings", "◈ portafoglio salvato — le prossime analisi lo useranno": "◈ portfolio saved — future analyses will use it", "salva": "save", "Questo nome è già in uso, scegline un altro.": "This name is already taken, pick another one.", "Salvataggio fallito, riprova.": "Save failed, try again.", "◈ impostazioni salvate": "◈ settings saved", "clicca per aprire": "tap to open", "ipotesi implicita": "implicit hypothesis", "▤ portafoglio tesi": "▤ thesis portfolio", "symnaps-grafo.png": "symnaps-graph.png", "Esportazione non riuscita, riprova.": "Export failed, try again.", "risposta": "answer", "perché": "why", "cosa può cambiare": "what could change", "tu e il grafo": "you and the graph", "esplora": "explore", "🔔 avvisami se il verdetto cambia": "🔔 alert me if the verdict changes", "✓ avviso attivo — ricontrollo ogni settimana": "✓ alert active — re-checked weekly", "⚡ Verdetto cambiato: ": "⚡ Verdict changed: ", "sì": "yes", "dipende": "depends", "convinzione": "conviction", "⚡ contraddice": "⚡ contradicts", "✓ rafforza": "✓ reinforces", "stessa ipotesi": "same hypothesis", "dato complementare": "complementary data", "stesso tipo": "same type", "Eliminare questa task? Verranno rimosse anche le sue connessioni.": "Delete this task? Its connections will be removed too.", "portafoglio tesi": "thesis portfolio", "Portafoglio della tesi": "Thesis portfolio", "tesi confermata ✓": "thesis confirmed ✓", "tesi invalidata ✕": "thesis invalidated ✕", "tesi emergente": "emerging thesis", " giorni": " days", "in corso": "active", "confermata ✓": "confirmed ✓", "invalidata ✕": "invalidated ✕", "Segnali non ancora valutati — vengono controllati sui dati reali alla prossima apertura.": "Signals not yet evaluated — they are checked against real data on the next open.", "Servono almeno 2 segnali scattati per un verdetto e una percentuale di accuratezza.": "A verdict and an accuracy score require at least 2 fired signals.", "tesi confermata": "thesis confirmed", "tesi invalidata": "thesis invalidated", "Pubblica: altri possono trovarla e importarla": "Public: others can find and import it", "Privata: visibile solo a te": "Private: visible only to you", "pubblicata ✓": "published ✓", "pubblica": "publish", "○ non ancora": "○ not yet", "○ in attesa": "○ waiting", "la tesi": "the thesis", "le prove": "the evidence", "evoluzione": "evolution", "metti alla prova": "put it to the test", "contesto": "context", "Serve confidenza ≥60% per pubblicarla": "Needs ≥60% confidence to be published", "Tesi importata: non ripubblicabile": "Imported thesis: cannot be republished", "Hai raggiunto il massimo di tesi pubbliche (20)": "You reached the maximum of public theses (20)", "Tesi non ancora salvata, riprova tra un istante": "Thesis not saved yet, retry in a moment", "Scegli un nome pubblico (profilo) prima di pubblicare": "Pick a public name (settings) before publishing", "riprova": "retry", "generazione in corso…": "generating…", "Limite mensile di chiamate AI raggiunto.": "Monthly AI call limit reached.", "◈ spunti dal tuo portafoglio": "◈ prompts from your portfolio", "◆ tesi in formazione": "◆ theses forming", "esplora →": "explore →", "serve 1 domanda in più": "needs 1 more question", "tesi in formazione": "theses forming", "Hai raggiunto il limite di ": "You reached the limit of ", " analisi del piano ": " analyses on the plan ", " questo mese. Scopri il piano Pro su /pricing.": " this month. Check out the Pro plan at /pricing.", "parsing intent semantico": "parsing semantic intent", "ricerca web se necessaria": "web search if needed", "analizzando contesto macro": "analyzing macro context", "costruendo fingerprint e output": "building fingerprint and output", "🔗 link copiato negli appunti": "🔗 link copied to clipboard", "🔗 grafo pubblico creato": "🔗 public graph created", "apri →": "open →", "Fai almeno una domanda prima di condividere il grafo.": "Ask at least one question before sharing the graph.", "⚠ salvataggio non riuscito — la domanda potrebbe non essere conservata. Controlla la connessione e riprova.": "⚠ save failed — the question may not be stored. Check your connection and retry.", "Errore: ": "Error: ", "verdetto": "verdict", "scenari": "scenarios", "catalizzatori in arrivo": "upcoming catalysts", "il tuo portafoglio": "your portfolio", "ipotesi e intent estratti": "extracted hypothesis and intent", "settore": "sector", "fonti": "sources", "tocca una domanda per esplorarla →": "tap a question to explore it →", "Symnaps sta leggendo il tuo grafo...": "Symnaps is reading your graph...", "elimina questa task": "delete this task", "▤ nodo azione": "▤ action node", "logica del portafoglio": "portfolio logic", "◆ tesi": "◆ thesis", "evoluzione della tesi": "thesis evolution", "Δ confidenza": "Δ confidence", "verifica manuale": "manual check", "● scattato": "● fired", "segnali da monitorare": "signals to monitor", "la rafforzano": "strengthen it", "nessun segnale": "no signals", "la indeboliscono": "weaken it", "perché questa tesi": "why this thesis", "portafoglio della tesi": "thesis portfolio", "prossimo passo suggerito": "suggested next step", "⊞ genera portafoglio da questa tesi": "⊞ generate a portfolio from this thesis", "Traduce la tesi in categorie di asset e strumenti, con taglio educativo.": "Translates the thesis into asset categories and instruments, educational by design.", "⚔ sfida questa tesi": "⚔ challenge this thesis", "Il mio portafoglio": "My portfolio", "+ aggiungi strumento": "+ add instrument", "annulla": "cancel", "chiudi": "close", "Nome pubblico (marketplace) — richiesto per pubblicare": "Public name (marketplace) — required to publish", "Impostazioni": "Settings", "Piano": "Plan", "vedi piani →": "see plans →", "⏻ esci": "⏻ log out", "Mostrato sulle tue tesi pubblicate al posto di #hash anonimo. Lascia vuoto per restare anonimo (ma non potrai pubblicare).": "Shown on your published theses instead of the anonymous #hash. Leave empty to stay anonymous (but you will not be able to publish).", "Mostrato sulle tue tesi pubblicate al posto di #hash anonimo. Vuoto = anonimo (niente pubblicazioni).": "Shown on your published theses instead of the anonymous #hash. Empty = anonymous (no publishing).", "scegli un nome unico (serve per pubblicare)": "pick a unique name (needed to publish)", "scegli un nome unico": "pick a unique name", " analisi questo mese": " analyses this month", " analisi": " analyses", "totale: ": "total: ", "↘ importata": "↘ imported", "↘ Importata dal marketplace": "↘ Imported from the marketplace", " — il track record è azzerato e si ricostruisce sui dati da oggi in poi. Non ripubblicabile.": " — the track record starts from zero and rebuilds on data from today onward. Cannot be republished.", " da #": " by #"};
+function TT(t){ return (SYN_LANG==='en' && SYN_EN[t]!==undefined) ? SYN_EN[t] : t; }
+
 // NON azzerare: page.tsx la preload PRIMA di iniettare questo script — azzerarla
 // lasciava la label utilizzo vuota fino alla prima analisi.
 window.__SYN_USAGE = window.__SYN_USAGE || null;
 function updateUsageLabel(){
   const u = window.__SYN_USAGE;
   const el = document.getElementById('usage-label');
-  if(el && u){ el.textContent = u.plan + ' · ' + u.used + '/' + u.limit + ' analisi'; }
+  if(el && u){ el.textContent = u.plan + ' · ' + u.used + '/' + u.limit + TT(' analisi'); }
 }
 // Persistence — saves tasks/connections/theses to Supabase via the page's saver
 // Un id è "persistito" solo se è un UUID (ha i trattini); gli id temporanei
@@ -95,7 +100,7 @@ async function refreshStaleData(){
     if(touched>0){
       const notif=document.getElementById('mem-notif');
       if(notif){
-        document.getElementById('mem-notif-text').textContent='◆ '+touched+(touched===1?' tesi ri-valutata':' tesi ri-valutate')+' con dati aggiornati';
+        document.getElementById('mem-notif-text').textContent='◆ '+touched+(touched===1?' tesi ri-valutata':TT(' tesi ri-valutate'))+TT(' con dati aggiornati');
         notif.classList.add('show');
         setTimeout(()=>notif.classList.remove('show'),7000);
       }
@@ -135,10 +140,10 @@ function showFlipNotification(){
   if(!w) return;
   const notif=document.getElementById('mem-notif');
   if(!notif) return;
-  const lbl={si:'sì',no:'no',dipende:'dipende'};
-  document.getElementById('mem-notif-text').textContent='⚡ Verdetto cambiato: "'+w.query.slice(0,48)+(w.query.length>48?'…':'')+'" — '+(lbl[w.flip.old_stance]||w.flip.old_stance)+' → '+(lbl[w.flip.new_stance]||w.flip.new_stance);
+  const lbl=SYN_LANG==='en'?{si:'yes',no:'no',dipende:'depends'}:{si:'sì',no:'no',dipende:'dipende'};
+  document.getElementById('mem-notif-text').textContent=TT('⚡ Verdetto cambiato: ')+'"'+w.query.slice(0,48)+(w.query.length>48?'…':'')+'" — '+(lbl[w.flip.old_stance]||w.flip.old_stance)+' → '+(lbl[w.flip.new_stance]||w.flip.new_stance);
   const nb=notif.querySelector('.mem-notif-btn');
-  if(nb){ nb.textContent='vedi →'; nb.onclick=async()=>{
+  if(nb){ nb.textContent=TT('vedi →'); nb.onclick=async()=>{
     notif.classList.remove('show');
     try{ await fetch('/api/watch',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:w.id})}); w.flip_seen=true; }catch(e){}
     const t=TASKS.find(x=>x.id===w.task_id);
@@ -154,13 +159,13 @@ async function toggleWatch(task, btn){
     if(existing){
       await fetch('/api/watch',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({task_id:task.id})});
       WATCHES=WATCHES.filter(w=>w.task_id!==task.id);
-      btn.classList.remove('on'); btn.textContent='🔔 avvisami se il verdetto cambia';
+      btn.classList.remove('on'); btn.textContent=TT('🔔 avvisami se il verdetto cambia');
     } else {
       const res=await fetch('/api/watch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task_id:task.id})});
       const json=await res.json();
-      if(json.error==='watch_limit'){ alert('Limite di '+json.limit+' avvisi attivi per il piano '+json.plan+'. Disattiva un avviso o passa a Pro.'); }
-      else if(json.error==='no_verdict'){ alert('Questa domanda non ha un verdetto da osservare: il watch serve per domande con risposta si/no/dipende.'); }
-      else if(json.watch){ WATCHES.push(json.watch); btn.classList.add('on'); btn.textContent='✓ avviso attivo — ricontrollo ogni settimana'; }
+      if(json.error==='watch_limit'){ alert(TT('Limite di ')+json.limit+TT(' avvisi attivi per il piano ')+json.plan+TT('. Disattiva un avviso o passa a Pro.')); }
+      else if(json.error==='no_verdict'){ alert(TT('Questa domanda non ha un verdetto da osservare: il watch serve per domande con risposta si/no/dipende.')); }
+      else if(json.watch){ WATCHES.push(json.watch); btn.classList.add('on'); btn.textContent=TT('✓ avviso attivo — ricontrollo ogni settimana'); }
     }
   }catch(e){ console.warn('watch toggle failed', e); }
   btn.disabled=false;
@@ -183,7 +188,7 @@ function pfeRow(h){
 function pfeUpdateTotal(){
   const tot=[...document.querySelectorAll('.pfe-weight')].reduce((s,i)=>s+(parseFloat(String(i.value).replace(',','.'))||0),0);
   const el=document.getElementById('pfe-total');
-  if(el) el.innerHTML='totale: <b style="color:'+(Math.abs(tot-100)<0.5?'#34d399':tot>100?'#e05555':'#dddde8')+'">'+(Math.round(tot*10)/10)+'%</b>';
+  if(el) el.innerHTML=TT('totale: ')+'<b style="color:'+(Math.abs(tot-100)<0.5?'#34d399':tot>100?'#e05555':'#dddde8')+'">'+(Math.round(tot*10)/10)+'%</b>';
 }
 function openPortfolioEditor(){
   if(document.getElementById('pfe-overlay')) return;
@@ -191,18 +196,18 @@ function openPortfolioEditor(){
   const ov=document.createElement('div');
   ov.className='pfe-overlay'; ov.id='pfe-overlay';
   ov.innerHTML=`<div class="pfe-card">
-    <div class="pfe-title">Il mio portafoglio</div>
+    <div class="pfe-title">${TT('Il mio portafoglio')}</div>
     <div class="pfe-sub">Gli strumenti che possiedi davvero, col peso in %. Le analisi li useranno per dirti quanto sei già esposto a un tema ("sei già esposto ~12% via VWCE"). Restano privati nel tuo profilo.</div>
     <div style="margin:4px 0 14px">
-      <label style="display:block;font-size:11px;color:#7a7a95;margin-bottom:5px">Nome pubblico (marketplace) — richiesto per pubblicare</label>
-      <input id="pfe-display-name" placeholder="scegli un nome unico (serve per pubblicare)" maxlength="40" style="width:100%;background:#141418;border:1px solid #2a2a36;border-radius:8px;padding:8px 10px;color:#e8e8f0;font-family:inherit;font-size:12px;box-sizing:border-box">
-      <div id="pfe-name-msg" style="font-size:10px;color:#5a5a78;margin-top:4px">Mostrato sulle tue tesi pubblicate al posto di #hash anonimo. Lascia vuoto per restare anonimo (ma non potrai pubblicare).</div>
+      <label style="display:block;font-size:11px;color:#7a7a95;margin-bottom:5px">${TT('Nome pubblico (marketplace) — richiesto per pubblicare')}</label>
+      <input id="pfe-display-name" placeholder="${TT('scegli un nome unico (serve per pubblicare)')}" maxlength="40" style="width:100%;background:#141418;border:1px solid #2a2a36;border-radius:8px;padding:8px 10px;color:#e8e8f0;font-family:inherit;font-size:12px;box-sizing:border-box">
+      <div id="pfe-name-msg" style="font-size:10px;color:#5a5a78;margin-top:4px">${TT('Mostrato sulle tue tesi pubblicate al posto di #hash anonimo. Lascia vuoto per restare anonimo (ma non potrai pubblicare).')}</div>
     </div>
     <div class="pfe-rows" id="pfe-rows"></div>
     <div class="pfe-total" id="pfe-total"></div>
     <div class="pfe-actions">
-      <button class="pfe-add" id="pfe-add">+ aggiungi strumento</button>
-      <span><button class="pfe-cancel" id="pfe-cancel">annulla</button>
+      <button class="pfe-add" id="pfe-add">${TT('+ aggiungi strumento')}</button>
+      <span><button class="pfe-cancel" id="pfe-cancel">${TT('annulla')}</button>
       <button class="pfe-save" id="pfe-save">salva</button></span>
     </div>
   </div>`;
@@ -239,13 +244,13 @@ function openPortfolioEditor(){
       const seeding = TASKS.length===0 && out.length>0;
       if(seeding) seedFromPortfolio();
       showNotif(seeding
-        ? '◈ portafoglio salvato — sto preparando alcuni spunti dai tuoi titoli'
-        : '◈ portafoglio salvato — le prossime analisi lo useranno', 5000);
+        ? TT('◈ portafoglio salvato — sto preparando alcuni spunti dai tuoi titoli')
+        : TT('◈ portafoglio salvato — le prossime analisi lo useranno'), 5000);
     }catch(e){
-      btn.disabled=false; btn.textContent='salva';
+      btn.disabled=false; btn.textContent=TT('salva');
       const nm=document.getElementById('pfe-name-msg');
-      if(e&&e.message==='name_taken'&&nm){ nm.textContent='Questo nome è già in uso, scegline un altro.'; nm.style.color='var(--red,#e05555)'; }
-      else alert('Salvataggio fallito, riprova.');
+      if(e&&e.message==='name_taken'&&nm){ nm.textContent=TT('Questo nome è già in uso, scegline un altro.'); nm.style.color='var(--red,#e05555)'; }
+      else alert(TT('Salvataggio fallito, riprova.'));
     }
   });
 }
@@ -260,29 +265,29 @@ function openSettingsModal(){
   ov.className='pfe-overlay';
   ov.innerHTML=`
   <div class="pfe-card">
-    <div class="pfe-title">Impostazioni</div>
+    <div class="pfe-title">${TT('Impostazioni')}</div>
     <div>
       <label style="display:block;font-size:11px;color:#7a7a95;margin-bottom:5px">Account</label>
       <div style="font-size:12px;color:#b8b8cc;font-family:'DM Mono',monospace;word-break:break-all">${window.__SYN_EMAIL||'—'}</div>
     </div>
     <div>
-      <label style="display:block;font-size:11px;color:#7a7a95;margin-bottom:5px">Nome pubblico (marketplace) — richiesto per pubblicare</label>
-      <input id="set-display-name" placeholder="scegli un nome unico" maxlength="40" style="width:100%;background:#141418;border:1px solid #2a2a36;border-radius:8px;padding:8px 10px;color:#e8e8f0;font-family:inherit;font-size:12px;box-sizing:border-box">
-      <div id="set-name-msg" style="font-size:10px;color:#5a5a78;margin-top:4px">Mostrato sulle tue tesi pubblicate al posto di #hash anonimo. Vuoto = anonimo (niente pubblicazioni).</div>
+      <label style="display:block;font-size:11px;color:#7a7a95;margin-bottom:5px">${TT('Nome pubblico (marketplace) — richiesto per pubblicare')}</label>
+      <input id="set-display-name" placeholder="${TT('scegli un nome unico')}" maxlength="40" style="width:100%;background:#141418;border:1px solid #2a2a36;border-radius:8px;padding:8px 10px;color:#e8e8f0;font-family:inherit;font-size:12px;box-sizing:border-box">
+      <div id="set-name-msg" style="font-size:10px;color:#5a5a78;margin-top:4px">${TT('Mostrato sulle tue tesi pubblicate al posto di #hash anonimo. Vuoto = anonimo (niente pubblicazioni).')}</div>
     </div>
     <div>
-      <label style="display:block;font-size:11px;color:#7a7a95;margin-bottom:5px">Piano</label>
+      <label style="display:block;font-size:11px;color:#7a7a95;margin-bottom:5px">${TT('Piano')}</label>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#141418;border:1px solid #2a2a36;border-radius:8px;padding:9px 12px">
-        <span style="font-size:12px;color:#b8b8cc">${u?u.plan+' · '+u.used+'/'+u.limit+' analisi questo mese':'—'}</span>
-        <a href="/pricing" style="font-size:11px;color:#a78bfa;text-decoration:none;flex-shrink:0">vedi piani →</a>
+        <span style="font-size:12px;color:#b8b8cc">${u?u.plan+' · '+u.used+'/'+u.limit+TT(' analisi questo mese'):'—'}</span>
+        <a href="/pricing" style="font-size:11px;color:#a78bfa;text-decoration:none;flex-shrink:0">${TT('vedi piani →')}</a>
       </div>
     </div>
     <div class="pfe-actions">
       <span style="display:flex;gap:14px;align-items:center">
         <a href="/privacy" style="font-size:11px;color:#5a5a78;text-decoration:none">privacy</a>
-        <button id="set-logout" style="background:none;border:none;color:#e05555;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;padding:8px 0">⏻ esci</button>
+        <button id="set-logout" style="background:none;border:none;color:#e05555;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;padding:8px 0">${TT('⏻ esci')}</button>
       </span>
-      <span><button class="pfe-cancel" id="set-cancel">chiudi</button>
+      <span><button class="pfe-cancel" id="set-cancel">${TT('chiudi')}</button>
       <button class="pfe-save" id="set-save">salva</button></span>
     </div>
   </div>`;
@@ -301,12 +306,12 @@ function openSettingsModal(){
       if(window.__synSaveProfile) await window.__synSaveProfile({display_name:dn||null});
       window.__SYN_DISPLAY_NAME=dn;
       ov.remove();
-      showNotif('◈ impostazioni salvate');
+      showNotif(TT('◈ impostazioni salvate'));
     }catch(e){
-      btn.disabled=false; btn.textContent='salva';
+      btn.disabled=false; btn.textContent=TT('salva');
       const nm=document.getElementById('set-name-msg');
-      if(e&&e.message==='name_taken'&&nm){ nm.textContent='Questo nome è già in uso, scegline un altro.'; nm.style.color='var(--red,#e05555)'; }
-      else alert('Salvataggio fallito, riprova.');
+      if(e&&e.message==='name_taken'&&nm){ nm.textContent=TT('Questo nome è già in uso, scegline un altro.'); nm.style.color='var(--red,#e05555)'; }
+      else alert(TT('Salvataggio fallito, riprova.'));
     }
   });
 }
@@ -617,7 +622,7 @@ function loop() {
       ctx.font='9px DM Mono';ctx.fillStyle=color;ctx.globalAlpha=0.7;
       ctx.textAlign='center';ctx.textBaseline='top';
       const ly2=n.y+r+8+(tooClose?0:28);
-      ctx.fillText('clicca per aprire',n.x,ly2);
+      ctx.fillText(TT('clicca per aprire'),n.x,ly2);
       ctx.globalAlpha=1;
     }
 
@@ -630,7 +635,7 @@ function loop() {
       ctx.fillStyle='#141418';ctx.strokeStyle=color;ctx.lineWidth=1;ctx.globalAlpha=0.97;
       roundRect(ctx,tx2,ty2,pw,ph,10);ctx.fill();ctx.stroke();ctx.globalAlpha=1;
       ctx.fillStyle=color;ctx.font='9px DM Mono';ctx.textAlign='left';ctx.textBaseline='top';
-      ctx.fillText('ipotesi implicita',tx2+14,ty2+14);
+      ctx.fillText(TT('ipotesi implicita'),tx2+14,ty2+14);
       ctx.fillStyle='#a0a0b8';ctx.font='11px DM Mono';
       hLines.forEach((l,i)=>ctx.fillText(l,tx2+14,ty2+14+18+i*16));
     }
@@ -746,7 +751,7 @@ function loop() {
 
     if(isHov&&!isSel){
       ctx.fillStyle=color;ctx.font='9px DM Mono';ctx.globalAlpha=0.7;
-      ctx.fillText('clicca per aprire',mn.x,labelY+tLines.length*13+18);ctx.globalAlpha=1;
+      ctx.fillText(TT('clicca per aprire'),mn.x,labelY+tLines.length*13+18);ctx.globalAlpha=1;
     }
   }
 
@@ -791,7 +796,7 @@ function loop() {
     const aLines=wrapText(al.length>28?al.slice(0,28)+'…':al,24);
     aLines.forEach((l,i)=>ctx.fillText(l,an.x,an.y+s+8+i*13));
     ctx.fillStyle=color;ctx.font='9px DM Mono';
-    ctx.fillText('▤ portafoglio tesi',an.x,an.y+s+8+aLines.length*13+2);
+    ctx.fillText(TT('▤ portafoglio tesi'),an.x,an.y+s+8+aLines.length*13+2);
 
     // Badge: performance dalla creazione (verde/rosso)
     const hasPerf=an.performance&&an.performance.overall;
@@ -804,7 +809,7 @@ function loop() {
 
     if(isHov&&!isSel){
       ctx.fillStyle=color;ctx.font='9px DM Mono';ctx.globalAlpha=0.7;
-      ctx.fillText('clicca per aprire',an.x,an.y+s+8+aLines.length*13+(hasPerf?30:16));ctx.globalAlpha=1;
+      ctx.fillText(TT('clicca per aprire'),an.x,an.y+s+8+aLines.length*13+(hasPerf?30:16));ctx.globalAlpha=1;
     }
   }
 
@@ -883,11 +888,11 @@ function exportGraphImage(){
     o.fillText('Symnaps', W-20*dpr, H-18*dpr);
     // Trigger download
     const link=document.createElement('a');
-    link.download='symnaps-grafo.png';
+    link.download=TT('symnaps-grafo.png');
     link.href=out.toDataURL('image/png');
     link.click();
     if(window.posthog) try{ window.posthog.capture('graph_exported'); }catch(_){}
-  }catch(err){ console.warn('export failed', err); alert('Esportazione non riuscita, riprova.'); }
+  }catch(err){ console.warn('export failed', err); alert(TT('Esportazione non riuscita, riprova.')); }
 }
 
 canvas.addEventListener('mousemove',e=>{
@@ -1099,25 +1104,25 @@ function renderDrawerBody(task){
   // Verdetto — la risposta secca alla domanda, prima di tutto
   const vd=task.output?.verdict;
   if(vd&&vd.label){
-    band('risposta');
+    band(TT('risposta'));
     const VC={si:'#4ad68a',no:'#e05555',dipende:'#f0a030'};
     const vc=VC[vd.stance]||'#7a7a95';
     const vx=document.createElement('div');
-    vx.innerHTML=`<div class="section-lbl">verdetto</div>
+    vx.innerHTML=`<div class="section-lbl">${TT('verdetto')}</div>
     <div class="verdict-box" style="background:${vc}12;border:1px solid ${vc}30">
       <div class="verdict-top">
-        <span class="verdict-pill" style="color:${vc};background:${vc}1a;border:1px solid ${vc}40">${vd.stance==='si'?'sì':vd.stance||'—'}</span>
-        ${vd.confidence?`<span class="verdict-conf">convinzione ${vd.confidence}</span>`:''}
+        <span class="verdict-pill" style="color:${vc};background:${vc}1a;border:1px solid ${vc}40">${vd.stance==='si'?TT('sì'):vd.stance==='dipende'?TT('dipende'):vd.stance||'—'}</span>
+        ${vd.confidence?`<span class="verdict-conf">${TT('convinzione')} ${vd.confidence}</span>`:''}
       </div>
       <div class="verdict-lbl">${vd.label}</div>
     </div>
-    <button class="watch-btn${watchFor(task.id)?' on':''}" id="watch-btn">${watchFor(task.id)?'✓ avviso attivo — ricontrollo ogni settimana':'🔔 avvisami se il verdetto cambia'}</button>`;
+    <button class="watch-btn${watchFor(task.id)?' on':''}" id="watch-btn">${watchFor(task.id)?TT('✓ avviso attivo — ricontrollo ogni settimana'):TT('🔔 avvisami se il verdetto cambia')}</button>`;
     body.appendChild(vx);
     setTimeout(()=>{ const wb=document.getElementById('watch-btn'); if(wb) wb.addEventListener('click',()=>toggleWatch(task,wb)); },100);
   }
 
   // PERCHÉ — le prove che reggono la risposta, narrativa in testa
-  if(task.output?.insight||task.output?.takeaways?.length||task.output?.metrics?.length||task.output?.chart?.values?.length) band('perché');
+  if(task.output?.insight||task.output?.takeaways?.length||task.output?.metrics?.length||task.output?.chart?.values?.length) band(TT('perché'));
   if(task.output?.insight){
     const ins=document.createElement('div');
     ins.innerHTML=`<div class="section-lbl">il ragionamento</div><div class="insight-box">${task.output.insight}</div>`;
@@ -1160,11 +1165,11 @@ function renderDrawerBody(task){
   }
 
   // COSA PUÒ CAMBIARE — prospettiva: scenari alternativi e prossimi eventi
-  if(task.output?.scenarios?.length||task.output?.catalysts?.length) band('cosa può cambiare');
+  if(task.output?.scenarios?.length||task.output?.catalysts?.length) band(TT('cosa può cambiare'));
   if(task.output?.scenarios?.length){
     const SCEN={bull:{c:'#4ad68a',l:'rialzista'},base:{c:'#5b9cf6',l:'base'},bear:{c:'#e05555',l:'ribassista'}};
     const sc=document.createElement('div');
-    sc.innerHTML=`<div class="section-lbl">scenari</div><div class="scen-grid">
+    sc.innerHTML=`<div class="section-lbl">${TT('scenari')}</div><div class="scen-grid">
     ${task.output.scenarios.slice(0,3).map(s=>{const m=SCEN[s.name]||{c:'#7a7a95',l:s.name||''};return `
       <div class="scen-cell" style="border-top-color:${m.c}66">
         <span class="scen-name" style="color:${m.c}">${m.l}</span>
@@ -1179,7 +1184,7 @@ function renderDrawerBody(task){
   // Catalizzatori in arrivo — il "quando ricontrollare"
   if(task.output?.catalysts?.length){
     const ct=document.createElement('div');
-    ct.innerHTML=`<div class="section-lbl">catalizzatori in arrivo</div><div class="cat-list">
+    ct.innerHTML=`<div class="section-lbl">${TT('catalizzatori in arrivo')}</div><div class="cat-list">
     ${task.output.catalysts.slice(0,4).map(c=>`
       <div class="cat-row">
         <span class="cat-when">${c.when||''}</span>
@@ -1190,11 +1195,11 @@ function renderDrawerBody(task){
   }
 
   // TU E IL GRAFO — contesto personale e collocazione nel grafo
-  band('tu e il grafo');
+  band(TT('tu e il grafo'));
   // Collegamento al portafoglio — esposizione già presente al tema
   if(task.output?.portfolio_link?.note){
     const pf=document.createElement('div');
-    pf.innerHTML=`<div class="section-lbl">il tuo portafoglio</div>
+    pf.innerHTML=`<div class="section-lbl">${TT('il tuo portafoglio')}</div>
     <div class="pf-box"><span style="flex-shrink:0">◈</span><span>${task.output.portfolio_link.note}</span></div>`;
     body.appendChild(pf);
   }
@@ -1203,13 +1208,13 @@ function renderDrawerBody(task){
   // details chiuso di default. Wrappato in <div>: il selettore dello stagger
   // (#dr-body>div) non matcha <details>.
   const meta=document.createElement('div');
-  meta.innerHTML=`<details class="meta-fold"><summary>ipotesi e intent estratti</summary>
+  meta.innerHTML=`<details class="meta-fold"><summary>${TT('ipotesi e intent estratti')}</summary>
     ${task.fingerprint?.hypothesis?`<div class="hyp-box">"${task.fingerprint.hypothesis}"</div>`:''}
     <div class="intent-grid">
       <div class="icell"><span class="icell-k">assets</span><span class="icell-v">${(task.intent?.assets||[]).slice(0,3).join(', ')||'—'}</span></div>
       <div class="icell"><span class="icell-k">metriche</span><span class="icell-v">${(task.intent?.metrics||[]).slice(0,2).join(', ')||'—'}</span></div>
       <div class="icell"><span class="icell-k">periodo</span><span class="icell-v">${task.intent?.timeframe||'—'}</span></div>
-      <div class="icell"><span class="icell-k">settore</span><span class="icell-v" style="color:${color}">${task.fingerprint?.sector||'—'}</span></div>
+      <div class="icell"><span class="icell-k">${TT('settore')}</span><span class="icell-v" style="color:${color}">${task.fingerprint?.sector||'—'}</span></div>
     </div>
   </details>`;
   body.appendChild(meta);
@@ -1222,7 +1227,7 @@ function renderDrawerBody(task){
     ${task.connections.map(c=>`
       <div class="conn-pill" onclick="jumpToNode('${c.task_id}')">
         <span class="conn-pct">${Math.round(c.score*100)}%</span>
-        <span class="conn-type" style="color:${({contradiction:'#e05555',supports:'#4ad68a'})[c.type]||'inherit'}">${({contradiction:'⚡ contraddice',supports:'✓ rafforza',same_hypothesis:'stessa ipotesi',complementary_data:'dato complementare',same_question_type:'stesso tipo'})[c.type]||c.type.replace(/_/g,' ')}</span>
+        <span class="conn-type" style="color:${({contradiction:'#e05555',supports:'#4ad68a'})[c.type]||'inherit'}">${({contradiction:TT('⚡ contraddice'),supports:TT('✓ rafforza'),same_hypothesis:TT('stessa ipotesi'),complementary_data:TT('dato complementare'),same_question_type:TT('stesso tipo')})[c.type]||c.type.replace(/_/g,' ')}</span>
         <span class="conn-q">${c.query}</span>
       </div>`).join('')}
     </div>`;
@@ -1240,7 +1245,7 @@ function renderDrawerBody(task){
   }
   if(task.output?.sources?.length){
     const src=document.createElement('div');
-    src.innerHTML=`<div class="section-lbl">fonti</div>
+    src.innerHTML=`<div class="section-lbl">${TT('fonti')}</div>
     <div style="display:flex;flex-wrap:wrap;gap:6px">
     ${task.output.sources.map(renderSourcePill).join('')}
     </div>`;
@@ -1248,13 +1253,13 @@ function renderDrawerBody(task){
   }
 
   // ESPLORA — spunti per continuare, separati dal contesto del grafo
-  band('esplora');
+  band(TT('esplora'));
   const sqSection = document.createElement('div');
   sqSection.id = 'sq-section';
   sqSection.innerHTML = `
-    <div class="section-lbl">tocca una domanda per esplorarla →</div>
+    <div class="section-lbl">${TT('tocca una domanda per esplorarla →')}</div>
     <div id="sq-loading" style="display:flex;align-items:center;gap:8px;padding:10px 0;color:var(--text3);font-size:11px">
-      <div class="spinner"></div><span>Symnaps sta leggendo il tuo grafo...</span>
+      <div class="spinner"></div><span>${TT('Symnaps sta leggendo il tuo grafo...')}</span>
     </div>
     <div id="sq-list" style="display:none;flex-direction:column;gap:6px"></div>`;
   body.appendChild(sqSection);
@@ -1263,7 +1268,7 @@ function renderDrawerBody(task){
   // Delete task button
   const delSection = document.createElement('div');
   delSection.style.cssText = 'margin-top:8px;padding-top:16px;border-top:1px solid var(--border)';
-  delSection.innerHTML = `<button id="del-task-btn" style="width:100%;background:none;border:1px solid #3a1a1a;border-radius:10px;padding:11px;color:#c0506a;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;transition:all .2s">elimina questa task</button>`;
+  delSection.innerHTML = `<button id="del-task-btn" style="width:100%;background:none;border:1px solid #3a1a1a;border-radius:10px;padding:11px;color:#c0506a;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;transition:all .2s">${TT('elimina questa task')}</button>`;
   body.appendChild(delSection);
   setTimeout(()=>{
     const db=document.getElementById('del-task-btn');
@@ -1276,7 +1281,7 @@ function renderDrawerBody(task){
 }
 
 async function deleteTask(taskId){
-  if(!confirm('Eliminare questa task? Verranno rimosse anche le sue connessioni.')) return;
+  if(!confirm(TT('Eliminare questa task? Verranno rimosse anche le sue connessioni.'))) return;
   // Remove from local state
   TASKS = TASKS.filter(t=>t.id!==taskId);
   NODES = NODES.filter(n=>n.id!==taskId);
@@ -1359,10 +1364,10 @@ function openActionDrawer(an){
   const color=an.color||'#34d399';
   const body=document.getElementById('dr-body');
   const badge=document.getElementById('dr-badge');
-  badge.textContent='portafoglio tesi';
+  badge.textContent=TT('portafoglio tesi');
   badge.style.background=color+'22';badge.style.color=color;
   tintDrawer(color);
-  document.getElementById('dr-query').innerHTML=`<span style="font-size:13px;display:block;margin-bottom:4px;opacity:.6">▤ nodo azione</span>${an.title||'Portafoglio della tesi'}`;
+  document.getElementById('dr-query').innerHTML=`<span style="font-size:13px;display:block;margin-bottom:4px;opacity:.6">${TT('▤ nodo azione')}</span>${an.title||TT('Portafoglio della tesi')}`;
 
   const perf=an.performance;
   const perfMap={};
@@ -1405,7 +1410,7 @@ function openActionDrawer(an){
 
   body.innerHTML=`
     <div>
-      <div class="section-lbl">logica del portafoglio</div>
+      <div class="section-lbl">${TT('logica del portafoglio')}</div>
       <div style="background:var(--bg3);border-left:2px solid ${color};border-radius:0 12px 12px 0;padding:14px 18px;font-family:'Fraunces',serif;font-size:14px;font-weight:300;color:var(--text);line-height:1.6">${an.summary||''}</div>
     </div>
     ${allocHTML}
@@ -1431,15 +1436,15 @@ function openMemoryDrawer(mn){
   const color=mn.color||'#a78bfa';
   const body=document.getElementById('dr-body');
   const badge=document.getElementById('dr-badge');
-  if(mn.status==='confirmed'){badge.textContent='tesi confermata ✓';badge.style.background='var(--green)22';badge.style.color='var(--green)';}
-  else if(mn.status==='invalidated'){badge.textContent='tesi invalidata ✕';badge.style.background='var(--red)22';badge.style.color='var(--red)';}
-  else{badge.textContent='tesi emergente';badge.style.background=color+'22';badge.style.color=color;}
+  if(mn.status==='confirmed'){badge.textContent=TT('tesi confermata ✓');badge.style.background='var(--green)22';badge.style.color='var(--green)';}
+  else if(mn.status==='invalidated'){badge.textContent=TT('tesi invalidata ✕');badge.style.background='var(--red)22';badge.style.color='var(--red)';}
+  else{badge.textContent=TT('tesi emergente');badge.style.background=color+'22';badge.style.color=color;}
   tintDrawer(color);
   const impAuthor=mn.imported_from_author||null;
-  const impBadge=impAuthor?`<span style="font-size:10px;color:#a78bfa;background:#241a3a;border-radius:6px;padding:2px 8px;margin-left:8px;vertical-align:middle">↘ importata · #${impAuthor}</span>`:'';
+  const impBadge=impAuthor?`<span style="font-size:10px;color:#a78bfa;background:#241a3a;border-radius:6px;padding:2px 8px;margin-left:8px;vertical-align:middle">${TT('↘ importata')} · #${impAuthor}</span>`:'';
   // Header compatto: il testo completo della tesi vive solo nell'hero
   // (prima era duplicato qui e nell'hero).
-  document.getElementById('dr-query').innerHTML=`<span style="font-size:13px;opacity:.6">◆ tesi</span>${mn.sector?`<span style="font-size:10px;color:var(--text2);background:var(--bg4);border-radius:6px;padding:2px 8px;margin-left:8px;vertical-align:middle">${mn.sector}</span>`:''}${impBadge}`;
+  document.getElementById('dr-query').innerHTML=`<span style="font-size:13px;opacity:.6">${TT('◆ tesi')}</span>${mn.sector?`<span style="font-size:10px;color:var(--text2);background:var(--bg4);border-radius:6px;padding:2px 8px;margin-left:8px;vertical-align:middle">${mn.sector}</span>`:''}${impBadge}`;
 
   // Timeline della history (senza wrapper/label: vive dentro la sezione
   // "evoluzione della tesi" insieme alle stats).
@@ -1478,18 +1483,18 @@ function openMemoryDrawer(mn){
   // come evolve nel tempo la convinzione, tutta in un posto solo.
   const evoHTML=`
     <div>
-      <div class="section-lbl">evoluzione della tesi</div>
+      <div class="section-lbl">${TT('evoluzione della tesi')}</div>
       <div class="intent-grid">
         <div class="icell"><span class="icell-k">sorgenti</span><span class="icell-v">${(mn.source_ids||[]).length} task</span></div>
-        <div class="icell"><span class="icell-k">età</span><span class="icell-v">${ageDays!==null?ageDays+' giorni':'—'}</span></div>
+        <div class="icell"><span class="icell-k">età</span><span class="icell-v">${ageDays!==null?ageDays+TT(' giorni'):'—'}</span></div>
         <div class="icell"><span class="icell-k">revisioni</span><span class="icell-v">${revs}</span></div>
-        <div class="icell"><span class="icell-k">Δ confidenza</span><span class="icell-v" style="color:${dTot>0?'var(--green)':dTot<0?'var(--red)':'var(--text2)'}">${dTot>0?'+':''}${dTot}%</span></div>
+        <div class="icell"><span class="icell-k">${TT('Δ confidenza')}</span><span class="icell-v" style="color:${dTot>0?'var(--green)':dTot<0?'var(--red)':'var(--text2)'}">${dTot>0?'+':''}${dTot}%</span></div>
       </div>
       ${expo.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">${expo.map(e=>`<span style="font-size:10px;padding:3px 10px;border-radius:20px;background:${color}11;border:1px solid ${color}33;color:${color}cc">${e}</span>`).join('')}</div>`:''}
       ${timelineHTML}
     </div>`;
   // Track record: stato di vita + accuratezza dedotti dai segnali reali (Fase 1).
-  const stMap={active:{l:'in corso',c:'var(--text2)',bg:'var(--bg3)'},confirmed:{l:'confermata ✓',c:'var(--green)',bg:'#0f2a1c'},invalidated:{l:'invalidata ✕',c:'var(--red)',bg:'#2a0f0f'}};
+  const stMap={active:{l:TT('in corso'),c:'var(--text2)',bg:'var(--bg3)'},confirmed:{l:TT('confermata ✓'),c:'var(--green)',bg:'#0f2a1c'},invalidated:{l:TT('invalidata ✕'),c:'var(--red)',bg:'#2a0f0f'}};
   const stt=stMap[mn.status||'active']||stMap.active;
   const accStr=(mn.accuracy==null)?'—':mn.accuracy+'%';
   // Denominatore segnali: se la tesi è già valutata usa signals_total (autorevole,
@@ -1509,9 +1514,9 @@ function openMemoryDrawer(mn){
   // più comune di confusione (segnali presenti ma non ancora valutati).
   let trackNote='';
   if(denom===0) trackNote='Nessun segnale misurabile su dati di mercato: questa tesi non ha un track record automatico.';
-  else if(!evaluated) trackNote='Segnali non ancora valutati — vengono controllati sui dati reali alla prossima apertura.';
-  else if(mn.accuracy==null) trackNote='Servono almeno 2 segnali scattati per un verdetto e una percentuale di accuratezza.';
-  const badgeLabel=mn.status==='confirmed'?'tesi confermata':mn.status==='invalidated'?'tesi invalidata':'tesi emergente';
+  else if(!evaluated) trackNote=TT('Segnali non ancora valutati — vengono controllati sui dati reali alla prossima apertura.');
+  else if(mn.accuracy==null) trackNote=TT('Servono almeno 2 segnali scattati per un verdetto e una percentuale di accuratezza.');
+  const badgeLabel=mn.status==='confirmed'?TT('tesi confermata'):mn.status==='invalidated'?TT('tesi invalidata'):TT('tesi emergente');
   // "Cosa la conferma": primo segnale di conferma leggibile — il punto d'aggancio
   // più utile a colpo d'occhio.
   const firstConfirm=(mn.signals?(mn.signals.confirm||[]).map(s=>typeof s==='string'?s:(s&&s.text)).filter(Boolean)[0]:'')||'';
@@ -1537,13 +1542,13 @@ function openMemoryDrawer(mn){
   const publishHTML=imported?`
     <div>
       <div class="section-lbl">marketplace</div>
-      <div style="font-size:11px;color:var(--text2);line-height:1.6;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px">↘ Importata dal marketplace${impAuthor?` da #${impAuthor}`:''} — il track record è azzerato e si ricostruisce sui dati da oggi in poi. Non ripubblicabile.</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.6;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px">${TT('↘ Importata dal marketplace')}${impAuthor?`${TT(' da #')}${impAuthor}`:''}${TT(' — il track record è azzerato e si ricostruisce sui dati da oggi in poi. Non ripubblicabile.')}</div>
     </div>`:`
     <div>
       <div class="section-lbl">marketplace</div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg3);border:1px solid ${pub?color+'55':'var(--border)'};border-radius:10px;padding:10px 14px">
-        <div id="mem-publish-msg-${mn.id}" style="font-size:11px;color:var(--text2);line-height:1.5">${pub?'Pubblica: altri possono trovarla e importarla':'Privata: visibile solo a te'}</div>
-        <button id="mem-publish-${mn.id}" data-cluster="${mn.clusterId}" style="flex-shrink:0;background:${pub?color:'transparent'};color:${pub?'#08080a':'var(--text2)'};border:1px solid ${pub?color:'var(--border)'};border-radius:8px;padding:6px 12px;font-size:11px;font-weight:500;cursor:pointer">${pub?'pubblicata ✓':'pubblica'}</button>
+        <div id="mem-publish-msg-${mn.id}" style="font-size:11px;color:var(--text2);line-height:1.5">${pub?TT('Pubblica: altri possono trovarla e importarla'):TT('Privata: visibile solo a te')}</div>
+        <button id="mem-publish-${mn.id}" data-cluster="${mn.clusterId}" style="flex-shrink:0;background:${pub?color:'transparent'};color:${pub?'#08080a':'var(--text2)'};border:1px solid ${pub?color:'var(--border)'};border-radius:8px;padding:6px 12px;font-size:11px;font-weight:500;cursor:pointer">${pub?TT('pubblicata ✓'):TT('pubblica')}</button>
       </div>
     </div>`;
   // Segnali: una riga per segnale con stato esplicito. I segnali 'manual'
@@ -1556,32 +1561,32 @@ function openMemoryDrawer(mn){
     const testable=_sigTestable(o);
     let st,tip='';
     if(!testable){
-      st='<span class="sig-status" style="color:var(--text3)">verifica manuale</span>';
+      st=`<span class="sig-status" style="color:var(--text3)">${TT('verifica manuale')}</span>`;
       tip=' title="Non misurabile automaticamente (misuriamo prezzi, fondamentali TTM e serie macro FRED): resta come nota, non conta nel track record."';
     }
-    else if(o.fired) st=`<span class="sig-status" style="color:${c}">● scattato</span>`;
-    else if(o.checked_at) st='<span class="sig-status">○ non ancora</span>';
-    else st='<span class="sig-status">○ in attesa</span>';
+    else if(o.fired) st=`<span class="sig-status" style="color:${c}">${TT('● scattato')}</span>`;
+    else if(o.checked_at) st=`<span class="sig-status">${TT('○ non ancora')}</span>`;
+    else st=`<span class="sig-status">${TT('○ in attesa')}</span>`;
     return `<div class="sig-row"${tip}><span class="sig-mark" style="color:${c}">${side==='confirm'?'✓':'✗'}</span><span class="sig-txt">${o.text||''}</span>${st}</div>`;
   };
   const signalsHTML=(sg&&(((sg.confirm||[]).length)||((sg.invalidate||[]).length)))?`
     <div>
-      <div class="section-lbl">segnali da monitorare</div>
+      <div class="section-lbl">${TT('segnali da monitorare')}</div>
       <div class="sig-grid">
         <div class="sig-col" style="border-color:#1f4a3366">
-          <div class="sig-head" style="color:var(--green)">la rafforzano</div>
-          ${(sg.confirm||[]).map(s=>sigRow(s,'confirm')).join('')||'<div class="sig-empty">nessun segnale</div>'}
+          <div class="sig-head" style="color:var(--green)">${TT('la rafforzano')}</div>
+          ${(sg.confirm||[]).map(s=>sigRow(s,'confirm')).join('')||`<div class="sig-empty">${TT('nessun segnale')}</div>`}
         </div>
         <div class="sig-col" style="border-color:#4a1f1f66">
-          <div class="sig-head" style="color:var(--red)">la indeboliscono</div>
-          ${(sg.invalidate||[]).map(s=>sigRow(s,'invalidate')).join('')||'<div class="sig-empty">nessun segnale</div>'}
+          <div class="sig-head" style="color:var(--red)">${TT('la indeboliscono')}</div>
+          ${(sg.invalidate||[]).map(s=>sigRow(s,'invalidate')).join('')||`<div class="sig-empty">${TT('nessun segnale')}</div>`}
         </div>
       </div>
     </div>`:'';
   // Perché + pattern insieme: il pattern è meta secondaria, collassato.
   const whyHTML=(mn.explanation||mn.pattern)?`
     <div>
-      ${mn.explanation?`<div class="section-lbl">perché questa tesi</div>
+      ${mn.explanation?`<div class="section-lbl">${TT('perché questa tesi')}</div>
       <div style="font-size:12px;color:var(--text2);line-height:1.7">${mn.explanation}</div>`:''}
       ${mn.pattern?`<details class="meta-fold"${mn.explanation?' style="margin-top:14px"':''}><summary>pattern rilevato</summary>
         <div style="background:var(--bg3);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--text2);line-height:1.7;font-family:'Fraunces',serif;font-weight:300">${mn.pattern}</div>
@@ -1591,29 +1596,29 @@ function openMemoryDrawer(mn){
   // Gerarchia di lettura: la tesi → le prove → evoluzione → metti alla prova
   // → contesto. Stessa grammatica a bande della scheda task.
   body.innerHTML=`
-    ${bandHTML('la tesi',color)}
+    ${bandHTML(TT('la tesi'),color)}
     ${heroHTML}
-    ${(signalsHTML||whyHTML)?bandHTML('le prove',color):''}
+    ${(signalsHTML||whyHTML)?bandHTML(TT('le prove'),color):''}
     ${signalsHTML}
     ${whyHTML}
-    ${bandHTML('evoluzione',color)}
+    ${bandHTML(TT('evoluzione'),color)}
     ${evoHTML}
-    ${bandHTML('metti alla prova',color)}
+    ${bandHTML(TT('metti alla prova'),color)}
     <div>
       <div class="section-lbl">avvocato del diavolo</div>
       <div id="mem-challenge-area-${mn.id}"></div>
     </div>
     <div>
-      <div class="section-lbl">portafoglio della tesi</div>
+      <div class="section-lbl">${TT('portafoglio della tesi')}</div>
       <div id="mem-portfolio-area-${mn.id}"></div>
     </div>
     ${mn.suggested_question?`<div>
-      <div class="section-lbl">prossimo passo suggerito</div>
+      <div class="section-lbl">${TT('prossimo passo suggerito')}</div>
       <div id="mem-suggested-q-${mn.id}" style="background:${color}11;border:1px dashed ${color}44;border-radius:12px;padding:14px 16px;font-size:12px;color:${color};cursor:pointer;line-height:1.5">
         → ${mn.suggested_question}
       </div>
     </div>`:''}
-    ${bandHTML('contesto',color)}
+    ${bandHTML(TT('contesto'),color)}
     ${(mn.source_ids||[]).length?`<div>
       <div class="section-lbl">task sorgente (${(mn.source_ids||[]).length})</div>
       <div class="memory-sources">
@@ -1642,15 +1647,15 @@ function openMemoryDrawer(mn){
         const r=await fetch('/api/market/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clusterId:mn.clusterId,public:next})});
         const j=await r.json().catch(()=>({}));
         if(!r.ok){
-          const msgs={low_confidence:'Serve confidenza ≥60% per pubblicarla',imported_no_republish:'Tesi importata: non ripubblicabile',limit_reached:'Hai raggiunto il massimo di tesi pubbliche (20)',not_found:'Tesi non ancora salvata, riprova tra un istante',no_handle:'Scegli un nome pubblico (profilo) prima di pubblicare'};
+          const msgs={low_confidence:TT('Serve confidenza ≥60% per pubblicarla'),imported_no_republish:TT('Tesi importata: non ripubblicabile'),limit_reached:TT('Hai raggiunto il massimo di tesi pubbliche (20)'),not_found:TT('Tesi non ancora salvata, riprova tra un istante'),no_handle:TT('Scegli un nome pubblico (profilo) prima di pubblicare')};
           const m=document.getElementById(`mem-publish-msg-${mn.id}`);
           if(m){m.textContent=msgs[j.error]||'Operazione non riuscita';m.style.color='var(--red)';}
-          pubBtn.disabled=false;pubBtn.textContent=mn.is_public?'pubblicata ✓':'pubblica';
+          pubBtn.disabled=false;pubBtn.textContent=mn.is_public?TT('pubblicata ✓'):TT('pubblica');
           return;
         }
         mn.is_public=next;
         openMemoryDrawer(mn); // re-render con lo stato aggiornato
-      }catch(e){pubBtn.disabled=false;pubBtn.textContent='riprova';}
+      }catch(e){pubBtn.disabled=false;pubBtn.textContent=TT('riprova');}
     });
     renderPortfolioArea(mn);
     renderChallengeArea(mn);
@@ -1669,19 +1674,19 @@ function renderPortfolioArea(mn){
   if(exists){
     area.innerHTML=`<div style="background:#34d39911;border:1px solid #34d39944;border-radius:12px;padding:14px 16px;font-size:12px;color:#34d399;line-height:1.5">▤ portafoglio già generato — lo trovi come quadrato verde collegato a questa tesi sul grafo</div>`;
   } else if(inFlight){
-    area.innerHTML=`<div style="background:var(--bg3);border-radius:12px;padding:14px 16px;font-size:12px;color:var(--text3)">generazione in corso…</div>`;
+    area.innerHTML=`<div style="background:var(--bg3);border-radius:12px;padding:14px 16px;font-size:12px;color:var(--text3)">${TT(TT('generazione in corso…'))}</div>`;
   } else if(mn.confidence<75){
     area.innerHTML=`<div style="background:var(--bg3);border-radius:12px;padding:14px 16px;font-size:12px;color:var(--text3);line-height:1.5">Il portafoglio si può generare quando la tesi raggiunge il 75% di confidenza (ora ${mn.confidence}%). Continua a fare domande sul tema per rafforzarla.</div>`;
   } else {
-    area.innerHTML=`<button id="gen-portfolio-${mn.id}" style="width:100%;background:#34d39915;border:1px solid #34d39955;border-radius:12px;padding:14px 16px;font-size:13px;color:#34d399;cursor:pointer;font-family:inherit;transition:background .2s">⊞ genera portafoglio da questa tesi</button>
-    <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.5">Traduce la tesi in categorie di asset e strumenti, con taglio educativo.</div>`;
+    area.innerHTML=`<button id="gen-portfolio-${mn.id}" style="width:100%;background:#34d39915;border:1px solid #34d39955;border-radius:12px;padding:14px 16px;font-size:13px;color:#34d399;cursor:pointer;font-family:inherit;transition:background .2s">${TT('⊞ genera portafoglio da questa tesi')}</button>
+    <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.5">${TT('Traduce la tesi in categorie di asset e strumenti, con taglio educativo.')}</div>`;
     const btn=document.getElementById(`gen-portfolio-${mn.id}`);
     if(btn){
       btn.addEventListener('mouseenter',()=>btn.style.background='#34d39925');
       btn.addEventListener('mouseleave',()=>btn.style.background='#34d39915');
       btn.addEventListener('click',async()=>{
         btn.disabled=true;
-        btn.textContent='generazione in corso…';
+        btn.textContent=TT('generazione in corso…');
         btn.style.cursor='default';
         await genActionForThesis(mn);
         renderPortfolioArea(mn); // refresh to show the "already generated" state
@@ -1712,7 +1717,7 @@ function renderChallengeArea(mn){
   } else if(inFlight){
     area.innerHTML=`<div style="background:var(--bg3);border-radius:12px;padding:14px 16px;font-size:12px;color:var(--text3)">costruzione del caso contrario…</div>`;
   } else {
-    area.innerHTML=`<button id="gen-challenge-${mn.id}" style="width:100%;background:#e0557715;border:1px solid #e0557755;border-radius:12px;padding:14px 16px;font-size:13px;color:#e05577;cursor:pointer;font-family:inherit;transition:background .2s">⚔ sfida questa tesi</button>
+    area.innerHTML=`<button id="gen-challenge-${mn.id}" style="width:100%;background:#e0557715;border:1px solid #e0557755;border-radius:12px;padding:14px 16px;font-size:13px;color:#e05577;cursor:pointer;font-family:inherit;transition:background .2s">${TT('⚔ sfida questa tesi')}</button>
     <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.5">Costruisce il miglior caso contrario con dati aggiornati — per testare la solidità della tesi.</div>`;
     const btn=document.getElementById(`gen-challenge-${mn.id}`);
     if(btn){
@@ -1740,7 +1745,7 @@ async function genChallengeForThesis(mn){
     });
     const json=await res.json();
     if(json.error||!json.result){
-      if(json.error==='limit_reached') alert('Limite mensile di chiamate AI raggiunto.');
+      if(json.error==='limit_reached') alert(TT('Limite mensile di chiamate AI raggiunto.'));
       return;
     }
     mn.challenge=json.result; // già persistita server-side dalla route
@@ -1904,14 +1909,14 @@ function renderProtoTheses(){
   // Titolo del pannello: "spunti" quando mostra i seed dal portafoglio,
   // "tesi in formazione" altrimenti — prima era fuorviante.
   const _pt=document.getElementById('proto-title');
-  if(_pt) _pt.textContent=(!list.length&&SEED_SPUNTI&&SEED_SPUNTI.length)?'◈ spunti dal tuo portafoglio':'◆ tesi in formazione';
+  if(_pt) _pt.textContent=(!list.length&&SEED_SPUNTI&&SEED_SPUNTI.length)?TT('◈ spunti dal tuo portafoglio'):TT('◆ tesi in formazione');
   if(!list.length){
     // Spunti dal portafoglio (seed): mostrali finché non ci sono tesi vere.
     if(SEED_SPUNTI && SEED_SPUNTI.length){
       panel.classList.add('show');
       const cntS=document.getElementById('proto-count'); if(cntS) cntS.textContent=SEED_SPUNTI.length;
       const bS=document.getElementById('proto-body');
-      if(bS) bS.innerHTML=SEED_SPUNTI.map((q,i)=>'<div class="proto-row"><div class="proto-thesis">'+(q.q||'').replace(/</g,'&lt;')+'</div><div class="proto-meta" style="color:var(--text3);line-height:1.4">'+(q.reason||'').replace(/</g,'&lt;')+'</div><button class="proto-dev" onclick="runSpunto('+i+')">esplora →</button></div>').join('');
+      if(bS) bS.innerHTML=SEED_SPUNTI.map((q,i)=>'<div class="proto-row"><div class="proto-thesis">'+(q.q||'').replace(/</g,'&lt;')+'</div><div class="proto-meta" style="color:var(--text3);line-height:1.4">'+(q.reason||'').replace(/</g,'&lt;')+'</div><button class="proto-dev" onclick="runSpunto('+i+')">'+TT('esplora →')+'</button></div>').join('');
       return;
     }
     // Cold start: poche domande e nessuna tesi ancora → trasforma il vuoto in
@@ -1933,7 +1938,7 @@ function renderProtoTheses(){
     const t=(p.thesis||'').replace(/"/g,'&quot;');
     const sq=(p.suggested_question||'').replace(/"/g,'&quot;');
     const ex=(p.explanation||'').replace(/"/g,'&quot;');
-    const need = p.sources<2 ? 'serve 1 domanda in più' : 'conferma '+p.confidence+'%';
+    const need = p.sources<2 ? TT('serve 1 domanda in più') : 'conferma '+p.confidence+'%';
     return '<div class="proto-row">'+
       '<div class="proto-thesis" title="'+ex+'">'+t+'</div>'+
       '<div class="proto-meta"><span class="proto-bar"><i style="width:'+Math.min(100,p.confidence)+'%"></i></span><span class="proto-need">'+need+'</span></div>'+
@@ -2328,7 +2333,7 @@ async function runTask(){
       body: JSON.stringify({ query, priorContext: prevCtx, lang: SYN_LANG })
     });
     const json = await res.json();
-    if (json.error === 'limit_reached') { stopLoading(); alert('Hai raggiunto il limite di ' + json.limit + ' analisi del piano ' + json.plan + ' questo mese. Scopri il piano Pro su /pricing.'); isLoading=false; document.getElementById('sb').disabled=false; return; }
+    if (json.error === 'limit_reached') { stopLoading(); alert(TT('Hai raggiunto il limite di ') + json.limit + TT(' analisi del piano ') + json.plan + TT(' questo mese. Scopri il piano Pro su /pricing.')); isLoading=false; document.getElementById('sb').disabled=false; return; }
     if (json.error) throw new Error(json.error);
     const parsed = json.result;
     if (json.usage) { window.__SYN_USAGE = json.usage; updateUsageLabel(); }
@@ -2363,7 +2368,7 @@ async function runTask(){
     const saved=await persistTask(task);
     if(!saved){
       task.unsaved=true;
-      showNotif('⚠ salvataggio non riuscito — la domanda potrebbe non essere conservata. Controlla la connessione e riprova.', 9000, 'error');
+      showNotif(TT('⚠ salvataggio non riuscito — la domanda potrebbe non essere conservata. Controlla la connessione e riprova.'), 9000, 'error');
     }
 
     updateStats();
@@ -2385,7 +2390,7 @@ async function runTask(){
 
   }catch(err){
     stopLoading();
-    alert('Errore: '+err.message);
+    alert(TT('Errore: ')+err.message);
   }finally{
     isLoading=false;
     document.getElementById('sb').disabled=false;
@@ -2466,7 +2471,7 @@ function updateStats(){
 // ═══ LOADING ANIMATION ═══
 let loadingAnimFrame = null;
 let loadingPhase = 0;
-const LOAD_LABELS = ['parsing intent semantico','ricerca web se necessaria','analizzando contesto macro','costruendo fingerprint e output'];
+const LOAD_LABELS = [TT('parsing intent semantico'),TT('ricerca web se necessaria'),TT('analizzando contesto macro'),TT('costruendo fingerprint e output')];
 
 function startLoading(queryText){
   document.getElementById('loverlay').classList.add('show');
@@ -2670,15 +2675,15 @@ document.getElementById('qi').addEventListener('input',function(){this.style.hei
           const win=window.open(url,'_blank');
           const notif=document.getElementById('mem-notif');
           if(notif){
-            document.getElementById('mem-notif-text').textContent=copied?'🔗 link copiato negli appunti':'🔗 grafo pubblico creato';
+            document.getElementById('mem-notif-text').textContent=copied?TT('🔗 link copiato negli appunti'):TT('🔗 grafo pubblico creato');
             const nb=notif.querySelector('.mem-notif-btn');
-            if(nb){ nb.textContent='apri →'; nb.onclick=()=>{ window.open(url,'_blank'); }; }
+            if(nb){ nb.textContent=TT('apri →'); nb.onclick=()=>{ window.open(url,'_blank'); }; }
             notif.classList.add('show');
             setTimeout(()=>notif.classList.remove('show'), win?6000:12000);
           }
           try{ if(window.posthog) window.posthog.capture('graph_shared'); }catch(e){}
         } else if(json.error==='empty_graph'){
-          alert('Fai almeno una domanda prima di condividere il grafo.');
+          alert(TT('Fai almeno una domanda prima di condividere il grafo.'));
         }
       }catch(e){ console.warn('share failed', e); }
       shb.disabled=false; shb.textContent=old;
