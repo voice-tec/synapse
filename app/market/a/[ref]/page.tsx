@@ -57,6 +57,7 @@ export default function AuthorPage() {
       });
       const j = await r.json();
       setImp((m) => ({ ...m, [id]: j.imported ? 'done' : j.duplicate ? 'duplicate' : 'error' }));
+      try { if (j.imported) (window as any).posthog?.capture('thesis_imported'); } catch {}
     } catch { setImp((m) => ({ ...m, [id]: 'error' })); }
   };
 

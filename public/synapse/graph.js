@@ -1756,6 +1756,7 @@ function openMemoryDrawer(mn){
           return;
         }
         mn.is_public=next;
+        try{ if(next&&window.posthog) window.posthog.capture('thesis_published'); }catch(e){}
         openMemoryDrawer(mn); // re-render con lo stato aggiornato
       }catch(e){pubBtn.disabled=false;pubBtn.textContent=TT('riprova');}
     });

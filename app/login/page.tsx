@@ -153,12 +153,14 @@ export default function LoginPage() {
         // email" step needed.
         const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
         if (signInErr) throw signInErr;
+        try { (window as any).posthog?.identify(email); (window as any).posthog?.capture('signup'); } catch {}
         // Full reload, NON navigazione SPA: lo script del grafo inietta stato
         // globale (TASKS, NODES, __SYN_INITIALIZED) che deve morire col cambio utente
         window.location.href = '/';
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        try { (window as any).posthog?.identify(email); (window as any).posthog?.capture('login'); } catch {}
         window.location.href = '/';
       }
     } catch (e: any) {

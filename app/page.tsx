@@ -147,6 +147,8 @@ export default function SynapsePage() {
       (window as any).__SYN_PORTFOLIO = (profile as any)?.portfolio || [];
       (window as any).__SYN_DISPLAY_NAME = (profile as any)?.display_name || '';
       (window as any).__SYN_EMAIL = user.email || '';
+      // Analytics per-utente (person_profiles: identified_only richiede identify)
+      try { (window as any).posthog?.identify(user.email || user.id); } catch {}
 
       // Portafoglio reale: salvato su profiles.portfolio, iniettato nei prompt
       // da /api/analyze e /api/portfolio per il collegamento esposizione.
