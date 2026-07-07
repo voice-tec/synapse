@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
+import { createAdminClient } from '@/lib/supabase-admin';
+import { wordOverlap } from '@/lib/text';
+import { signalsPredicatesEqual } from '@/lib/fork';
 
 // Pubblica/ritira una propria tesi dal marketplace (opt-in per tesi).
-// Anti-spam in pubblicazione: confidence minima, tetto di tesi pubbliche, e
-// niente ripubblicazione di tesi a loro volta importate (no ricircolo).
+// Anti-spam in pubblicazione: confidence minima, tetto di tesi pubbliche.
+// Le tesi importate dal marketplace sono ripubblicabili come FORK solo se
+// modificate rispetto all'origine (testo o predicati dei segnali) — copiare
+// una tesi buona e ripubblicarla identica per rubarne la reputazione resta
+// impossibile. Import da grafo condiviso / origine cancellata: nessuna origine
+// da diffare → non ripubblicabile come prima.
 // RLS garantisce che si tocchi solo una tesi del chiamante.
 const MIN_PUBLISH_CONF = 60;
 const MAX_PUBLIC = 20;
@@ -20,7 +27,7 @@ export async function POST(req: NextRequest) {
 
   const { data: th, error: thErr } = await supabase
     .from('theses')
-    .select('id, confidence, imported_from_token, imported_from_author, is_public')
+    .select('id, thesis, signals, confidence, imported_from_token, imported_from_author, imported_from_thesis, is_public')
     .eq('user_id', user.id)
     .eq('cluster_id', clusterId)
     .maybeSingle();
@@ -28,7 +35,17 @@ export async function POST(req: NextRequest) {
   if (!th) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 
   if (isPublic) {
-    if (th.imported_from_token || th.imported_from_author) {
+    if (th.imported_from_thesis) {
+      // Fork: confronto con l'origine (lettura cross-utente → admin).
+      const { data: origin } = await createAdminClient()
+        .from('theses').select('thesis, signals')
+        .eq('id', th.imported_from_thesis).maybeSingle();
+      if (!origin) return NextResponse.json({ error: 'imported_no_republish' }, { status: 400 });
+      const unchanged =
+        wordOverlap(th.thesis || '', origin.thesis || '') >= 0.9 &&
+        signalsPredicatesEqual(th.signals, origin.signals);
+      if (unchanged) return NextResponse.json({ error: 'fork_unchanged' }, { status: 400 });
+    } else if (th.imported_from_token || th.imported_from_author) {
       return NextResponse.json({ error: 'imported_no_republish' }, { status: 400 });
     }
     if ((th.confidence ?? 0) < MIN_PUBLISH_CONF) {
