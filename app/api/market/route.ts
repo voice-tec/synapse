@@ -21,18 +21,21 @@ export async function GET(req: NextRequest) {
   const admin = createAdminClient();
   const params = req.nextUrl.searchParams;
   const sectorFilter = params.get('sector')?.trim() || '';
+  // status=confirmed → sezione "Confermate" della home (solo verdetti chiusi positivi).
+  const statusFilter = params.get('status') === 'confirmed' ? 'confirmed' : '';
   const sort = ['rep', 'recent', 'accuracy'].includes(params.get('sort') || '') ? params.get('sort')! : 'rep';
   const limit = Math.min(50, Math.max(1, parseInt(params.get('limit') || '20', 10) || 20));
   const offset = Math.min(500, Math.max(0, parseInt(params.get('offset') || '0', 10) || 0));
 
   let pubQ = admin
     .from('theses')
-    .select('id, user_id, thesis, confidence, explanation, signals, status, accuracy, created_at, sector')
+    .select('id, user_id, thesis, confidence, explanation, signals, status, accuracy, created_at, updated_at, sector')
     .eq('is_public', true)
     // Tetto Supabase: oltre 1000 pubbliche il totale diventa "almeno 1000".
     // Accettato oggi (max 20 pubbliche/autore = servono 50+ autori attivi).
     .limit(1000);
   if (sectorFilter) pubQ = pubQ.eq('sector', sectorFilter);
+  if (statusFilter) pubQ = pubQ.eq('status', statusFilter);
 
   const { data: pub, error: pubErr } = await pubQ;
   if (pubErr) return NextResponse.json({ error: 'market_unavailable' }, { status: 500 });
@@ -71,12 +74,14 @@ export async function GET(req: NextRequest) {
     status: t.status || 'active',
     accuracy: t.accuracy ?? null,
     created_at: t.created_at,
+    updated_at: t.updated_at || t.created_at,
     sector: normalizeSector(t.sector),
     signals: t.signals ? { confirm: sigText(t.signals.confirm), invalidate: sigText(t.signals.invalidate) } : null,
     author: authorRef(t.user_id),
     authorName: nameByUser.get(t.user_id) || null,
     authorRep: authorRep(byUser.get(t.user_id) || []),
     imports: 0,
+    forks: 0,
   }));
 
   const recency = (a: { created_at: string }, b: { created_at: string }) =>
@@ -97,18 +102,22 @@ export async function GET(req: NextRequest) {
 
   const items = all.slice(offset, offset + limit);
 
-  // Import ricevuti: conteggio dei cloni che puntano alle tesi in pagina.
+  // Import e fork ricevuti: cloni che puntano alle tesi in pagina; un clone a
+  // sua volta pubblico è un FORK (lineage visibile nel Knowledge Tree).
   // Fatto DOPO lo slice (solo gli id in pagina), per restare leggeri.
   if (items.length) {
     const { data: clones } = await admin
       .from('theses')
-      .select('imported_from_thesis')
+      .select('imported_from_thesis, is_public')
       .in('imported_from_thesis', items.map((i) => i.id));
     const counts = new Map<string, number>();
+    const forkCounts = new Map<string, number>();
     for (const c of clones || []) {
-      if (c.imported_from_thesis) counts.set(c.imported_from_thesis, (counts.get(c.imported_from_thesis) || 0) + 1);
+      if (!c.imported_from_thesis) continue;
+      counts.set(c.imported_from_thesis, (counts.get(c.imported_from_thesis) || 0) + 1);
+      if (c.is_public) forkCounts.set(c.imported_from_thesis, (forkCounts.get(c.imported_from_thesis) || 0) + 1);
     }
-    for (const i of items) i.imports = counts.get(i.id) || 0;
+    for (const i of items) { i.imports = counts.get(i.id) || 0; i.forks = forkCounts.get(i.id) || 0; }
   }
 
   return NextResponse.json(
