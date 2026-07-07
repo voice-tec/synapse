@@ -269,7 +269,7 @@ export default function MarketPage() {
 
                 {trackItems.length > 0 && (
                   <div style={{ marginBottom: 26 }}>
-                    {sectionHead(lp.secTrack, null, () => openList('rep'))}
+                    {sectionHead(lp.secTrack, null, () => openList('accuracy'))}
                     {row(trackItems)}
                   </div>
                 )}
