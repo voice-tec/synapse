@@ -3,7 +3,7 @@
 // track record completo, accuratezza per tesi e per settore, tesi importabili.
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { type Item, type ImpState, type Rep, useAuthed, MarketTopbar, ThesisCard, AccuracyBar, StatBox, useMarketLang } from '../../ui';
+import { type Item, type Rep, useAuthed, MarketTopbar, ThesisCard, AccuracyBar, StatBox, useMarketLang } from '../../ui';
 
 const P = {
   it: {
@@ -34,8 +34,7 @@ export default function AuthorPage() {
   const [data, setData] = useState<AuthorData | null>(null);
   const [state, setState] = useState<'loading' | 'ok' | 'notfound' | 'error'>('loading');
   const isAuthed = useAuthed();
-  const [imp, setImp] = useState<Record<string, ImpState>>({});
-  const [mlang, , mt] = useMarketLang();
+  const [mlang] = useMarketLang();
   const lp = P[mlang];
 
   useEffect(() => {
@@ -47,19 +46,6 @@ export default function AuthorPage() {
       setData(j); setState('ok');
     }).catch(() => setState('error'));
   }, [ref]);
-
-  const importThesis = async (id: string) => {
-    setImp((m) => ({ ...m, [id]: 'loading' }));
-    try {
-      const r = await fetch('/api/import', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ thesisId: id }),
-      });
-      const j = await r.json();
-      setImp((m) => ({ ...m, [id]: j.imported ? 'done' : j.duplicate ? 'duplicate' : 'error' }));
-      try { if (j.imported) (window as any).posthog?.capture('thesis_imported'); } catch {}
-    } catch { setImp((m) => ({ ...m, [id]: 'error' })); }
-  };
 
   return (
     <div style={{ minHeight: '100vh', background: '#08080a', color: '#e8e8f0', fontFamily: 'system-ui, sans-serif' }}>
@@ -109,9 +95,7 @@ export default function AuthorPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {data.theses.map((t) => (
                 <div key={t.id}>
-                  <ThesisCard
-                    it={{ ...t, author: data.author, authorName: data.name, authorRep: data.rep }}
-                    impState={imp[t.id] || 'idle'} onImport={importThesis} isAuthed={isAuthed} />
+                  <ThesisCard it={{ ...t, author: data.author, authorName: data.name, authorRep: data.rep }} />
                   <div style={{ padding: '6px 18px 0' }}>
                     <AccuracyBar accuracy={t.accuracy} status={t.status} />
                   </div>

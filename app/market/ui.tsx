@@ -11,6 +11,10 @@ export const MT = {
     mine: 'le mie pubblicazioni', plans: 'piani', yourGraph: 'il tuo grafo →',
     author: 'autore', confirmedWord: 'confermate', accuracyWord: 'accuratezza',
     importsWord: 'import', importsTitle: 'quante volte è stata importata da altri utenti',
+    forksWord: 'fork', forksTitle: 'import ripubblicati (modificati) da altri utenti',
+    trackTitle: "accuratezza media dell'autore su tutte le sue tesi",
+    updToday: 'aggiornata oggi', updYesterday: 'aggiornata ieri', updDaysAgo: (d: number) => `aggiornata ${d} gg fa`,
+    openBtn: 'apri →',
     conf: 'confidenza', imported: '✓ importata', already: '↘ già nel tuo grafo',
     alreadyTitle: "L'hai già importata: è nel tuo grafo", similar: 'hai già una tesi simile',
     retry: 'riprova', importing: 'importo…', save: '+ salva nel mio grafo', loginToImport: 'accedi per importare',
@@ -20,6 +24,10 @@ export const MT = {
     mine: 'my publications', plans: 'pricing', yourGraph: 'your graph →',
     author: 'author', confirmedWord: 'confirmed', accuracyWord: 'accuracy',
     importsWord: 'imports', importsTitle: 'how many times other users imported it',
+    forksWord: 'forks', forksTitle: 'imports republished (modified) by other users',
+    trackTitle: "author's average accuracy across all their theses",
+    updToday: 'updated today', updYesterday: 'updated yesterday', updDaysAgo: (d: number) => `updated ${d}d ago`,
+    openBtn: 'open →',
     conf: 'confidence', imported: '✓ imported', already: '↘ already in your graph',
     alreadyTitle: 'You already imported it: it is in your graph', similar: 'you already have a similar thesis',
     retry: 'retry', importing: 'importing…', save: '+ save to my graph', loginToImport: 'log in to import',
@@ -40,10 +48,10 @@ export const stFor = (t: MTDict): Record<string, { l: string; c: string }> => ({
 export type Rep = { theses: number; confirmed: number; invalidated: number; accuracy: number | null };
 export type Item = {
   id: string; thesis: string; confidence: number; explanation: string | null;
-  status: string; accuracy: number | null; created_at: string; sector: string;
+  status: string; accuracy: number | null; created_at: string; updated_at?: string; sector: string;
   signals: { confirm: string[]; invalidate: string[] } | null;
   author: string; authorName: string | null; authorRep: Rep;
-  imports: number;
+  imports: number; forks?: number; matchedTickers?: string[];
 };
 export type ImpState = 'idle' | 'loading' | 'done' | 'duplicate' | 'error' | 'already';
 
@@ -107,42 +115,54 @@ export function ImportsBadge({ n }: { n: number }) {
   );
 }
 
-export function ThesisCard({ it, impState, onImport, isAuthed }: {
-  it: Item; impState: ImpState; onImport: (id: string) => void; isAuthed: boolean;
-}) {
+// "aggiornata oggi / ieri / N gg fa" nella lingua corrente.
+export function updatedAgo(iso: string | undefined, t: MTDict): string | null {
+  if (!iso) return null;
+  const d = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
+  if (!isFinite(d)) return null;
+  return d === 0 ? t.updToday : d === 1 ? t.updYesterday : t.updDaysAgo(d);
+}
+
+// Card tesi (GitHub delle tesi): solo gli essenziali — confidenza, stato,
+// track record autore, fork, import, freschezza. L'import si fa dal dettaglio.
+// compact: variante stretta per le row orizzontali della home.
+export function ThesisCard({ it, compact }: { it: Item; compact?: boolean }) {
   const [, , t] = useMarketLang();
   const STL = stFor(t);
   const st = STL[it.status] || STL.active;
-  const s = impState;
+  const upd = updatedAgo(it.updated_at, t);
   return (
-    <div style={{ background: '#0e0e12', border: '1px solid #2a2a36', borderRadius: 14, padding: '16px 18px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, fontSize: 10, color: '#5a5a78', flexWrap: 'wrap' }}>
-        <span style={{ color: '#a78bfa' }}>◆ {t.conf} {it.confidence}%</span>
+    <div style={{
+      background: '#0e0e12', border: '1px solid #2a2a36', borderRadius: 14, padding: compact ? '12px 14px' : '16px 18px',
+      ...(compact ? { minWidth: 250, maxWidth: 290, flexShrink: 0, display: 'flex', flexDirection: 'column' } : {}),
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: 10, color: '#5a5a78', flexWrap: 'wrap' }}>
+        <span style={{ color: '#a78bfa' }}>◆ {it.confidence}%</span>
         <span style={{ color: st.c }}>{st.l}</span>
-        <ImportsBadge n={it.imports} />
-        {it.sector && <span style={{ marginLeft: 'auto', padding: '2px 8px', borderRadius: 6, background: '#16161e', color: '#7a7a95', textTransform: 'uppercase', letterSpacing: '.05em' }}>{it.sector}</span>}
+        {it.authorRep?.accuracy != null && <span style={{ color: '#5b9cf6' }} title={t.trackTitle}>📈 {it.authorRep.accuracy}%</span>}
+        {(it.forks || 0) > 0 && <span style={{ color: '#f0a030' }} title={t.forksTitle}>⑂ {it.forks}</span>}
+        {it.imports > 0 && <span style={{ color: '#4ad68a' }} title={t.importsTitle}>↘ {it.imports}</span>}
+        {!compact && it.sector && <span style={{ marginLeft: 'auto', padding: '2px 8px', borderRadius: 6, background: '#16161e', color: '#7a7a95', textTransform: 'uppercase', letterSpacing: '.05em' }}>{it.sector}</span>}
       </div>
-      <div style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic', fontSize: 16, fontWeight: 300, lineHeight: 1.5, color: '#d4bbff', marginBottom: 8 }}>"{it.thesis}"</div>
-      {it.explanation && <div style={{ fontSize: 11.5, color: '#7a7a95', lineHeight: 1.6, marginBottom: 10 }}>{it.explanation}</div>}
-      {it.signals && (
-        <div style={{ display: 'flex', gap: 12, fontSize: 10.5, lineHeight: 1.6, marginBottom: 12 }}>
-          <div style={{ flex: 1 }}>{it.signals.confirm.map((t, i) => <div key={i} style={{ color: '#4ad68a99' }}>✓ {t}</div>)}</div>
-          <div style={{ flex: 1 }}>{it.signals.invalidate.map((t, i) => <div key={i} style={{ color: '#e0555599' }}>✗ {t}</div>)}</div>
-        </div>
-      )}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderTop: '1px solid #1f1f28', paddingTop: 12 }}>
-        <div style={{ fontSize: 10.5, color: '#7a7a95' }}>
-          <RepLine authorRef={it.author} name={it.authorName} rep={it.authorRep} />
-        </div>
-        {isAuthed ? (
-          s === 'done' ? <span style={{ fontSize: 11.5, color: '#4ad68a' }}>{t.imported}</span>
-          : s === 'already' ? <span style={{ fontSize: 11.5, color: '#4ad68a' }} title={t.alreadyTitle}>{t.already}</span>
-          : s === 'duplicate' ? <span style={{ fontSize: 11.5, color: '#f0a030' }}>{t.similar}</span>
-          : s === 'error' ? <button onClick={() => onImport(it.id)} style={btnStyle}>{t.retry}</button>
-          : <button onClick={() => onImport(it.id)} disabled={s === 'loading'} style={{ ...btnStyle, opacity: s === 'loading' ? 0.6 : 1 }}>{s === 'loading' ? t.importing : t.save}</button>
-        ) : (
-          <a href="/login" style={{ ...btnStyle, textDecoration: 'none' }}>{t.loginToImport}</a>
-        )}
+      <a href={`/market/t/${it.id}`} style={{ textDecoration: 'none' }}>
+        <div style={{
+          fontFamily: "'Fraunces', serif", fontStyle: 'italic', fontWeight: 300, color: '#d4bbff',
+          fontSize: compact ? 13.5 : 16, lineHeight: 1.5, marginBottom: 8,
+          ...(compact ? { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' } : {}),
+        }}>"{it.thesis}"</div>
+      </a>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+        borderTop: '1px solid #1f1f28', paddingTop: compact ? 8 : 12, marginTop: compact ? 'auto' : 0,
+        fontSize: 10.5, color: '#7a7a95',
+      }}>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {compact
+            ? <a href={`/market/a/${it.author}`} style={{ color: '#9a9ab2', textDecoration: 'none' }}>{it.authorName || `#${it.author}`}</a>
+            : <RepLine authorRef={it.author} name={it.authorName} rep={it.authorRep} />}
+          {upd && <span style={{ color: '#5a5a78' }}> · {upd}</span>}
+        </span>
+        <a href={`/market/t/${it.id}`} style={{ flexShrink: 0, color: '#a78bfa', fontSize: 11, textDecoration: 'none' }}>{t.openBtn}</a>
       </div>
     </div>
   );
