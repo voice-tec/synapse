@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { authorRep, authorRef } from '@/lib/reputation';
 import { normalizeSector } from '@/lib/sectors';
+import { extractTickers } from '@/lib/market-tickers';
 
 // Vetrina marketplace: tesi pubbliche di tutti gli utenti, con la reputazione
 // (anonima) dell'autore. Lettura cross-utente → service role (RLS bloccherebbe).
@@ -76,6 +77,7 @@ export async function GET(req: NextRequest) {
     created_at: t.created_at,
     updated_at: t.updated_at || t.created_at,
     sector: normalizeSector(t.sector),
+    tickers: extractTickers(t.signals),
     signals: t.signals ? { confirm: sigText(t.signals.confirm), invalidate: sigText(t.signals.invalidate) } : null,
     author: authorRef(t.user_id),
     authorName: nameByUser.get(t.user_id) || null,

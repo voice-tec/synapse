@@ -13,8 +13,11 @@ const P = {
     desc: "Le tesi qui non si scaricano e basta: si importano, si forkano, evolvono — e ogni autore ha un track record misurato sui dati reali, non sui like.",
     stTheses: 'tesi pubbliche', stAuthors: 'autori attivi', stConfirmed: 'confermate', stAcc: 'accuratezza media', stAccOf: 'accuratezza',
     secTrending: '🔥 trending', secForYou: '🧠 per te', secConfirmed: '✓ confermate', secTrack: '📈 miglior track record', secNew: '🆕 nuove tesi',
+    secAll: '◆ le tesi della community',
     forYouSub: 'tesi di altri sui ticker del tuo portafoglio e delle tue tesi',
     seeAll: 'vedi tutte →', backHome: '← sezioni',
+    evPublished: 'pubblicata', evConfirmed: 'confermata ✓', evInvalidated: 'invalidata ✕', evImported: 'importata nel grafo di qualcuno',
+    agoToday: 'oggi', agoYesterday: 'ieri', agoDays: (d: number) => `${d}g fa`,
     loading: 'caricamento…', error: 'Marketplace non disponibile al momento. Riprova tra poco.',
     searchPh: 'cerca tra le tesi caricate…', allSectors: 'tutti i settori',
     sortRep: 'reputazione', sortRecent: 'recenti', sortAcc: 'accuratezza', onlyConfirmed: 'solo confermate ✓',
@@ -27,8 +30,11 @@ const P = {
     desc: "Theses here aren't just downloaded: they get imported, forked, they evolve — and every author has a track record measured on real data, not likes.",
     stTheses: 'public theses', stAuthors: 'active authors', stConfirmed: 'confirmed', stAcc: 'average accuracy', stAccOf: 'accuracy',
     secTrending: '🔥 trending', secForYou: '🧠 for you', secConfirmed: '✓ confirmed', secTrack: '📈 best track record', secNew: '🆕 new theses',
+    secAll: '◆ community theses',
     forYouSub: "others' theses on the tickers of your portfolio and your theses",
     seeAll: 'see all →', backHome: '← sections',
+    evPublished: 'published', evConfirmed: 'confirmed ✓', evInvalidated: 'invalidated ✕', evImported: "imported into someone's graph",
+    agoToday: 'today', agoYesterday: 'yesterday', agoDays: (d: number) => `${d}d ago`,
     loading: 'loading…', error: 'Marketplace unavailable right now. Try again shortly.',
     searchPh: 'search loaded theses…', allSectors: 'all sectors',
     sortRep: 'reputation', sortRecent: 'recent', sortAcc: 'accuracy', onlyConfirmed: 'confirmed only ✓',
@@ -47,8 +53,10 @@ type Trend = {
   imports14d: number; author: string; authorName: string | null;
 };
 type Sort = 'rep' | 'recent' | 'accuracy';
+type Activity = { type: 'published' | 'confirmed' | 'invalidated' | 'imported'; thesisId: string; thesis: string; author: string; authorName: string | null; date: string };
 const PAGE = 20;
 const ROW = 10; // item per sezione orizzontale
+const MIN_FOR_SECTIONS = 5; // sotto: vetrina unica (le sezioni ripeterebbero le stesse card)
 
 export default function MarketPage() {
   const isAuthed = useAuthed();
@@ -67,6 +75,8 @@ export default function MarketPage() {
   const [newItems, setNewItems] = useState<Item[]>([]);
   const [forMeItems, setForMeItems] = useState<Item[]>([]);
   const [homeState, setHomeState] = useState<'loading' | 'ok' | 'empty' | 'error'>('loading');
+  const [totalPublic, setTotalPublic] = useState(0);
+  const [activity, setActivity] = useState<Activity[]>([]);
 
   // ── Dati lista ──
   const [items, setItems] = useState<Item[]>([]);
@@ -79,12 +89,12 @@ export default function MarketPage() {
   const [sector, setSector] = useState<string>('');
   const [confirmedOnly, setConfirmedOnly] = useState(false);
 
-  const fetchItems = async (params: Record<string, string>): Promise<{ items: Item[]; hasMore: boolean } | null> => {
+  const fetchItems = async (params: Record<string, string>): Promise<{ items: Item[]; hasMore: boolean; total: number } | null> => {
     try {
       const r = await fetch(`/api/market?${new URLSearchParams(params)}`);
       const j = await r.json().catch(() => ({}));
       if (!r.ok || j.error) return null;
-      return { items: j.items || [], hasMore: !!j.hasMore };
+      return { items: j.items || [], hasMore: !!j.hasMore, total: j.total || 0 };
     } catch { return null; }
   };
 
@@ -100,8 +110,17 @@ export default function MarketPage() {
       setConfirmedItems(conf?.items || []);
       setTrackItems(track?.items || []);
       setNewItems(recent?.items || []);
+      setTotalPublic(recent?.total || 0);
       setHomeState((recent?.items || []).length ? 'ok' : 'empty');
     })();
+  }, []);
+
+  // Strip attività: eventi pubblici recenti. Best-effort, nascosta se pochi.
+  useEffect(() => {
+    fetch('/api/market/activity').then(async (r) => {
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && Array.isArray(j.events)) setActivity(j.events);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -181,6 +200,28 @@ export default function MarketPage() {
     return Math.round(withAcc.reduce((a, s) => a + (s.accuracy as number) * s.theses, 0) / tot);
   })();
 
+  // "oggi / ieri / Ng fa" per la strip attività.
+  const agoShort = (iso: string) => {
+    const d = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
+    return d === 0 ? lp.agoToday : d === 1 ? lp.agoYesterday : lp.agoDays(d);
+  };
+  const EV_STYLE: Record<Activity['type'], { icon: string; c: string }> = {
+    published: { icon: '◆', c: '#a78bfa' },
+    confirmed: { icon: '✓', c: '#4ad68a' },
+    invalidated: { icon: '✕', c: '#e05555' },
+    imported: { icon: '↘', c: '#4ad68a' },
+  };
+  const evLabel = (t: Activity['type']) =>
+    t === 'published' ? lp.evPublished : t === 'confirmed' ? lp.evConfirmed : t === 'invalidated' ? lp.evInvalidated : lp.evImported;
+
+  // Sezioni senza fotocopie: una tesi appare solo nella PRIMA sezione che la
+  // contiene (ordine di priorità: trending → per te → confermate → track → nuove).
+  const sections = (() => {
+    const seen = new Set<string>(trending.map((t) => t.id));
+    const take = (arr: Item[]) => arr.filter((it) => (seen.has(it.id) ? false : (seen.add(it.id), true)));
+    return { forMe: take(forMeItems), confirmed: take(confirmedItems), track: take(trackItems), recent: take(newItems) };
+  })();
+
   const sectionHead = (title: string, sub: string | null, onSeeAll: (() => void) | null) => (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 8 }}>
       <span style={{ fontSize: 11, color: '#9a9ab2', textTransform: 'uppercase', letterSpacing: '.06em' }}>{title}</span>
@@ -196,7 +237,7 @@ export default function MarketPage() {
 
   const row = (its: Item[]) => (
     <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
-      {its.map((it) => <ThesisCard key={it.id} it={it} compact />)}
+      {its.map((it, i) => <ThesisCard key={it.id} it={it} compact fadeIndex={i} />)}
     </div>
   );
 
@@ -221,64 +262,144 @@ export default function MarketPage() {
 
         {view === 'home' && (
           <>
-            {homeState === 'loading' && <div style={{ color: '#3a3a50', fontSize: 12 }}>{lp.loading}</div>}
+            {homeState === 'loading' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {[0, 1, 2].map((i) => <div key={i} className="mk-skel" style={{ height: 110 }} />)}
+              </div>
+            )}
             {homeState === 'error' && <div style={{ color: '#e05555', fontSize: 13 }}>{lp.error}</div>}
             {homeState === 'empty' && <div style={{ color: '#7a7a95', fontSize: 13 }}>{lp.empty}</div>}
 
             {homeState === 'ok' && (
               <>
-                {trending.length > 0 && (
-                  <div style={{ marginBottom: 26 }}>
-                    {sectionHead(lp.secTrending, null, null)}
-                    <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
-                      {trending.map((t) => {
-                        const st = ST[t.status] || ST.active;
+                {/* Strip attività: il nastro che fa respirare la pagina. */}
+                {activity.length >= 3 && (
+                  <div className="mk-fade" style={{ overflow: 'hidden', borderTop: '1px solid #1f1f28', borderBottom: '1px solid #1f1f28', padding: '8px 0', marginBottom: 24 }}>
+                    <div className="mk-tape">
+                      {activity.concat(activity).map((e, i) => {
+                        const s = EV_STYLE[e.type];
                         return (
-                          <div key={t.id} style={{ minWidth: 220, maxWidth: 260, flexShrink: 0, background: '#12101c', border: '1px solid #2f2545', borderRadius: 12, padding: '12px 14px' }}>
-                            <div style={{ display: 'flex', gap: 8, fontSize: 9.5, color: '#5a5a78', marginBottom: 6 }}>
-                              <span style={{ color: '#a78bfa' }}>◆ {t.confidence}%</span>
-                              <span style={{ color: st.c }}>{st.l}</span>
-                              {t.imports14d > 0 && <span style={{ color: '#4ad68a' }}>↘ {t.imports14d}</span>}
-                            </div>
-                            <a href={`/market/t/${t.id}`} style={{ textDecoration: 'none' }}>
-                              <div style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic', fontSize: 13, lineHeight: 1.45, color: '#d4bbff', marginBottom: 8, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>"{t.thesis}"</div>
-                            </a>
-                            <a href={`/market/a/${t.author}`} style={{ fontSize: 10, color: '#7a7a95', textDecoration: 'none' }}>
-                              {t.authorName || `#${t.author}`} →
-                            </a>
-                          </div>
+                          <a key={i} href={`/market/t/${e.thesisId}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 10.5, color: '#7a7a95', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                            <span style={{ color: s.c }}>{s.icon}</span>
+                            <span style={{ color: '#9a9ab2' }}>{e.authorName || `#${e.author}`}</span>
+                            <span>{evLabel(e.type)}</span>
+                            <span style={{ color: '#5a5a78', fontStyle: 'italic', fontFamily: "'Fraunces', serif" }}>
+                              «{e.thesis.slice(0, 46)}{e.thesis.length > 46 ? '…' : ''}»
+                            </span>
+                            <span style={{ color: '#3a3a50' }}>{agoShort(e.date)}</span>
+                          </a>
                         );
                       })}
                     </div>
                   </div>
                 )}
 
-                {forMeItems.length > 0 && (
+                {totalPublic < MIN_FOR_SECTIONS ? (
+                  /* Cold start: con poche tesi le sezioni sarebbero fotocopie —
+                     una vetrina sola con card piene. */
                   <div style={{ marginBottom: 26 }}>
-                    {sectionHead(lp.secForYou, lp.forYouSub, null)}
-                    {row(forMeItems)}
+                    {sectionHead(lp.secAll, null, null)}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      {newItems.map((it, i) => <ThesisCard key={it.id} it={it} fadeIndex={i} />)}
+                    </div>
                   </div>
-                )}
+                ) : (
+                  <>
+                    {trending.length >= 4 ? (
+                      /* Hero: prima trending grande + le successive impilate. */
+                      <div style={{ marginBottom: 26 }}>
+                        {sectionHead(lp.secTrending, null, null)}
+                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                          {(() => {
+                            const [first, ...rest] = trending;
+                            const st0 = ST[first.status] || ST.active;
+                            return (
+                              <>
+                                <a href={`/market/t/${first.id}`} className="mk-card mk-fade"
+                                  style={{ flex: '1.5 1 340px', textDecoration: 'none', background: '#12101c', border: '1px solid #2f2545', borderRadius: 14, padding: '20px 22px', display: 'flex', flexDirection: 'column' }}>
+                                  <div style={{ display: 'flex', gap: 8, fontSize: 10, color: '#5a5a78', marginBottom: 10 }}>
+                                    <span style={{ color: '#a78bfa' }}>◆ {first.confidence}%</span>
+                                    <span style={{ color: st0.c }}>{st0.l}</span>
+                                    {first.imports14d > 0 && <span style={{ color: '#4ad68a' }}>↘ {first.imports14d}</span>}
+                                  </div>
+                                  <div style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic', fontSize: 19, fontWeight: 300, lineHeight: 1.5, color: '#d4bbff', marginBottom: 12 }}>"{first.thesis}"</div>
+                                  <div style={{ marginTop: 'auto', fontSize: 10.5, color: '#7a7a95' }}>{first.authorName || `#${first.author}`} →</div>
+                                </a>
+                                <div style={{ flex: '1 1 260px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                  {rest.slice(0, 3).map((t, i) => {
+                                    const st = ST[t.status] || ST.active;
+                                    return (
+                                      <a key={t.id} href={`/market/t/${t.id}`} className="mk-card mk-fade"
+                                        style={{ animationDelay: `${(i + 1) * 60}ms`, flex: 1, textDecoration: 'none', background: '#12101c', border: '1px solid #2f2545', borderRadius: 12, padding: '10px 14px' }}>
+                                        <div style={{ display: 'flex', gap: 8, fontSize: 9.5, color: '#5a5a78', marginBottom: 4 }}>
+                                          <span style={{ color: '#a78bfa' }}>◆ {t.confidence}%</span>
+                                          <span style={{ color: st.c }}>{st.l}</span>
+                                          {t.imports14d > 0 && <span style={{ color: '#4ad68a' }}>↘ {t.imports14d}</span>}
+                                        </div>
+                                        <div style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic', fontSize: 12.5, lineHeight: 1.4, color: '#d4bbff', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>"{t.thesis}"</div>
+                                      </a>
+                                    );
+                                  })}
+                                </div>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    ) : trending.length > 0 && (
+                      <div style={{ marginBottom: 26 }}>
+                        {sectionHead(lp.secTrending, null, null)}
+                        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
+                          {trending.map((t, i) => {
+                            const st = ST[t.status] || ST.active;
+                            return (
+                              <div key={t.id} className="mk-card mk-fade" style={{ animationDelay: `${i * 60}ms`, minWidth: 220, maxWidth: 260, flexShrink: 0, background: '#12101c', border: '1px solid #2f2545', borderRadius: 12, padding: '12px 14px' }}>
+                                <div style={{ display: 'flex', gap: 8, fontSize: 9.5, color: '#5a5a78', marginBottom: 6 }}>
+                                  <span style={{ color: '#a78bfa' }}>◆ {t.confidence}%</span>
+                                  <span style={{ color: st.c }}>{st.l}</span>
+                                  {t.imports14d > 0 && <span style={{ color: '#4ad68a' }}>↘ {t.imports14d}</span>}
+                                </div>
+                                <a href={`/market/t/${t.id}`} style={{ textDecoration: 'none' }}>
+                                  <div style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic', fontSize: 13, lineHeight: 1.45, color: '#d4bbff', marginBottom: 8, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>"{t.thesis}"</div>
+                                </a>
+                                <a href={`/market/a/${t.author}`} style={{ fontSize: 10, color: '#7a7a95', textDecoration: 'none' }}>
+                                  {t.authorName || `#${t.author}`} →
+                                </a>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
 
-                {confirmedItems.length > 0 && (
-                  <div style={{ marginBottom: 26 }}>
-                    {sectionHead(lp.secConfirmed, null, () => openList('accuracy', true))}
-                    {row(confirmedItems)}
-                  </div>
-                )}
+                    {sections.forMe.length > 0 && (
+                      <div style={{ marginBottom: 26 }}>
+                        {sectionHead(lp.secForYou, lp.forYouSub, null)}
+                        {row(sections.forMe)}
+                      </div>
+                    )}
 
-                {trackItems.length > 0 && (
-                  <div style={{ marginBottom: 26 }}>
-                    {sectionHead(lp.secTrack, null, () => openList('accuracy'))}
-                    {row(trackItems)}
-                  </div>
-                )}
+                    {sections.confirmed.length > 0 && (
+                      <div style={{ marginBottom: 26 }}>
+                        {sectionHead(lp.secConfirmed, null, () => openList('accuracy', true))}
+                        {row(sections.confirmed)}
+                      </div>
+                    )}
 
-                {newItems.length > 0 && (
-                  <div style={{ marginBottom: 26 }}>
-                    {sectionHead(lp.secNew, null, () => openList('recent'))}
-                    {row(newItems)}
-                  </div>
+                    {sections.track.length > 0 && (
+                      <div style={{ marginBottom: 26 }}>
+                        {sectionHead(lp.secTrack, null, () => openList('accuracy'))}
+                        {row(sections.track)}
+                      </div>
+                    )}
+
+                    {sections.recent.length > 0 && (
+                      <div style={{ marginBottom: 26 }}>
+                        {sectionHead(lp.secNew, null, () => openList('recent'))}
+                        {row(sections.recent)}
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
@@ -292,7 +413,11 @@ export default function MarketPage() {
               {lp.backHome}
             </button>
 
-            {state === 'loading' && <div style={{ color: '#3a3a50', fontSize: 12 }}>{lp.loading}</div>}
+            {state === 'loading' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {[0, 1, 2].map((i) => <div key={i} className="mk-skel" style={{ height: 110 }} />)}
+              </div>
+            )}
             {state === 'error' && <div style={{ color: '#e05555', fontSize: 13 }}>{lp.error}</div>}
 
             {(state === 'ok' || state === 'empty') && (
@@ -322,7 +447,7 @@ export default function MarketPage() {
             {state === 'empty' && <div style={{ color: '#7a7a95', fontSize: 13 }}>{sector ? lp.emptySector(sector) : lp.empty}</div>}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {shown.map((it) => <ThesisCard key={it.id} it={it} />)}
+              {shown.map((it, i) => <ThesisCard key={it.id} it={it} fadeIndex={i} />)}
             </div>
 
             {state === 'ok' && hasMore && !q.trim() && (

@@ -5,7 +5,7 @@
 // condividi. L'import/fork usa l'endpoint /api/import esistente.
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { type Rep, type ImpState, useAuthed, MarketTopbar, AccuracyBar, RepLine, btnStyle, stFor, useMarketLang, updatedAgo } from '../../ui';
+import { type Rep, type ImpState, useAuthed, MarketTopbar, AccuracyBar, RepLine, Sparkline, btnStyle, stFor, useMarketLang, updatedAgo } from '../../ui';
 
 const P = {
   it: {
@@ -46,7 +46,7 @@ type TreeNode = {
 type Detail = {
   id: string; thesis: string; confidence: number; explanation: string | null;
   status: string; accuracy: number | null; sector: string; created_at: string; updated_at: string;
-  daysOnline: number;
+  daysOnline: number; tickers?: string[];
   signals: { confirm: SigView[]; invalidate: SigView[] } | null;
   history: HistEntry[];
   author: { ref: string; name: string | null; rep: Rep };
@@ -185,6 +185,7 @@ export default function ThesisDetailPage() {
               <span style={{ color: st.c }}>{st.l}</span>
               {data.forks > 0 && <span style={{ color: '#f0a030' }} title={mt.forksTitle}>⑂ {data.forks} {lp.forksWord}</span>}
               {data.imports > 0 && <span style={{ color: '#4ad68a' }} title={mt.importsTitle}>↘ {data.imports} {lp.importsWord}</span>}
+              <Sparkline symbol={data.tickers?.[0]} />
               {data.sector && <span style={{ marginLeft: 'auto', padding: '2px 8px', borderRadius: 6, background: '#16161e', color: '#7a7a95', textTransform: 'uppercase', letterSpacing: '.05em' }}>{data.sector}</span>}
             </div>
 

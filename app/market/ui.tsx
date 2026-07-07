@@ -51,7 +51,7 @@ export type Item = {
   status: string; accuracy: number | null; created_at: string; updated_at?: string; sector: string;
   signals: { confirm: string[]; invalidate: string[] } | null;
   author: string; authorName: string | null; authorRep: Rep;
-  imports: number; forks?: number; matchedTickers?: string[];
+  imports: number; forks?: number; tickers?: string[]; matchedTickers?: string[];
 };
 export type ImpState = 'idle' | 'loading' | 'done' | 'duplicate' | 'error' | 'already';
 
@@ -129,13 +129,15 @@ export function updatedAgo(iso: string | undefined, t: MTDict): string | null {
 // Card tesi (GitHub delle tesi): solo gli essenziali — confidenza, stato,
 // track record autore, fork, import, freschezza. L'import si fa dal dettaglio.
 // compact: variante stretta per le row orizzontali della home.
-export function ThesisCard({ it, compact }: { it: Item; compact?: boolean }) {
+// fadeIndex: ingresso scaglionato (60ms a card, cap a 8).
+export function ThesisCard({ it, compact, fadeIndex }: { it: Item; compact?: boolean; fadeIndex?: number }) {
   const [, , t] = useMarketLang();
   const STL = stFor(t);
   const st = STL[it.status] || STL.active;
   const upd = updatedAgo(it.updated_at, t);
   return (
-    <div style={{
+    <div className="mk-card mk-fade" style={{
+      animationDelay: `${Math.min(fadeIndex || 0, 8) * 60}ms`,
       background: '#0e0e12', border: '1px solid #2a2a36', borderRadius: 14, padding: compact ? '12px 14px' : '16px 18px',
       ...(compact ? { minWidth: 250, maxWidth: 290, flexShrink: 0, display: 'flex', flexDirection: 'column' } : {}),
     }}>
@@ -154,6 +156,12 @@ export function ThesisCard({ it, compact }: { it: Item; compact?: boolean }) {
           ...(compact ? { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' } : {}),
         }}>"{it.thesis}"</div>
       </a>
+      {!compact && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 10 }}>
+          <div style={{ flex: 1 }}><AccuracyBar accuracy={it.accuracy} status={it.status} /></div>
+          <Sparkline symbol={it.tickers?.[0]} />
+        </div>
+      )}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
         borderTop: '1px solid #1f1f28', paddingTop: compact ? 8 : 12, marginTop: compact ? 'auto' : 0,
@@ -187,11 +195,63 @@ export function AccuracyBar({ accuracy, status }: { accuracy: number | null; sta
   );
 }
 
+// StatBox con count-up (rAF ~700ms, ease-out) al cambio valore: le stats
+// entrano "vive" invece che piatte. Valori non numerici (es. "—") passano
+// diretti; prefers-reduced-motion salta l'animazione.
 export function StatBox({ value, label }: { value: string | number; label: string }) {
+  const [shown, setShown] = useState<string | number>(typeof value === 'number' ? 0 : value);
+  useEffect(() => {
+    const m = typeof value === 'number'
+      ? { n: value, suf: '' }
+      : (() => { const mm = /^(\d+)(.*)$/.exec(String(value)); return mm ? { n: parseInt(mm[1], 10), suf: mm[2] } : null; })();
+    if (!m) { setShown(value); return; }
+    let raf = 0;
+    try { if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setShown(value); return; } } catch {}
+    const t0 = performance.now();
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - t0) / 700);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setShown(Math.round(m.n * eased) + m.suf);
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
   return (
     <div style={{ flex: 1, minWidth: 110, background: '#0e0e12', border: '1px solid #2a2a36', borderRadius: 12, padding: '12px 16px' }}>
-      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 300, color: '#e8e8f0' }}>{value}</div>
+      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 300, color: '#e8e8f0' }}>{shown}</div>
       <div style={{ fontSize: 10, color: '#7a7a95', textTransform: 'uppercase', letterSpacing: '.05em', marginTop: 2 }}>{label}</div>
     </div>
+  );
+}
+
+// Sparkline 30 giorni di un simbolo: SVG hairline, verde/rossa col segno.
+// Best-effort: 404 o rete ko → non renderizza nulla (mai placeholder rotti).
+export function Sparkline({ symbol, width = 84, height = 22 }: { symbol?: string; width?: number; height?: number }) {
+  const [d, setD] = useState<{ closes: number[]; pct: number } | null>(null);
+  useEffect(() => {
+    if (!symbol) return;
+    let dead = false;
+    fetch(`/api/market/spark/${encodeURIComponent(symbol)}`).then(async (r) => {
+      if (!r.ok) return;
+      const j = await r.json().catch(() => null);
+      if (!dead && Array.isArray(j?.closes) && j.closes.length >= 2) setD(j);
+    }).catch(() => {});
+    return () => { dead = true; };
+  }, [symbol]);
+  if (!symbol || !d) return null;
+  const min = Math.min(...d.closes), max = Math.max(...d.closes);
+  const span = max - min || 1;
+  const pts = d.closes
+    .map((c, i) => `${((i / (d.closes.length - 1)) * width).toFixed(1)},${(height - 2 - ((c - min) / span) * (height - 4)).toFixed(1)}`)
+    .join(' ');
+  const color = d.pct >= 0 ? '#4ad68a' : '#e05555';
+  return (
+    <span className="mk-fade" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }} title={`${symbol} · 30d`}>
+      <svg width={width} height={height} style={{ display: 'block' }} aria-hidden="true">
+        <polyline points={pts} fill="none" stroke={color} strokeOpacity={0.8} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
+      </svg>
+      <span style={{ fontSize: 9.5, fontFamily: 'monospace', color }}>{symbol} {d.pct >= 0 ? '+' : ''}{d.pct}%</span>
+    </span>
   );
 }
