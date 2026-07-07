@@ -68,7 +68,10 @@ export default function PricingPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#08080a', color: '#e8e8f0', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: '1px solid #1f1f28' }}>
-        <a href="/welcome" style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 300, color: '#e8e8f0', textDecoration: 'none' }}>Symnaps</a>
+        <a href="/welcome" style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 300, color: '#e8e8f0', textDecoration: 'none' }}>
+          <img src="/logo.png" alt="" style={{ height: 22, width: 'auto', display: 'block' }} />
+          Symnaps
+        </a>
         <span style={{ marginLeft: 'auto' }} />
         <LangToggle lang={lang} setLang={setLang} />
       </div>

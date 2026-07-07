@@ -319,7 +319,10 @@ export default function SharedGraphPage() {
 
       {/* Header */}
       <div className="gd-head" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 20px', borderBottom: '1px solid #1f1f28', background: '#0e0e12', flexShrink: 0, zIndex: 5 }}>
-        <span style={{ fontFamily: "'Fraunces', serif", fontSize: 17, fontWeight: 300 }}>Symnaps</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: "'Fraunces', serif", fontSize: 17, fontWeight: 300 }}>
+          <img src="/logo.png" alt="" style={{ height: 20, width: 'auto', display: 'block' }} />
+          Symnaps
+        </span>
         <span className="gd-badge" style={{ fontSize: 10, padding: '3px 10px', borderRadius: 6, background: '#1a2a4a', color: '#5b9cf6', textTransform: 'uppercase', letterSpacing: '.06em' }}>grafo condiviso</span>
         {stats && (
           <span className="gd-stats" style={{ fontSize: 10, color: '#5a5a78', display: 'flex', gap: 12 }}>

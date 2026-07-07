@@ -78,7 +78,10 @@ export function MarketTopbar({ isAuthed }: { isAuthed: boolean }) {
   const [lang, setLang, t] = useMarketLang();
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: '1px solid #1f1f28' }}>
-      <a href="/market" style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 300, color: '#e8e8f0', textDecoration: 'none' }}>Symnaps</a>
+      <a href="/market" style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 300, color: '#e8e8f0', textDecoration: 'none' }}>
+        <img src="/logo.png" alt="" style={{ height: 22, width: 'auto', display: 'block' }} />
+        Symnaps
+      </a>
       <span style={{ fontSize: 10, padding: '3px 10px', borderRadius: 6, background: '#241a3a', color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '.06em' }}>marketplace</span>
       <span style={{ marginLeft: 'auto', display: 'flex', gap: 16, alignItems: 'center' }}>
         {isAuthed && <a href="/market/mine" style={{ color: '#a78bfa', fontSize: 12, textDecoration: 'none' }}>{t.mine}</a>}
