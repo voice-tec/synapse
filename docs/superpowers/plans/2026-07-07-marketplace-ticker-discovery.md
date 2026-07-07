@@ -1,5 +1,9 @@
 # Marketplace Ticker Discovery Implementation Plan
 
+> **SUPERATO** — non eseguire. Sostituito dalla spec
+> `docs/superpowers/specs/2026-07-07-marketplace-github-design.md`
+> ("GitHub della ricerca finanziaria", fase 1: fork + albero + home a sezioni).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ticker estratti dai segnali come asse di discovery del marketplace: chip/filtro in `/market`, pagina dettaglio `/market/t/[id]` con tesi correlate, chip nel grafo "N tesi community sui tuoi titoli".

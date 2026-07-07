@@ -1,6 +1,8 @@
 # Marketplace: ticker come asse di discovery + pagina dettaglio tesi
 
-**Data:** 2026-07-07 · **Stato:** approvato
+**Data:** 2026-07-07 · **Stato:** SUPERATA da `2026-07-07-marketplace-github-design.md`
+(la visione "GitHub della ricerca finanziaria" ridisegna home, card e dettaglio;
+`extractTickers` e la sezione "Per te" sopravvivono lì).
 
 ## Obiettivo
 
