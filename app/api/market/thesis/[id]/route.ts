@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { authorRep, authorRef } from '@/lib/reputation';
 import { normalizeSector } from '@/lib/sectors';
 import { buildForkTree, type ForkNode } from '@/lib/fork';
+import { extractTickers } from '@/lib/market-tickers';
 
 // Dettaglio pubblico di una tesi del marketplace ("GitHub delle tesi"):
 // tesi completa con lo stato dei segnali, autore (ref opaco + reputazione),
@@ -123,6 +124,9 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       created_at: t.created_at,
       updated_at: t.updated_at || t.created_at,
       daysOnline,
+      // Ticker dai segnali: alimenta la sparkline dell'hero (era assente e
+      // la sparkline non veniva mai renderizzata nel dettaglio).
+      tickers: extractTickers(t.signals),
       signals: t.signals ? { confirm: sigView(t.signals.confirm), invalidate: sigView(t.signals.invalidate) } : null,
       // Evoluzione: pubblicare una tesi pubblica anche la sua storia (detto
       // esplicitamente nel copy della pagina).
