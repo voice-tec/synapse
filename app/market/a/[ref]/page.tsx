@@ -10,14 +10,14 @@ const P = {
     back: '← marketplace', loading: 'caricamento…',
     notfound: 'Autore non trovato (o senza tesi pubbliche).', error: 'Profilo non disponibile al momento. Riprova tra poco.',
     since: 'pubblica da', dateLocale: 'it-IT',
-    stTheses: 'tesi pubbliche', stConfirmed: 'confermate (su tutte)', stAcc: 'accuratezza media', stImports: 'import ricevuti',
+    stTheses: 'tesi pubbliche', stConfirmed: 'confermate (su tutte)', stAcc: 'accuratezza media', stImports: 'evoluzioni ricevute',
     bySector: 'per settore', publicTheses: 'tesi pubbliche',
   },
   en: {
     back: '← marketplace', loading: 'loading…',
     notfound: 'Author not found (or has no public theses).', error: 'Profile unavailable right now. Try again shortly.',
     since: 'publishing since', dateLocale: 'en-US',
-    stTheses: 'public theses', stConfirmed: 'confirmed (overall)', stAcc: 'average accuracy', stImports: 'imports received',
+    stTheses: 'public theses', stConfirmed: 'confirmed (overall)', stAcc: 'average accuracy', stImports: 'evolutions received',
     bySector: 'by sector', publicTheses: 'public theses',
   },
 };

@@ -5,7 +5,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Marketplace di tesi',
   description:
-    'Tesi di investimento pubbliche con track record misurato su dati reali: importale nel tuo grafo e giudica gli autori dalla loro accuratezza.',
+    'Tesi di investimento pubbliche con track record misurato su dati reali: evolvile nel tuo grafo e giudica gli autori dalla loro accuratezza.',
 };
 
 // Motion condiviso delle pagine market: hover discreti, fade scaglionato,

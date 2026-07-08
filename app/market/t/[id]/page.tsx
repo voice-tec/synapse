@@ -1,8 +1,9 @@
 'use client';
 // Dettaglio pubblico di una tesi del marketplace ("GitHub delle tesi"):
 // hero, segnali con stato, Evoluzione (timeline delle versioni) e Knowledge
-// Tree (albero dei fork con track record per nodo). CTA: importa, forka,
-// condividi. L'import/fork usa l'endpoint /api/import esistente.
+// Tree (albero delle evoluzioni con track record per nodo). CTA: evolvi,
+// condividi. "Evolvi" usa l'endpoint /api/import esistente: porta la tesi
+// nel grafo; modificata e ripubblicata diventa un ramo dell'albero.
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { type Rep, type ImpState, useAuthed, MarketTopbar, AccuracyBar, RepLine, Sparkline, btnStyle, stFor, useMarketLang, updatedAgo } from '../../ui';
@@ -16,10 +17,10 @@ const P = {
     signalsTitle: 'segnali', confirmCol: 'conferma se', invalidateCol: 'invalida se',
     fired: '● scattato', waiting: '○ in attesa', noData: 'dato mancante', manualNote: 'nota qualitativa',
     evoTitle: 'evoluzione', evoSub: "la storia della tesi come l'ha aggiornata l'autore", evoNow: 'versione attuale',
-    treeTitle: 'knowledge tree', treeSub: 'origine e fork: ogni nodo ha il suo track record, misurato sui dati',
-    treeYouAreHere: 'questa tesi', privImports: (n: number) => `+${n} import privat${n === 1 ? 'o' : 'i'}`,
-    forkBtn: '⑂ forka', forkHint: 'Importata nel grafo: modificala e ripubblicala come fork', share: '↗ condividi', copied: '🔗 link copiato',
-    forksWord: 'fork', importsWord: 'import',
+    treeTitle: 'knowledge tree', treeSub: 'origine ed evoluzioni: ogni nodo ha il suo track record, misurato sui dati',
+    treeYouAreHere: 'questa tesi', privImports: (n: number) => `+${n} evoluzion${n === 1 ? 'e' : 'i'} privat${n === 1 ? 'a' : 'e'}`,
+    evolveHint: 'modificala dal grafo e ripubblicala come evoluzione', share: '↗ condividi', copied: '🔗 link copiato',
+    forksWord: 'rami', importsWord: 'evoluzioni',
   },
   en: {
     back: '← marketplace', loading: 'loading…',
@@ -29,10 +30,10 @@ const P = {
     signalsTitle: 'signals', confirmCol: 'confirms if', invalidateCol: 'invalidates if',
     fired: '● fired', waiting: '○ waiting', noData: 'data missing', manualNote: 'qualitative note',
     evoTitle: 'evolution', evoSub: 'the story of the thesis as the author updated it', evoNow: 'current version',
-    treeTitle: 'knowledge tree', treeSub: 'origin and forks: every node has its own track record, measured on data',
-    treeYouAreHere: 'this thesis', privImports: (n: number) => `+${n} private import${n === 1 ? '' : 's'}`,
-    forkBtn: '⑂ fork', forkHint: 'Imported into your graph: edit it and republish it as a fork', share: '↗ share', copied: '🔗 link copied',
-    forksWord: 'forks', importsWord: 'imports',
+    treeTitle: 'knowledge tree', treeSub: 'origin and evolutions: every node has its own track record, measured on data',
+    treeYouAreHere: 'this thesis', privImports: (n: number) => `+${n} private evolution${n === 1 ? '' : 's'}`,
+    evolveHint: 'edit it from your graph and republish it as an evolution', share: '↗ share', copied: '🔗 link copied',
+    forksWord: 'branches', importsWord: 'evolutions',
   },
 };
 
@@ -109,7 +110,6 @@ export default function ThesisDetailPage() {
   const [state, setState] = useState<'loading' | 'ok' | 'notfound' | 'error'>('loading');
   const isAuthed = useAuthed();
   const [imp, setImp] = useState<ImpState>('idle');
-  const [forkHint, setForkHint] = useState(false);
   const [copied, setCopied] = useState(false);
   const [mlang, , mt] = useMarketLang();
   const lp = P[mlang];
@@ -134,9 +134,10 @@ export default function ThesisDetailPage() {
     }).catch(() => {});
   }, [isAuthed, id]);
 
-  // Import e fork usano lo stesso endpoint: il fork è un import che l'utente
-  // poi modifica e ripubblica dal grafo (il server rifiuta i fork identici).
-  const importThesis = async (asFork: boolean) => {
+  // "Evolvi" = import nel grafo; se l'utente poi la modifica e ripubblica
+  // diventa un ramo (il server rifiuta le ripubblicazioni identiche).
+  // L'evento PostHog resta thesis_imported per continuità analytics.
+  const importThesis = async () => {
     setImp('loading');
     try {
       const r = await fetch('/api/import', {
@@ -145,8 +146,7 @@ export default function ThesisDetailPage() {
       });
       const j = await r.json();
       setImp(j.imported ? 'done' : j.duplicate ? 'duplicate' : 'error');
-      if (j.imported && asFork) setForkHint(true);
-      try { if (j.imported) (window as any).posthog?.capture(asFork ? 'thesis_forked' : 'thesis_imported'); } catch {}
+      try { if (j.imported) (window as any).posthog?.capture('thesis_imported'); } catch {}
     } catch { setImp('error'); }
   };
 
@@ -206,24 +206,18 @@ export default function ThesisDetailPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderTop: '1px solid #1f1f28', borderBottom: '1px solid #1f1f28', padding: '14px 0', marginBottom: 26, flexWrap: 'wrap' }}>
               {isAuthed ? (
                 imp === 'done' ? (
-                  <span style={{ fontSize: 12, color: '#4ad68a' }}>{forkHint ? `${mt.imported} — ${lp.forkHint}` : mt.imported}</span>
+                  <span style={{ fontSize: 12, color: '#4ad68a' }}>{`${mt.imported} — ${lp.evolveHint}`}</span>
                 ) : imp === 'already' ? (
                   <span style={{ fontSize: 12, color: '#4ad68a' }} title={mt.alreadyTitle}>{mt.already}</span>
                 ) : imp === 'duplicate' ? (
                   <span style={{ fontSize: 12, color: '#f0a030' }}>{mt.similar}</span>
                 ) : imp === 'error' ? (
-                  <button onClick={() => importThesis(false)} style={btnStyle}>{mt.retry}</button>
+                  <button onClick={importThesis} style={btnStyle}>{mt.retry}</button>
                 ) : (
-                  <>
-                    <button onClick={() => importThesis(false)} disabled={imp === 'loading'}
-                      style={{ ...btnStyle, opacity: imp === 'loading' ? 0.6 : 1 }}>
-                      {imp === 'loading' ? mt.importing : mt.save}
-                    </button>
-                    <button onClick={() => importThesis(true)} disabled={imp === 'loading'} title={lp.forkHint}
-                      style={{ ...btnStyle, background: 'transparent', color: '#f0a030', border: '1px solid #f0a03055', opacity: imp === 'loading' ? 0.6 : 1 }}>
-                      {lp.forkBtn}
-                    </button>
-                  </>
+                  <button onClick={importThesis} disabled={imp === 'loading'} title={lp.evolveHint}
+                    style={{ ...btnStyle, opacity: imp === 'loading' ? 0.6 : 1 }}>
+                    {imp === 'loading' ? mt.importing : mt.save}
+                  </button>
                 )
               ) : (
                 <a href="/login" style={{ ...btnStyle, textDecoration: 'none' }}>{mt.loginToImport}</a>
