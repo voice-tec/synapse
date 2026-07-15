@@ -7,14 +7,16 @@ const UI = {
     search: 'cerca nel grafo…',
     stTask: 'task', stConn: 'conn.', stHyp: 'ipotesi',
     btnPortfolio: ' portafoglio', btnShare: ' condividi', btnMarket: ' marketplace', btnSettings: ' impostazioni', btnLogout: ' esci',
-    ghint: 'la tua rete semantica apparirà qui',
+    ghint: 'fai la tua prima domanda qui sotto ↓ — o tocca un esempio',
     protoTitle: '◆ tesi in formazione', protoSub: 'emergono dalle tue domande · maturano coi dati',
+    tutVh: 'Metti alla prova le tue idee di investimento',
+    tutVp: "Fai una domanda sui mercati — «l'oro sale se i tassi scendono?». Symnaps risponde con <b>dati ufficiali</b>, non opinioni, e prende posizione: <b>sì, no o dipende</b>. Le tue domande diventano <b>tesi</b> con una confidenza misurata, che i dati confermano o smentiscono nel tempo. Ricerca educativa: niente consigli d'acquisto.",
     tut0h: 'Le domande sono nodi',
-    tut0p: 'Scrivi una domanda di analisi e premi <b>analizza</b>. Diventa un <b>cerchio</b> colorato nel grafo, con la sua analisi, i dati e le fonti. Il colore indica il tipo: causale, confronto, rischio, trend.',
+    tut0p: 'Scrivi una domanda e premi <b>analizza</b>: diventa un nodo nel grafo con una <b>risposta netta</b>, i dati e le fonti. Il colore indica il tipo: causale, confronto, rischio, trend.',
     tut1h: 'Si collegano tra loro',
     tut1p: 'Fai <b>4-5 domande sullo stesso tema</b>: Symnaps le collega automaticamente con dei fili. È qui che il grafo prende vita e mostra come ragioni.',
     tut2h: 'Emergono tesi e portafogli',
-    tut2p: 'Dalle domande nascono le <b>tesi</b> (esagoni colorati): convinzioni con una percentuale di confidenza. Da una tesi forte germoglia un <b>portafoglio</b> (quadrato verde). Tocca le forme per aprirle.',
+    tut2p: 'Dalle domande nascono le <b>tesi</b> (esagoni): convinzioni con una confidenza <b>calcolata dai dati</b>, che si conferma o si invalida nel tempo. Da una tesi forte germoglia un <b>portafoglio</b> (quadrato verde). Tocca le forme per aprirle.',
     tut3h: 'Approfondisci',
     tut3p: 'Sotto ogni analisi trovi delle <b>domande suggerite</b>: sono spunti da <b>cliccare</b> per esplorare nuove direzioni — non domande a cui rispondere.',
     tut4h: 'Parti dal tuo portafoglio',
@@ -38,14 +40,16 @@ const UI = {
     search: 'search the graph…',
     stTask: 'tasks', stConn: 'conn.', stHyp: 'theses',
     btnPortfolio: ' portfolio', btnShare: ' share', btnMarket: ' marketplace', btnSettings: ' settings', btnLogout: ' log out',
-    ghint: 'your semantic network will appear here',
+    ghint: 'ask your first question below ↓ — or tap an example',
     protoTitle: '◆ theses forming', protoSub: 'they emerge from your questions · mature with data',
+    tutVh: 'Put your investment ideas to the test',
+    tutVp: 'Ask a question about the markets — "does gold rise when rates fall?". Symnaps answers with <b>official data</b>, not opinions, and takes a stance: <b>yes, no or depends</b>. Your questions become <b>theses</b> with a measured confidence that data confirms or refutes over time. Educational research: no buy recommendations.',
     tut0h: 'Questions are nodes',
-    tut0p: 'Write an analysis question and hit <b>analyze</b>. It becomes a colored <b>circle</b> in the graph, with its analysis, data and sources. The color is the type: causal, compare, risk, trend.',
+    tut0p: 'Write a question and hit <b>analyze</b>: it becomes a node in the graph with a <b>clear answer</b>, the data and the sources. The color is the type: causal, compare, risk, trend.',
     tut1h: 'They connect to each other',
     tut1p: 'Ask <b>4-5 questions on the same theme</b>: Symnaps links them automatically. That is when the graph comes alive and shows how you reason.',
     tut2h: 'Theses and portfolios emerge',
-    tut2p: 'Questions give rise to <b>theses</b> (colored hexagons): convictions with a confidence score. A strong thesis sprouts a <b>portfolio</b> (green square). Tap the shapes to open them.',
+    tut2p: 'Questions give rise to <b>theses</b> (hexagons): convictions with a confidence <b>calculated from data</b>, confirmed or invalidated over time. A strong thesis sprouts a <b>portfolio</b> (green square). Tap the shapes to open them.',
     tut3h: 'Go deeper',
     tut3p: 'Under every analysis you will find <b>suggested questions</b>: prompts to <b>click</b> and explore new directions — not questions to answer.',
     tut4h: 'Start from your portfolio',
@@ -113,26 +117,31 @@ export const BODY_FOR = (lang: UiLang): string => {
       <div class="tut-logo">Symnaps</div>
       <div class="tut-slide-wrap">
         <div class="tut-slide" data-i="0">
+          <svg class="tut-shape" viewBox="0 0 140 80"><circle cx="25" cy="40" r="14" fill="#5b9cf622" stroke="#5b9cf6" stroke-width="2.5"/><text x="25" y="45" text-anchor="middle" fill="#5b9cf6" font-size="13" font-family="monospace">?</text><text x="49" y="44" fill="#6a6a82" font-size="12">→</text><polygon points="80,25 93,32 93,48 80,55 67,48 67,32" fill="#a78bfa22" stroke="#a78bfa" stroke-width="2.5"/><text x="80" y="44" text-anchor="middle" fill="#a78bfa" font-size="10">◆</text><text x="102" y="44" fill="#6a6a82" font-size="12">→</text><rect x="115" y="28" width="24" height="24" rx="4" fill="#34d39922" stroke="#34d399" stroke-width="2.5"/></svg>
+          <div class="tut-h">${t.tutVh}</div>
+          <div class="tut-p">${t.tutVp}</div>
+        </div>
+        <div class="tut-slide" data-i="1" style="display:none">
           <svg class="tut-shape" viewBox="0 0 80 80"><circle cx="40" cy="40" r="20" fill="#5b9cf622" stroke="#5b9cf6" stroke-width="2.5"/><circle cx="40" cy="40" r="30" fill="none" stroke="#5b9cf6" stroke-width="1" opacity="0.4"/><text x="40" y="46" text-anchor="middle" fill="#5b9cf6" font-size="16" font-family="monospace">?</text></svg>
           <div class="tut-h">${t.tut0h}</div>
           <div class="tut-p">${t.tut0p}</div>
         </div>
-        <div class="tut-slide" data-i="1" style="display:none">
+        <div class="tut-slide" data-i="2" style="display:none">
           <svg class="tut-shape" viewBox="0 0 120 80"><circle cx="25" cy="40" r="13" fill="#5b9cf622" stroke="#5b9cf6" stroke-width="2"/><circle cx="95" cy="25" r="13" fill="#2ecf9822" stroke="#2ecf98" stroke-width="2"/><circle cx="90" cy="60" r="13" fill="#f0a03022" stroke="#f0a030" stroke-width="2"/><line x1="38" y1="38" x2="82" y2="27" stroke="#6a6a82" stroke-width="1.5" stroke-dasharray="3 3"/><line x1="37" y1="44" x2="77" y2="58" stroke="#6a6a82" stroke-width="1.5" stroke-dasharray="3 3"/></svg>
           <div class="tut-h">${t.tut1h}</div>
           <div class="tut-p">${t.tut1p}</div>
         </div>
-        <div class="tut-slide" data-i="2" style="display:none">
+        <div class="tut-slide" data-i="3" style="display:none">
           <svg class="tut-shape" viewBox="0 0 120 80"><polygon points="40,18 58,29 58,51 40,62 22,51 22,29" fill="#a78bfa22" stroke="#a78bfa" stroke-width="2.5"/><text x="40" y="45" text-anchor="middle" fill="#a78bfa" font-size="14">◆</text><rect x="78" y="30" width="28" height="28" rx="4" fill="#34d39922" stroke="#34d399" stroke-width="2.5"/><line x1="58" y1="40" x2="78" y2="44" stroke="#34d399" stroke-width="1.5" stroke-dasharray="3 3"/></svg>
           <div class="tut-h">${t.tut2h}</div>
           <div class="tut-p">${t.tut2p}</div>
         </div>
-        <div class="tut-slide" data-i="3" style="display:none">
+        <div class="tut-slide" data-i="4" style="display:none">
           <svg class="tut-shape" viewBox="0 0 120 80"><rect x="14" y="26" width="92" height="13" rx="6" fill="none" stroke="#5b9cf6" stroke-width="1.5" opacity="0.5"/><rect x="14" y="44" width="68" height="13" rx="6" fill="none" stroke="#5b9cf6" stroke-width="1.5" opacity="0.5"/><text x="98" y="36" fill="#5b9cf6" font-size="13">→</text><text x="76" y="54" fill="#5b9cf6" font-size="13">→</text></svg>
           <div class="tut-h">${t.tut3h}</div>
           <div class="tut-p">${t.tut3p}</div>
         </div>
-        <div class="tut-slide" data-i="4" style="display:none">
+        <div class="tut-slide" data-i="5" style="display:none">
           <svg class="tut-shape" viewBox="0 0 120 80"><rect x="35" y="14" width="50" height="52" rx="7" fill="#34d39918" stroke="#34d399" stroke-width="2.5"/><line x1="45" y1="30" x2="75" y2="30" stroke="#34d399" stroke-width="3" stroke-linecap="round"/><line x1="45" y1="41" x2="67" y2="41" stroke="#34d399" stroke-width="3" stroke-linecap="round" opacity="0.7"/><line x1="45" y1="52" x2="59" y2="52" stroke="#34d399" stroke-width="3" stroke-linecap="round" opacity="0.45"/></svg>
           <div class="tut-h">${t.tut4h}</div>
           <div class="tut-p">${t.tut4p}</div>
