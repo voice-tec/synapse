@@ -21,3 +21,8 @@ Migration on existing rows; cross-user references including UUID arrays; stale s
 
 ## Later phases
 Phase 2: sourced evidence ingestion and deterministic What Changed with review queues. Phase 3: domain entities/relationship proposals/provenance, Focus/Universe and time travel bounded by ingestion time. Phase 4: append-only decision journal with verified market observations. Phase 5: public branches and completed-prediction reputation. Establish classification/contradiction benchmarks before adding provider adapters.
+
+## Implemented scope and remaining boundary
+Steps A–C implemented locally. The first slice includes structured revisions, immutable original capture, history, deterministic revision comparison, concurrency rejection and preserved drawer actions. Evidence and Decisions tabs deliberately explain that their full ledgers are later phases. No domain graph rewrite, broker integration, external evidence ingestion, verified-performance calculation, time travel, or new AI provider was added.
+
+Next operational step is the manual staging release checklist in V2_SECURITY.md. Next product step after acceptance is a source-and-ingestion-timestamp evidence ledger feeding deterministic What Changed. Do not begin it until this slice has been reviewed.

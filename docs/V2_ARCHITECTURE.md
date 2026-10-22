@@ -18,3 +18,8 @@ Add structured fields to theses and append-only thesis_versions snapshots. Postg
 
 ## Debt
 Unbundled 2,800-line renderer; loose any types and strict:false; client-controlled analysis JSON is conviction, not an attested prediction; JSON history is not trustworthy historical evidence. No existing database/browser integration suite. Refresh batch orchestration has concurrency/retry and cost-control debt. Legacy public metrics aggregate private research and overstate signal hits as accuracy. Dependency security updates require a separate compatibility pass. Google font/CDN availability affects rendering. Production behavior cannot be established from local source alone.
+
+## Implemented runtime update
+The security pass upgrades Next.js to 15.5.28, retaining React 18, Supabase auth and the existing canvas renderer. The four dynamic API route parameter contracts are asynchronous. Node/TypeScript checks and a production build validate compatibility locally; real Supabase sessions still require staging smoke tests.
+
+`lib/thesis-card.ts` holds the editable contract and import predicate projection; `app/api/theses/route.ts` authenticates reads, revision RPC calls and graph saves; `lib/thesis-card-ui.ts` adds DOM-based tabs without replacing legacy controls. HTML sinks use `lib/safe-html.ts`. SQL is tested using embedded PostgreSQL (PGlite), including route/RLS integration; jsdom tests cover the actual renderer and card interactions. No live Supabase database was queried by these tests.
