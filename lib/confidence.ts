@@ -84,12 +84,13 @@ export async function evalSignals(
   const out: { confirm: Signal[]; invalidate: Signal[] } = { confirm: [], invalidate: [] };
   let confirmFired = 0, invalidateFired = 0, testableTotal = 0;
   for (const dir of ['confirm', 'invalidate'] as const) {
+    const counted = new Map<string, boolean>();
     for (const raw of (signals?.[dir] || [])) {
-      const s = normSig(raw);
+      const s = { ...normSig(raw) };
       // 'pe' legacy = fund con field 'pe'; 'fund' richiede anche un field.
       const isFund = s.kind === 'fund' || s.kind === 'pe';
       const fundField = s.kind === 'pe' ? 'pe' : (s.field || null);
-      const testable = !!s.metric && !!s.op && typeof s.threshold === 'number'
+      const testable = !!s.metric && ['<','>','<=','>='].includes(s.op || '') && typeof s.threshold === 'number' && Number.isFinite(s.threshold)
         && (s.kind === 'fred' || s.kind === 'ticker' || (isFund && !!fundField));
       if (testable) {
         const v = s.kind === 'fred'
@@ -97,18 +98,24 @@ export async function evalSignals(
           : isFund
             ? (deps.fetchFundamental ? await deps.fetchFundamental(s.metric as string, fundField as string) : null)
             : await deps.fetchTickerPerformance(s.metric as string, createdAt);
-        if (v !== null) {
+        if (typeof v === 'number' && Number.isFinite(v)) {
           s.fired = cmp(v, s.op, s.threshold as number);
           s.checked_at = now;
           s.data_missing = false;
-          testableTotal++;
-          if (s.fired) { if (dir === 'confirm') confirmFired++; else invalidateFired++; }
+          const evidenceKey = [isFund ? 'fund' : s.kind, s.metric, fundField].join(':');
+          const duplicate = counted.has(evidenceKey);
+          const alreadyFired = counted.get(evidenceKey);
+          counted.set(evidenceKey, !!alreadyFired || s.fired);
+          if (!duplicate) testableTotal++;
+          if (s.fired && !alreadyFired) { if (dir === 'confirm') confirmFired++; else invalidateFired++; }
         } else {
           // dato non disponibile: niente verdetto, non conteggiato, no stale
           s.data_missing = true;
           s.fired = false;
+          s.checked_at = now;
         }
       }
+      if (!testable) { delete s.fired; delete s.checked_at; delete s.data_missing; }
       out[dir].push(s);
     }
   }

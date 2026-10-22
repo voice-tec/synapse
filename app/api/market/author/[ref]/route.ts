@@ -8,8 +8,8 @@ import { normalizeSector } from '@/lib/sectors';
 // Privacy: l'hash si risolve SOLO tra gli autori con almeno una tesi pubblica —
 // l'hash di un utente che non ha mai pubblicato non è risolvibile (404), e lo
 // user_id non compare mai nel payload.
-export async function GET(_req: NextRequest, { params }: { params: { ref: string } }) {
-  const ref = (params.ref || '').toLowerCase();
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ ref: string }> }) {
+  const ref = ((await params).ref || '').toLowerCase();
   if (!/^[0-9a-f]{8}$/.test(ref)) return NextResponse.json({ error: 'bad_ref' }, { status: 400 });
 
   const admin = createAdminClient();
@@ -28,7 +28,7 @@ export async function GET(_req: NextRequest, { params }: { params: { ref: string
   const [{ data: prof }, { data: allMine }, { data: clones }, { count: legacyCount }] = await Promise.all([
     admin.from('profiles').select('display_name').eq('id', uid).maybeSingle(),
     // Reputazione su TUTTE le sue tesi (anche private), come in vetrina.
-    admin.from('theses').select('status, accuracy').eq('user_id', uid),
+    admin.from('theses').select('status, accuracy').eq('is_public', true).eq('user_id', uid),
     admin.from('theses').select('imported_from_thesis').in('imported_from_thesis', theses.map((t) => t.id)),
     // Fallback legacy: import precedenti alla colonna imported_from_thesis
     // (e import via grafo condiviso) tracciati solo con l'hash autore.

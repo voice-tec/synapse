@@ -36,7 +36,7 @@ export async function GET() {
     // Import: cloni che puntano a una tesi pubblica; l'importatore resta un
     // hash anonimo (mai il display name: importare non è un atto pubblico).
     admin.from('theses')
-      .select('user_id, created_at, imported_from_thesis')
+      .select('user_id, created_at, imported_from_thesis').eq('is_public', true)
       .not('imported_from_thesis', 'is', null)
       .order('created_at', { ascending: false })
       .limit(6),

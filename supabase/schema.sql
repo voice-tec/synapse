@@ -264,3 +264,7 @@ create trigger on_auth_user_created
 --   on theses (imported_from_thesis) where imported_from_thesis is not null;
 -- create index if not exists theses_public_idx
 --   on theses (is_public, created_at desc) where is_public = true;
+
+-- V2: per nuove installazioni applicare successivamente
+-- supabase/migrations/001_v2_security_and_versions.sql.
+-- I permessi legacy qui sopra NON sono sufficienti per il rilascio V2.

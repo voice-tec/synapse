@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
   if (pubUserIds.length) {
     const { data: repRows, error: repErr } = await admin
       .from('theses')
-      .select('user_id, status, accuracy')
+      .select('user_id, status, accuracy').eq('is_public', true)
       .in('user_id', pubUserIds);
     if (repErr) return NextResponse.json({ error: 'market_unavailable' }, { status: 500 });
     for (const t of repRows || []) {

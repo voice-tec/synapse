@@ -1,3 +1,5 @@
+import { reserveUsage } from '@/lib/ai-usage';
+import { createAdminClient } from '@/lib/supabase-admin';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { extractJSON, createBatch, getBatch, getBatchResults } from '@/lib/anthropic';
@@ -35,6 +37,7 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
+  const admin = createAdminClient();
   const reqLang = normLang((await req.json().catch(() => ({} as any)))?.lang);
 
   const staleCutoff = new Date(Date.now() - STALE_MS).toISOString();
@@ -61,16 +64,19 @@ export async function POST(req: NextRequest) {
           let parsed: any;
           try { parsed = extractJSON(finalText); } catch { continue; }
 
+          const [thesisId, submittedRevision] = r.custom_id.split('__');
+          // I batch legacy non attestano la revisione: nessuna nota retroattiva.
+          if (!submittedRevision) continue;
           const { data: th } = await supabase
             .from('theses')
             .select('*')
-            .eq('id', r.custom_id)
+            .eq('id', thesisId)
             .eq('user_id', user.id)
             .single();
-          if (!th) continue;
+          if (!th || th.revision !== Number(submittedRevision)) continue;
 
           // Confidence CALCOLATA (non dal modello): base verdetti + scarto segnali scattati.
-          const base = await verdictBase(supabase, user.id, th.source_task_ids || []);
+          const base = (th.source_task_ids?.length ? null : th.conviction_base) ?? await verdictBase(supabase, user.id, th.source_task_ids || []);
           const { signals, confirmFired, invalidateFired, testableTotal } = await evalSignals(th.signals, th.created_at);
           const newConf = computeConfidence(base, confirmFired, invalidateFired);
           const history = Array.isArray(th.history) ? th.history : [];
@@ -78,28 +84,28 @@ export async function POST(req: NextRequest) {
 
           // Track record: esito dedotto dai segnali reali. closed_at solo alla prima chiusura.
           const outcome = deriveOutcome(confirmFired, invalidateFired, testableTotal, newConf);
-          const closing = outcome.status !== 'active' && th.status === 'active';
           const update: any = {
-            confidence: newConf, signals, history, updated_at: new Date().toISOString(),
+            revision_reason: 'signal_refresh', confidence: newConf, signals, history, updated_at: new Date().toISOString(),
             status: outcome.status, accuracy: outcome.accuracy,
             signals_hit: outcome.signalsHit, signals_total: outcome.signalsTotal,
           };
-          if (closing) update.closed_at = new Date().toISOString();
+          update.closed_at = outcome.status === 'active' ? null : th.closed_at || new Date().toISOString();
 
-          await supabase.from('theses').update(update).eq('id', th.id);
-          updatedTheses.push({ id: th.id, cluster_id: th.cluster_id, confidence: newConf, signals, history, status: outcome.status, accuracy: outcome.accuracy, signals_hit: outcome.signalsHit, signals_total: outcome.signalsTotal });
+          const { data: saved, error: saveError } = await admin.from('theses').update(update).eq('id', th.id).eq('user_id', user.id).eq('revision', th.revision).select('revision').maybeSingle();
+          if (saveError || !saved) continue;
+          updatedTheses.push({ id: th.id, revision: saved.revision, cluster_id: th.cluster_id, confidence: newConf, signals, history, status: outcome.status, accuracy: outcome.accuracy, signals_hit: outcome.signalsHit, signals_total: outcome.signalsTotal });
         }
-        await supabase.from('profiles').update({ refresh_batch_id: null }).eq('id', user.id);
+        await admin.from('profiles').update({ refresh_batch_id: null }).eq('id', user.id);
         status = 'ingested';
       } else if (batch.processing_status === 'in_progress') {
         status = 'pending';
       } else {
         // canceled / expired / stato ignoto: sgancia e riparti al prossimo giro
-        await supabase.from('profiles').update({ refresh_batch_id: null }).eq('id', user.id);
+        await admin.from('profiles').update({ refresh_batch_id: null }).eq('id', user.id);
       }
     } catch (e) {
       // batch non recuperabile (es. cancellato lato API): sgancia
-      await supabase.from('profiles').update({ refresh_batch_id: null }).eq('id', user.id);
+      await admin.from('profiles').update({ refresh_batch_id: null }).eq('id', user.id);
     }
   }
 
@@ -107,7 +113,7 @@ export async function POST(req: NextRequest) {
   if (status !== 'pending') {
     const { data: stale } = await supabase
       .from('theses')
-      .select('id, thesis, confidence, created_at')
+      .select('id, thesis, confidence, created_at, revision')
       .eq('user_id', user.id)
       .lt('updated_at', staleCutoff)
       .order('updated_at', { ascending: true })
@@ -115,13 +121,20 @@ export async function POST(req: NextRequest) {
 
     if (stale?.length) {
       try {
+        const reserved = [];
+        for (const th of stale) {
+          const gate = await reserveUsage(user.id, 'ai');
+          if (!gate.allowed) break;
+          reserved.push(th);
+        }
+        if (!reserved.length) throw new Error('limit_reached');
         const macro = await macroSnapshot();
         const system = [
           { type: 'text', text: localizeSystem(REFRESH_SYS, reqLang) },
           ...(macro ? [{ type: 'text', text: macro }] : []),
         ];
-        const batch = await createBatch(stale.map((th) => ({
-          custom_id: th.id,
+        const batch = await createBatch(reserved.map((th) => ({
+          custom_id: `${th.id}__${th.revision}`,
           params: {
             model: 'claude-sonnet-5',
             max_tokens: 650, // +30% per il tokenizer di Sonnet 5
@@ -135,7 +148,7 @@ export async function POST(req: NextRequest) {
             }],
           },
         })));
-        await supabase.from('profiles').update({ refresh_batch_id: batch.id }).eq('id', user.id);
+        await admin.from('profiles').update({ refresh_batch_id: batch.id }).eq('id', user.id);
         status = status === 'ingested' ? 'ingested+submitted' : 'submitted';
       } catch (e: any) {
         console.warn('batch submit failed', e.message);
@@ -151,7 +164,7 @@ export async function POST(req: NextRequest) {
   // non rientra più qui (re-scoring affidato al batch settimanale).
   const { data: unscored } = await supabase
     .from('theses')
-    .select('id, cluster_id, signals, created_at, confidence, status')
+    .select('*')
     .eq('user_id', user.id)
     .eq('signals_total', 0)
     .limit(THESES_PER_REFRESH);
@@ -159,14 +172,17 @@ export async function POST(req: NextRequest) {
     if (!th.signals) continue;
     const { signals, confirmFired, invalidateFired, testableTotal } = await evalSignals(th.signals, th.created_at);
     if (testableTotal === 0) continue; // niente di testabile: lascia 0/0, niente update inutile
-    const outcome = deriveOutcome(confirmFired, invalidateFired, testableTotal, th.confidence ?? 0);
+    const base = (th.source_task_ids?.length ? null : th.conviction_base) ?? await verdictBase(supabase, user.id, th.source_task_ids || []);
+    const confidence = computeConfidence(base, confirmFired, invalidateFired);
+    const outcome = deriveOutcome(confirmFired, invalidateFired, testableTotal, confidence);
     const update: any = {
-      signals, status: outcome.status, accuracy: outcome.accuracy,
+      revision_reason: 'initial_signal_evaluation', confidence, signals, status: outcome.status, accuracy: outcome.accuracy,
       signals_hit: outcome.signalsHit, signals_total: outcome.signalsTotal,
     };
-    if (outcome.status !== 'active' && th.status === 'active') update.closed_at = new Date().toISOString();
-    await supabase.from('theses').update(update).eq('id', th.id);
-    updatedTheses.push({ id: th.id, cluster_id: th.cluster_id, confidence: th.confidence, signals, status: outcome.status, accuracy: outcome.accuracy, signals_hit: outcome.signalsHit, signals_total: outcome.signalsTotal });
+    update.closed_at = outcome.status === 'active' ? null : th.closed_at || new Date().toISOString();
+    const { data: saved, error: saveError } = await admin.from('theses').update(update).eq('id', th.id).eq('user_id', user.id).eq('revision', th.revision).select('revision').maybeSingle();
+    if (saveError || !saved) continue;
+    updatedTheses.push({ id: th.id, revision: saved.revision, cluster_id: th.cluster_id, confidence, signals, status: outcome.status, accuracy: outcome.accuracy, signals_hit: outcome.signalsHit, signals_total: outcome.signalsTotal });
   }
 
   // ── 3. Performance portafogli — prezzi gratuiti, sincrono ──
@@ -201,10 +217,10 @@ export async function POST(req: NextRequest) {
         }
       : ac.performance;
 
-    await supabase
+    await admin
       .from('actions')
       .update({ performance, performance_updated_at: new Date().toISOString() })
-      .eq('id', ac.id);
+      .eq('id', ac.id).eq('user_id', user.id);
     if (items.length) updatedActions.push({ id: ac.id, performance });
   }
 

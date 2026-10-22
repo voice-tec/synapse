@@ -1,3 +1,4 @@
+import { reserveUsage } from '@/lib/ai-usage';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { askClaudeJSON } from '@/lib/anthropic';
@@ -82,16 +83,8 @@ export async function POST(req: NextRequest) {
     .eq('id', user.id)
     .single();
 
-  const plan = profile?.plan || 'free';
-  const used = profile?.tasks_this_month || 0;
-  const limit = PLAN_LIMITS[plan];
-
-  if (used >= limit) {
-    return NextResponse.json(
-      { error: 'limit_reached', plan, limit },
-      { status: 429 }
-    );
-  }
+  const { allowed, plan, used, limit } = await reserveUsage(user.id, 'analysis');
+  if (!allowed) return NextResponse.json({ error: 'limit_reached', plan, limit }, { status: 429 });
 
   const { query, priorContext, lang: rawLang } = await req.json();
   const lang = normLang(rawLang);
@@ -173,13 +166,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Incrementa contatore utilizzo
-    await supabase
-      .from('profiles')
-      .update({ tasks_this_month: used + 1 })
-      .eq('id', user.id);
-
-    return NextResponse.json({ result: parsed, usage: { used: used + 1, limit, plan } });
+    return NextResponse.json({ result: parsed, usage: { used, limit, plan } });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

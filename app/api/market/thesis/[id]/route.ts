@@ -54,8 +54,8 @@ function treeIds(n: ForkNode, acc: string[]) {
   for (const c of n.children) treeIds(c, acc);
 }
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
-  const id = (params.id || '').trim();
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const id = ((await params).id || '').trim();
   if (!id) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 
   const admin = createAdminClient();
@@ -69,7 +69,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   const [{ data: prof }, { data: allMine }, { data: pubAll }] = await Promise.all([
     admin.from('profiles').select('display_name').eq('id', t.user_id).maybeSingle(),
     // Reputazione su TUTTE le tesi dell'autore (anche private), come in vetrina.
-    admin.from('theses').select('status, accuracy').eq('user_id', t.user_id),
+    admin.from('theses').select('status, accuracy').eq('is_public', true).eq('user_id', t.user_id),
     // Pool per l'albero: solo tesi pubbliche (bounded, come la vetrina). Il
     // lineage che passa da tesi private resta invisibile per costruzione.
     admin.from('theses')

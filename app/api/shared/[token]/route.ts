@@ -4,8 +4,8 @@ import { createAdminClient } from '@/lib/supabase-admin';
 // Lettura pubblica dello snapshot per token. Passa dal service role
 // (la tabella non ha policy di lettura anonima: i token non sono enumerabili,
 // chi non ha il link non legge niente).
-export async function GET(req: NextRequest, { params }: { params: { token: string } }) {
-  const token = params.token;
+export async function GET(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+  const token = (await params).token;
   if (!token || token.length > 64) {
     return NextResponse.json({ error: 'not_found' }, { status: 404 });
   }

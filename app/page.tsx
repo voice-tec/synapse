@@ -3,6 +3,8 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
+import { safeHTML, escapeHTML } from '@/lib/safe-html';
+import { mountThesisCard } from '@/lib/thesis-card-ui';
 import { STYLE } from './synapse/style';
 import { BODY_FOR } from './synapse/body';
 
@@ -30,6 +32,9 @@ export default function SynapsePage() {
         else if ((navigator.language || '').toLowerCase().startsWith('en')) lang = 'en';
       } catch {}
       (window as any).__SYN_LANG = lang;
+      (window as any).__synSafeHTML = safeHTML;
+      (window as any).__synEscapeHTML = escapeHTML;
+      (window as any).__synMountThesisCard = mountThesisCard;
 
       // Inject BODY into the container. If the ref isn't ready yet, the canvas
       // won't exist — the waitForCanvas polling below handles that safely.
@@ -89,19 +94,10 @@ export default function SynapsePage() {
       // default DB (0/active/null) finché /api/refresh non valuta i segnali sui
       // dati reali. signals_total=0 è il marcatore "non ancora valutata".
       (window as any).__synSaveThesis = async (mn: any) => {
-        const { data: existing } = await supabase.from('theses').select('id').eq('user_id', user.id).eq('cluster_id', mn.clusterId).maybeSingle();
-        const payload = {
-          user_id: user.id, cluster_id: mn.clusterId, thesis: mn.thesis, confidence: mn.confidence,
-          explanation: mn.explanation, pattern: mn.pattern, suggested_question: mn.suggested_question,
-          sector: mn.sector || null,
-          signals: mn.signals || null,
-          source_task_ids: mn.source_ids, history: mn.history, color: mn.color, pos_x: mn.x, pos_y: mn.y,
-          updated_at: new Date().toISOString(),
-        };
-        const { error } = existing
-          ? await supabase.from('theses').update(payload).eq('id', existing.id)
-          : await supabase.from('theses').insert(payload);
-        if (error) throw error;
+        const response = await fetch('/api/theses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(mn) });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'save_failed');
+        mn.revision = result.thesis.revision;
       };
 
       (window as any).__synSaveAction = async (a: any) => {
@@ -113,9 +109,12 @@ export default function SynapsePage() {
             title: a.title, summary: a.summary, categories: a.categories, caveat: a.caveat,
             pos_x: a.x, pos_y: a.y,
           };
-          if (existing) await supabase.from('actions').update(payload).eq('id', existing.id);
-          else await supabase.from('actions').insert(payload);
-        } catch (e) { console.warn('save action failed', e); }
+          const { user_id: owner, ...editable } = payload;
+          const result = existing
+            ? await supabase.from('actions').update(editable).eq('id', existing.id).eq('user_id', user.id)
+            : await supabase.from('actions').insert(payload);
+          if (result.error) throw result.error;
+        } catch (e) { console.warn('save action failed', e); throw e; }
       };
 
       (window as any).__synDeleteTask = async (taskId: string) => {

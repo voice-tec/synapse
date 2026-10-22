@@ -1,3 +1,4 @@
+import { createAdminClient } from '@/lib/supabase-admin';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'no_verdict' }, { status: 400 });
   }
 
-  const { data: watch, error } = await supabase
+  const { data: watch, error } = await createAdminClient()
     .from('watches')
     .upsert({
       user_id: user.id,

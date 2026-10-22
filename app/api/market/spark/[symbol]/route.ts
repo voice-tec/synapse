@@ -5,8 +5,8 @@ import { fetchSeries } from '@/lib/quotes';
 // chiusure per un simbolo. Cache CDN dura (1h + SWR 24h): protegge il free
 // tier TwelveData — al massimo una chiamata per simbolo l'ora, condivisa da
 // tutti gli utenti. Errore o simbolo ignoto → 404 silenzioso (la UI nasconde).
-export async function GET(_req: NextRequest, { params }: { params: { symbol: string } }) {
-  const symbol = (params.symbol || '').trim().toUpperCase();
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ symbol: string }> }) {
+  const symbol = ((await params).symbol || '').trim().toUpperCase();
   if (!/^[A-Z0-9.\-]{1,12}$/.test(symbol)) {
     return NextResponse.json({ error: 'bad_symbol' }, { status: 404 });
   }

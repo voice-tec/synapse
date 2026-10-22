@@ -1,3 +1,4 @@
+import { authorizedCron } from '@/lib/cron-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { askClaudeJSON } from '@/lib/anthropic';
@@ -23,7 +24,7 @@ Return ONLY valid JSON, no extra text:
 Write "label" and "changed_because" in the SAME LANGUAGE as the previous verdict label quoted in the user message (Italian stays Italian, English stays English).`;
 
 export async function GET(req: NextRequest) {
-  if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!authorizedCron(req.headers.get('authorization'), process.env.CRON_SECRET)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

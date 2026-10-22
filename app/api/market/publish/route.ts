@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const { error } = await supabase
+  const { error } = await createAdminClient()
     .from('theses').update({ is_public: isPublic })
     .eq('id', th.id).eq('user_id', user.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

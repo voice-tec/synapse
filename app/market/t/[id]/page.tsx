@@ -13,7 +13,7 @@ const P = {
     back: '← marketplace', loading: 'caricamento…',
     notfound: 'Tesi non trovata (o non pubblica).', error: 'Tesi non disponibile al momento. Riprova tra poco.',
     published: 'pubblicata il', online: (d: number) => `online da ${d} ${d === 1 ? 'giorno' : 'giorni'}`, dateLocale: 'it-IT',
-    accuracy: 'accuratezza',
+    accuracy: 'allineamento segnali',
     signalsTitle: 'segnali', confirmCol: 'conferma se', invalidateCol: 'invalida se',
     fired: '● scattato', waiting: '○ in attesa', noData: 'dato mancante', manualNote: 'nota qualitativa',
     evoTitle: 'evoluzione', evoSub: "la storia della tesi come l'ha aggiornata l'autore", evoNow: 'versione attuale',
@@ -26,7 +26,7 @@ const P = {
     back: '← marketplace', loading: 'loading…',
     notfound: 'Thesis not found (or not public).', error: 'Thesis unavailable right now. Try again shortly.',
     published: 'published on', online: (d: number) => `online for ${d} day${d === 1 ? '' : 's'}`, dateLocale: 'en-US',
-    accuracy: 'accuracy',
+    accuracy: 'signal alignment',
     signalsTitle: 'signals', confirmCol: 'confirms if', invalidateCol: 'invalidates if',
     fired: '● fired', waiting: '○ waiting', noData: 'data missing', manualNote: 'qualitative note',
     evoTitle: 'evolution', evoSub: 'the story of the thesis as the author updated it', evoNow: 'current version',
@@ -85,7 +85,7 @@ function TreeNodeView({ n, currentId, lp, stl, depth }: {
           {me && <span style={{ color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '.05em' }}>◉ {lp.treeYouAreHere}</span>}
           <span style={{ color: '#a78bfa' }}>◆ {n.confidence ?? '—'}%</span>
           <span style={{ color: st.c }}>{st.l}</span>
-          {n.accuracy != null && <span style={{ color: '#5b9cf6' }}>{Math.round(n.accuracy)}% acc</span>}
+          {n.accuracy != null && <span style={{ color: '#5b9cf6' }}>{Math.round(n.accuracy)}% signals</span>}
           <span style={{ marginLeft: 'auto', color: '#7a7a95' }}>{n.authorName || `#${n.author}`}</span>
         </div>
         <div style={{ fontSize: 11.5, color: me ? '#d4bbff' : '#9a9ab2', lineHeight: 1.45, fontFamily: "'Fraunces', serif", fontStyle: 'italic' }}>

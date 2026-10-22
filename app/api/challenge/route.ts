@@ -1,3 +1,4 @@
+import { createAdminClient } from '@/lib/supabase-admin';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { askClaudeJSON } from '@/lib/anthropic';
@@ -56,9 +57,9 @@ export async function POST(req: NextRequest) {
 
     // Persiste sulla tesi, così sopravvive ai reload
     if (clusterId) {
-      await supabase
+      await createAdminClient()
         .from('theses')
-        .update({ challenge })
+        .update({ challenge, revision_reason: 'ai_challenge' })
         .eq('user_id', user.id)
         .eq('cluster_id', clusterId);
     }

@@ -12,7 +12,9 @@ if (window.__SYN_INITIALIZED) {
 const SYN_LANG = (window.__SYN_LANG==='en') ? 'en' : 'it';
 // ═══ i18n: TT('stringa italiana') → traduzione EN se SYN_LANG='en' ═══
 // Chiave = testo italiano corrente (stile gettext): niente chiavi inventate.
-const SYN_EN = {" tesi ri-valutate": " theses re-evaluated", " con dati aggiornati": " with fresh data", "vedi →": "view →", "Limite di ": "Limit of ", " avvisi attivi per il piano ": " active alerts for plan ", ". Disattiva un avviso o passa a Pro.": ". Turn one off or upgrade to Pro.", "Questa domanda non ha un verdetto da osservare: il watch serve per domande con risposta si/no/dipende.": "This question has no verdict to watch: alerts are for questions answered yes/no/depends.", "◈ portafoglio salvato — sto preparando alcuni spunti dai tuoi titoli": "◈ portfolio saved — preparing a few prompts from your holdings", "◈ portafoglio salvato — le prossime analisi lo useranno": "◈ portfolio saved — future analyses will use it", "salva": "save", "Questo nome è già in uso, scegline un altro.": "This name is already taken, pick another one.", "Salvataggio fallito, riprova.": "Save failed, try again.", "◈ impostazioni salvate": "◈ settings saved", "clicca per aprire": "tap to open", "ipotesi implicita": "implicit hypothesis", "▤ portafoglio tesi": "▤ thesis portfolio", "symnaps-grafo.png": "symnaps-graph.png", "Esportazione non riuscita, riprova.": "Export failed, try again.", "risposta": "answer", "perché": "why", "cosa può cambiare": "what could change", "tu e il grafo": "you and the graph", "esplora": "explore", "🔔 avvisami se il verdetto cambia": "🔔 alert me if the verdict changes", "✓ avviso attivo — ricontrollo ogni settimana": "✓ alert active — re-checked weekly", "⚡ Verdetto cambiato: ": "⚡ Verdict changed: ", "sì": "yes", "dipende": "depends", "convinzione": "conviction", "⚡ contraddice": "⚡ contradicts", "✓ rafforza": "✓ reinforces", "stessa ipotesi": "same hypothesis", "dato complementare": "complementary data", "stesso tipo": "same type", "Eliminare questa task? Verranno rimosse anche le sue connessioni.": "Delete this task? Its connections will be removed too.", "portafoglio tesi": "thesis portfolio", "Portafoglio della tesi": "Thesis portfolio", "tesi confermata ✓": "thesis confirmed ✓", "tesi invalidata ✕": "thesis invalidated ✕", "tesi emergente": "emerging thesis", " giorni": " days", "in corso": "active", "confermata ✓": "confirmed ✓", "invalidata ✕": "invalidated ✕", "Segnali non ancora valutati — vengono controllati sui dati reali alla prossima apertura.": "Signals not yet evaluated — they are checked against real data on the next open.", "Servono almeno 2 segnali scattati per un verdetto e una percentuale di accuratezza.": "A verdict and an accuracy score require at least 2 fired signals.", "tesi confermata": "thesis confirmed", "tesi invalidata": "thesis invalidated", "Pubblica: altri possono trovarla ed evolverla": "Public: others can find and evolve it", "Privata: visibile solo a te": "Private: visible only to you", "pubblicata ✓": "published ✓", "pubblica": "publish", "○ non ancora": "○ not yet", "○ in attesa": "○ waiting", "la tesi": "the thesis", "le prove": "the evidence", "evoluzione": "evolution", "metti alla prova": "put it to the test", "contesto": "context", "Serve confidenza ≥60% per pubblicarla": "Needs ≥60% confidence to be published", "Tesi importata: non ripubblicabile": "Imported thesis: cannot be republished", "Hai raggiunto il massimo di tesi pubbliche (20)": "You reached the maximum of public theses (20)", "Tesi non ancora salvata, riprova tra un istante": "Thesis not saved yet, retry in a moment", "Scegli un nome pubblico (profilo) prima di pubblicare": "Pick a public name (settings) before publishing", "riprova": "retry", "generazione in corso…": "generating…", "Limite mensile di chiamate AI raggiunto.": "Monthly AI call limit reached.", "◈ spunti dal tuo portafoglio": "◈ prompts from your portfolio", "◆ tesi in formazione": "◆ theses forming", "esplora →": "explore →", "serve 1 domanda in più": "needs 1 more question", "tesi in formazione": "theses forming", "Hai raggiunto il limite di ": "You reached the limit of ", " analisi del piano ": " analyses on the plan ", " questo mese. Scopri il piano Pro su /pricing.": " this month. Check out the Pro plan at /pricing.", "parsing intent semantico": "parsing semantic intent", "ricerca web se necessaria": "web search if needed", "analizzando contesto macro": "analyzing macro context", "costruendo fingerprint e output": "building fingerprint and output", "🔗 link copiato negli appunti": "🔗 link copied to clipboard", "🔗 grafo pubblico creato": "🔗 public graph created", "apri →": "open →", "Fai almeno una domanda prima di condividere il grafo.": "Ask at least one question before sharing the graph.", "⚠ salvataggio non riuscito — la domanda potrebbe non essere conservata. Controlla la connessione e riprova.": "⚠ save failed — the question may not be stored. Check your connection and retry.", "Errore: ": "Error: ", "verdetto": "verdict", "scenari": "scenarios", "catalizzatori in arrivo": "upcoming catalysts", "il tuo portafoglio": "your portfolio", "ipotesi e intent estratti": "extracted hypothesis and intent", "settore": "sector", "fonti": "sources", "tocca una domanda per esplorarla →": "tap a question to explore it →", "Symnaps sta leggendo il tuo grafo...": "Symnaps is reading your graph...", "elimina questa task": "delete this task", "▤ nodo azione": "▤ action node", "logica del portafoglio": "portfolio logic", "◆ tesi": "◆ thesis", "evoluzione della tesi": "thesis evolution", "Δ confidenza": "Δ confidence", "verifica manuale": "manual check", "● scattato": "● fired", "segnali da monitorare": "signals to monitor", "la rafforzano": "strengthen it", "nessun segnale": "no signals", "la indeboliscono": "weaken it", "perché questa tesi": "why this thesis", "portafoglio della tesi": "thesis portfolio", "prossimo passo suggerito": "suggested next step", "⊞ genera portafoglio da questa tesi": "⊞ generate a portfolio from this thesis", "Traduce la tesi in categorie di asset e strumenti, con taglio educativo.": "Translates the thesis into asset categories and instruments, educational by design.", "⚔ sfida questa tesi": "⚔ challenge this thesis", "Il mio portafoglio": "My portfolio", "+ aggiungi strumento": "+ add instrument", "annulla": "cancel", "chiudi": "close", "Nome pubblico (marketplace) — richiesto per pubblicare": "Public name (marketplace) — required to publish", "Impostazioni": "Settings", "Piano": "Plan", "vedi piani →": "see plans →", "⏻ esci": "⏻ log out", "Mostrato sulle tue tesi pubblicate al posto di #hash anonimo. Lascia vuoto per restare anonimo (ma non potrai pubblicare).": "Shown on your published theses instead of the anonymous #hash. Leave empty to stay anonymous (but you will not be able to publish).", "Mostrato sulle tue tesi pubblicate al posto di #hash anonimo. Vuoto = anonimo (niente pubblicazioni).": "Shown on your published theses instead of the anonymous #hash. Empty = anonymous (no publishing).", "scegli un nome unico (serve per pubblicare)": "pick a unique name (needed to publish)", "scegli un nome unico": "pick a unique name", " analisi questo mese": " analyses this month", " analisi": " analyses", "totale: ": "total: ", "nome (opzionale)": "name (optional)", "rimuovi": "remove", "Privato — mai visibile ad altri utenti. Le analisi lo usano per dirti quanto sei già esposto a ogni tema.": "Private — never visible to other users. Analyses use it to tell you how exposed you already are to each theme.", "pesi uguali": "equal weights", "completa a 100%": "fill to 100%", "manca ": "missing ", " oltre": " over", "nodi": "nodes", "connessioni": "connections", "ipotesi": "hypotheses", "tesi": "theses", "conferma ": "conf. ", "sviluppa →": "develop →", "Ancora poche domande. Le tesi emergono da ~5 domande collegate: continua a esplorare e qui vedrai quelle che stanno maturando.": "Still few questions. Theses emerge from ~5 linked questions: keep exploring and the ones maturing will show up here.", "il ragionamento": "the reasoning", "punti chiave": "key points", "metriche chiave": "key metrics", "grafico": "chart", "performance dal lancio": "performance since launch", "categorie e strumenti": "categories and instruments", "avvocato del diavolo": "devil's advocate", "⊙ centra": "⊙ center", "↓ esporta": "↓ export", "Inizia →": "Start →", "Avanti →": "Next →", "alta": "high", "media": "medium", "bassa": "low", "⑂ evoluta": "⑂ evolved", "⑂ Evoluta dal marketplace": "⑂ Evolved from the marketplace", " — il track record è azzerato e si ricostruisce sui dati da oggi in poi. Modificala per ripubblicarla come evoluzione.": " — the track record starts from zero and rebuilds on data from today onward. Edit it to republish it as an evolution.", "Identica all'originale: modifica testo o segnali per ripubblicarla come evoluzione": "Identical to the original: edit the text or signals to republish it as an evolution", " da #": " by #", "task sorgente": "source questions", "La confidenza della tesi parte dai verdetti di queste domande, poi si muove coi segnali.": "The thesis confidence starts from these questions' verdicts, then moves with the signals.", "spinge": "pushes it up", "frena": "pulls it down", "neutra": "neutral", "nessun verdetto": "no verdict", "come muove le tue tesi": "how it moves your theses", "la spinge": "pushes it up", "la frena": "pulls it down", "non pesa (nessun verdetto)": "no weight (no verdict)"};
+const safeHTML = window.__synSafeHTML;
+const esc = window.__synEscapeHTML;
+const SYN_EN = {"allineamento segnali":"signal alignment"," tesi ri-valutate": " theses re-evaluated", " con dati aggiornati": " with fresh data", "vedi →": "view →", "Limite di ": "Limit of ", " avvisi attivi per il piano ": " active alerts for plan ", ". Disattiva un avviso o passa a Pro.": ". Turn one off or upgrade to Pro.", "Questa domanda non ha un verdetto da osservare: il watch serve per domande con risposta si/no/dipende.": "This question has no verdict to watch: alerts are for questions answered yes/no/depends.", "◈ portafoglio salvato — sto preparando alcuni spunti dai tuoi titoli": "◈ portfolio saved — preparing a few prompts from your holdings", "◈ portafoglio salvato — le prossime analisi lo useranno": "◈ portfolio saved — future analyses will use it", "salva": "save", "Questo nome è già in uso, scegline un altro.": "This name is already taken, pick another one.", "Salvataggio fallito, riprova.": "Save failed, try again.", "◈ impostazioni salvate": "◈ settings saved", "clicca per aprire": "tap to open", "ipotesi implicita": "implicit hypothesis", "▤ portafoglio tesi": "▤ thesis portfolio", "symnaps-grafo.png": "symnaps-graph.png", "Esportazione non riuscita, riprova.": "Export failed, try again.", "risposta": "answer", "perché": "why", "cosa può cambiare": "what could change", "tu e il grafo": "you and the graph", "esplora": "explore", "🔔 avvisami se il verdetto cambia": "🔔 alert me if the verdict changes", "✓ avviso attivo — ricontrollo ogni settimana": "✓ alert active — re-checked weekly", "⚡ Verdetto cambiato: ": "⚡ Verdict changed: ", "sì": "yes", "dipende": "depends", "convinzione": "conviction", "⚡ contraddice": "⚡ contradicts", "✓ rafforza": "✓ reinforces", "stessa ipotesi": "same hypothesis", "dato complementare": "complementary data", "stesso tipo": "same type", "Eliminare questa task? Verranno rimosse anche le sue connessioni.": "Delete this task? Its connections will be removed too.", "portafoglio tesi": "thesis portfolio", "Portafoglio della tesi": "Thesis portfolio", "tesi confermata ✓": "thesis confirmed ✓", "tesi invalidata ✕": "thesis invalidated ✕", "tesi emergente": "emerging thesis", " giorni": " days", "in corso": "active", "confermata ✓": "confirmed ✓", "invalidata ✕": "invalidated ✕", "Segnali non ancora valutati — vengono controllati sui dati reali alla prossima apertura.": "Signals not yet evaluated — they are checked against real data on the next open.", "Servono almeno 2 segnali scattati per un verdetto e una percentuale di allineamento.": "A verdict and a signal alignment score require at least 2 fired signals.", "tesi confermata": "thesis confirmed", "tesi invalidata": "thesis invalidated", "Pubblica: altri possono trovarla ed evolverla": "Public: others can find and evolve it", "Privata: visibile solo a te": "Private: visible only to you", "pubblicata ✓": "published ✓", "pubblica": "publish", "○ non ancora": "○ not yet", "○ in attesa": "○ waiting", "la tesi": "the thesis", "le prove": "the evidence", "evoluzione": "evolution", "metti alla prova": "put it to the test", "contesto": "context", "Serve confidenza ≥60% per pubblicarla": "Needs ≥60% confidence to be published", "Tesi importata: non ripubblicabile": "Imported thesis: cannot be republished", "Hai raggiunto il massimo di tesi pubbliche (20)": "You reached the maximum of public theses (20)", "Tesi non ancora salvata, riprova tra un istante": "Thesis not saved yet, retry in a moment", "Scegli un nome pubblico (profilo) prima di pubblicare": "Pick a public name (settings) before publishing", "riprova": "retry", "generazione in corso…": "generating…", "Limite mensile di chiamate AI raggiunto.": "Monthly AI call limit reached.", "◈ spunti dal tuo portafoglio": "◈ prompts from your portfolio", "◆ tesi in formazione": "◆ theses forming", "esplora →": "explore →", "serve 1 domanda in più": "needs 1 more question", "tesi in formazione": "theses forming", "Hai raggiunto il limite di ": "You reached the limit of ", " analisi del piano ": " analyses on the plan ", " questo mese. Scopri il piano Pro su /pricing.": " this month. Check out the Pro plan at /pricing.", "parsing intent semantico": "parsing semantic intent", "ricerca web se necessaria": "web search if needed", "analizzando contesto macro": "analyzing macro context", "costruendo fingerprint e output": "building fingerprint and output", "🔗 link copiato negli appunti": "🔗 link copied to clipboard", "🔗 grafo pubblico creato": "🔗 public graph created", "apri →": "open →", "Fai almeno una domanda prima di condividere il grafo.": "Ask at least one question before sharing the graph.", "⚠ salvataggio non riuscito — la domanda potrebbe non essere conservata. Controlla la connessione e riprova.": "⚠ save failed — the question may not be stored. Check your connection and retry.", "Errore: ": "Error: ", "verdetto": "verdict", "scenari": "scenarios", "catalizzatori in arrivo": "upcoming catalysts", "il tuo portafoglio": "your portfolio", "ipotesi e intent estratti": "extracted hypothesis and intent", "settore": "sector", "fonti": "sources", "tocca una domanda per esplorarla →": "tap a question to explore it →", "Symnaps sta leggendo il tuo grafo...": "Symnaps is reading your graph...", "elimina questa task": "delete this task", "▤ nodo azione": "▤ action node", "logica del portafoglio": "portfolio logic", "◆ tesi": "◆ thesis", "evoluzione della tesi": "thesis evolution", "Δ confidenza": "Δ confidence", "verifica manuale": "manual check", "● scattato": "● fired", "segnali da monitorare": "signals to monitor", "la rafforzano": "strengthen it", "nessun segnale": "no signals", "la indeboliscono": "weaken it", "perché questa tesi": "why this thesis", "portafoglio della tesi": "thesis portfolio", "prossimo passo suggerito": "suggested next step", "⊞ genera portafoglio da questa tesi": "⊞ generate a portfolio from this thesis", "Traduce la tesi in categorie di asset e strumenti, con taglio educativo.": "Translates the thesis into asset categories and instruments, educational by design.", "⚔ sfida questa tesi": "⚔ challenge this thesis", "Il mio portafoglio": "My portfolio", "+ aggiungi strumento": "+ add instrument", "annulla": "cancel", "chiudi": "close", "Nome pubblico (marketplace) — richiesto per pubblicare": "Public name (marketplace) — required to publish", "Impostazioni": "Settings", "Piano": "Plan", "vedi piani →": "see plans →", "⏻ esci": "⏻ log out", "Mostrato sulle tue tesi pubblicate al posto di #hash anonimo. Lascia vuoto per restare anonimo (ma non potrai pubblicare).": "Shown on your published theses instead of the anonymous #hash. Leave empty to stay anonymous (but you will not be able to publish).", "Mostrato sulle tue tesi pubblicate al posto di #hash anonimo. Vuoto = anonimo (niente pubblicazioni).": "Shown on your published theses instead of the anonymous #hash. Empty = anonymous (no publishing).", "scegli un nome unico (serve per pubblicare)": "pick a unique name (needed to publish)", "scegli un nome unico": "pick a unique name", " analisi questo mese": " analyses this month", " analisi": " analyses", "totale: ": "total: ", "nome (opzionale)": "name (optional)", "rimuovi": "remove", "Privato — mai visibile ad altri utenti. Le analisi lo usano per dirti quanto sei già esposto a ogni tema.": "Private — never visible to other users. Analyses use it to tell you how exposed you already are to each theme.", "pesi uguali": "equal weights", "completa a 100%": "fill to 100%", "manca ": "missing ", " oltre": " over", "nodi": "nodes", "connessioni": "connections", "ipotesi": "hypotheses", "tesi": "theses", "conferma ": "conf. ", "sviluppa →": "develop →", "Ancora poche domande. Le tesi emergono da ~5 domande collegate: continua a esplorare e qui vedrai quelle che stanno maturando.": "Still few questions. Theses emerge from ~5 linked questions: keep exploring and the ones maturing will show up here.", "il ragionamento": "the reasoning", "punti chiave": "key points", "metriche chiave": "key metrics", "grafico": "chart", "performance dal lancio": "performance since launch", "categorie e strumenti": "categories and instruments", "avvocato del diavolo": "devil's advocate", "⊙ centra": "⊙ center", "↓ esporta": "↓ export", "Inizia →": "Start →", "Avanti →": "Next →", "alta": "high", "media": "medium", "bassa": "low", "⑂ evoluta": "⑂ evolved", "⑂ Evoluta dal marketplace": "⑂ Evolved from the marketplace", " — il track record è azzerato e si ricostruisce sui dati da oggi in poi. Modificala per ripubblicarla come evoluzione.": " — the track record starts from zero and rebuilds on data from today onward. Edit it to republish it as an evolution.", "Identica all'originale: modifica testo o segnali per ripubblicarla come evoluzione": "Identical to the original: edit the text or signals to republish it as an evolution", " da #": " by #", "task sorgente": "source questions", "La confidenza della tesi parte dai verdetti di queste domande, poi si muove coi segnali.": "The thesis confidence starts from these questions' verdicts, then moves with the signals.", "spinge": "pushes it up", "frena": "pulls it down", "neutra": "neutral", "nessun verdetto": "no verdict", "come muove le tue tesi": "how it moves your theses", "la spinge": "pushes it up", "la frena": "pulls it down", "non pesa (nessun verdetto)": "no weight (no verdict)"};
 function TT(t){ return (SYN_LANG==='en' && SYN_EN[t]!==undefined) ? SYN_EN[t] : t; }
 
 // NON azzerare: page.tsx la preload PRIMA di iniettare questo script — azzerarla
@@ -51,7 +53,7 @@ async function persistThesis(mn){
   if(mn.source_ids && mn.source_ids.some(id=>!isPersistedId(id))) return false;
   if(!window.__synSaveThesis) return true;
   try{ await window.__synSaveThesis(mn); return true; }
-  catch(e){ console.warn('save thesis failed', e); return false; }
+  catch(e){ console.warn('save thesis failed', e); showNotif(TT('⚠ salvataggio non riuscito — la domanda potrebbe non essere conservata. Controlla la connessione e riprova.'),9000,'error'); return false; }
 }
 // Banner di notifica riutilizzabile (#mem-notif). variant 'error' lo colora rosso.
 function showNotif(text, ms, variant){
@@ -91,7 +93,7 @@ async function refreshStaleData(){
       // Match per id DB (tesi caricate dal preload) o per clusterId (tesi emerse
       // in questa sessione, il cui id locale è 'mem_…' e non l'uuid del DB).
       const mn=MEMORY_NODES.find(m=>m.id===t.id||(t.cluster_id&&m.clusterId===t.cluster_id));
-      if(mn){ if(t.confidence!=null) mn.confidence=t.confidence; if(t.history) mn.history=t.history; if(t.signals) mn.signals=t.signals; if(t.status) mn.status=t.status; if('accuracy' in t) mn.accuracy=t.accuracy; if('signals_hit' in t) mn.signals_hit=t.signals_hit; if('signals_total' in t) mn.signals_total=t.signals_total; computeConfDelta(mn); touched++; }
+      if(mn){ if(t.revision) mn.revision=t.revision; if(t.confidence!=null) mn.confidence=t.confidence; if(t.history) mn.history=t.history; if(t.signals) mn.signals=t.signals; if(t.status) mn.status=t.status; if('accuracy' in t) mn.accuracy=t.accuracy; if('signals_hit' in t) mn.signals_hit=t.signals_hit; if('signals_total' in t) mn.signals_total=t.signals_total; computeConfDelta(mn); touched++; }
     });
     (json.updatedActions||[]).forEach(a=>{
       const an=ACTION_NODES.find(x=>x.id===a.id);
@@ -177,10 +179,10 @@ async function toggleWatch(task, btn){
 function pfeRow(h){
   const r=document.createElement('div');
   r.className='pfe-row';
-  r.innerHTML=`<input class="pfe-ticker" placeholder="VWCE" maxlength="12" value="${String(h&&h.ticker||'').replace(/["<>]/g,'')}">
+  r.innerHTML=safeHTML(`<input class="pfe-ticker" placeholder="VWCE" maxlength="12" value="${String(h&&h.ticker||'').replace(/["<>]/g,'')}">
   <input class="pfe-name" placeholder="${TT('nome (opzionale)')}" maxlength="60" value="${String(h&&h.name||'').replace(/["<>]/g,'')}">
   <input class="pfe-weight" placeholder="%" inputmode="decimal" maxlength="6" value="${h&&h.weight!=null?h.weight:''}">
-  <button class="pfe-del" title="${TT('rimuovi')}">×</button>`;
+  <button class="pfe-del" title="${TT('rimuovi')}">×</button>`);
   r.querySelector('.pfe-del').addEventListener('click',()=>{ r.remove(); pfeUpdateTotal(); });
   r.querySelector('.pfe-weight').addEventListener('input',pfeUpdateTotal);
   r.querySelector('.pfe-ticker').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase(); pfeUpdateTotal(); });
@@ -202,9 +204,9 @@ function pfeUpdateTotal(){
   const el=document.getElementById('pfe-total');
   if(el){
     const t1=Math.round(tot*10)/10;
-    if(Math.abs(tot-100)<0.5) el.innerHTML='<span class="pfe-chip ok">✓ '+t1+'%</span>';
-    else if(tot>100) el.innerHTML='<span class="pfe-chip over">'+t1+'% · +'+(Math.round((tot-100)*10)/10)+TT(' oltre')+'</span>';
-    else el.innerHTML='<span class="pfe-chip under">'+t1+'%'+(tot>0?' · '+TT('manca ')+(Math.round((100-tot)*10)/10)+'%':'')+'</span>';
+    if(Math.abs(tot-100)<0.5) el.innerHTML=safeHTML('<span class="pfe-chip ok">✓ '+t1+'%</span>');
+    else if(tot>100) el.innerHTML=safeHTML('<span class="pfe-chip over">'+t1+'% · +'+(Math.round((tot-100)*10)/10)+TT(' oltre')+'</span>');
+    else el.innerHTML=safeHTML('<span class="pfe-chip under">'+t1+'%'+(tot>0?' · '+TT('manca ')+(Math.round((100-tot)*10)/10)+'%':'')+'</span>');
   }
   // Barra di distribuzione: un segmento colorato per strumento, resto in grigio
   const bar=document.getElementById('pfe-dist');
@@ -213,11 +215,11 @@ function pfeUpdateTotal(){
     let html='';
     rows.forEach((r,i)=>{ if(r.w>0) html+='<i style="width:'+(r.w/scale*100)+'%;background:'+PFE_PALETTE[i%PFE_PALETTE.length]+'" title="'+(r.t||'?')+' '+r.w+'%"></i>'; });
     if(tot<100) html+='<i class="pfe-rest" style="width:'+((100-tot)/scale*100)+'%"></i>';
-    bar.innerHTML=html;
+    bar.innerHTML=safeHTML(html);
     bar.classList.toggle('over',tot>100.4);
     // Legenda mini sotto la barra: TICKER peso%, coi colori dei segmenti
     const leg=document.getElementById('pfe-legend');
-    if(leg) leg.innerHTML=rows.filter(r=>r.w>0&&r.t).map((r,i)=>'<span><b style="color:'+PFE_PALETTE[rows.indexOf(r)%PFE_PALETTE.length]+'">●</b> '+r.t+' '+r.w+'%</span>').join('');
+    if(leg) leg.innerHTML=safeHTML(rows.filter(r=>r.w>0&&r.t).map((r,i)=>'<span><b style="color:'+PFE_PALETTE[rows.indexOf(r)%PFE_PALETTE.length]+'">●</b> '+r.t+' '+r.w+'%</span>').join(''));
   }
 }
 function openPortfolioEditor(){
@@ -225,7 +227,7 @@ function openPortfolioEditor(){
   const holdings=Array.isArray(window.__SYN_PORTFOLIO)?window.__SYN_PORTFOLIO:[];
   const ov=document.createElement('div');
   ov.className='pfe-overlay'; ov.id='pfe-overlay';
-  ov.innerHTML=`<div class="pfe-card">
+  ov.innerHTML=safeHTML(`<div class="pfe-card">
     <div class="pfe-head">
       <span class="pfe-glyph">◈</span>
       <div>
@@ -254,7 +256,7 @@ function openPortfolioEditor(){
       <span><button class="pfe-cancel" id="pfe-cancel">${TT('annulla')}</button>
       <button class="pfe-save" id="pfe-save">${TT('salva')}</button></span>
     </div>
-  </div>`;
+  </div>`);
   document.body.appendChild(ov);
   const nameInput=document.getElementById('pfe-display-name');
   if(nameInput)nameInput.value=window.__SYN_DISPLAY_NAME||'';
@@ -327,7 +329,7 @@ function openSettingsModal(){
   const u=window.__SYN_USAGE;
   const ov=document.createElement('div');
   ov.className='pfe-overlay';
-  ov.innerHTML=`
+  ov.innerHTML=safeHTML(`
   <div class="pfe-card">
     <div class="pfe-title">${TT('Impostazioni')}</div>
     <div>
@@ -354,7 +356,7 @@ function openSettingsModal(){
       <span><button class="pfe-cancel" id="set-cancel">${TT('chiudi')}</button>
       <button class="pfe-save" id="set-save">salva</button></span>
     </div>
-  </div>`;
+  </div>`);
   document.body.appendChild(ov);
   const inp=document.getElementById('set-display-name');
   inp.value=window.__SYN_DISPLAY_NAME||'';
@@ -448,7 +450,7 @@ function loop() {
   const graphH = H - 110;
   ctx.clearRect(0,0,W,H);
 
-  if (!NODES.length) { requestAnimationFrame(loop); return; }
+  if (!NODES.length && !MEMORY_NODES.length && !ACTION_NODES.length) { requestAnimationFrame(loop); return; }
 
   // Apply pan/zoom view transform (everything drawn after this is in "world" coords)
   ctx.save();
@@ -1042,8 +1044,8 @@ function renderGraphSearch(){
   const inp=document.getElementById('gs-input'); const box=document.getElementById('gs-results');
   if(!inp||!box) return;
   const hits=graphSearchHits(inp.value);
-  if(!hits.length){ box.innerHTML = inp.value.trim()? '<div style="padding:10px 12px;font-size:11px;color:#6a6a88">nessun risultato</div>' : ''; box.style.display = inp.value.trim()?'block':'none'; return; }
-  box.innerHTML = hits.map((h,i)=>'<div class="gs-row" data-i="'+i+'" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:11.5px;color:#cfcfe8"><span style="flex:0 0 auto;font-size:9px;padding:2px 7px;border-radius:20px;background:'+h.color+'22;border:1px solid '+h.color+'55;color:'+h.color+'">'+h.tag+'</span><span style="flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+String(h.label).replace(/</g,'&lt;')+'</span></div>').join('');
+  if(!hits.length){ box.innerHTML = safeHTML(inp.value.trim()? '<div style="padding:10px 12px;font-size:11px;color:#6a6a88">nessun risultato</div>' : ''); box.style.display = inp.value.trim()?'block':'none'; return; }
+  box.innerHTML = safeHTML(hits.map((h,i)=>'<div class="gs-row" data-i="'+i+'" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:11.5px;color:#cfcfe8"><span style="flex:0 0 auto;font-size:9px;padding:2px 7px;border-radius:20px;background:'+h.color+'22;border:1px solid '+h.color+'55;color:'+h.color+'">'+h.tag+'</span><span style="flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+String(h.label).replace(/</g,'&lt;')+'</span></div>').join(''));
   box.style.display='block';
   box.querySelectorAll('.gs-row').forEach(el=>{
     el.addEventListener('mouseenter',()=>{ el.style.background='#1e1e34'; });
@@ -1140,7 +1142,7 @@ function openDrawer(task){
   const wsTag = task.output?.sources?.length
     ? ` <span style="font-size:10px;padding:2px 8px;border-radius:5px;background:#0a2a20;color:#2ecf98;vertical-align:middle;margin-left:6px">⊕ dati reali</span>`
     : ` <span style="font-size:10px;padding:2px 8px;border-radius:5px;background:var(--bg4);color:var(--text3);vertical-align:middle;margin-left:6px">training</span>`;
-  document.getElementById('dr-query').innerHTML = task.raw_query + wsTag;
+  document.getElementById('dr-query').innerHTML = safeHTML(esc(task.raw_query) + wsTag);
   renderDrawerBody(task);
   document.getElementById('backdrop').classList.add('open');
   document.getElementById('drawer').classList.add('open');
@@ -1162,8 +1164,8 @@ function bandHTML(txt,color){return `<div class="band-lbl" style="--c:${color}">
 function renderDrawerBody(task){
   const color=TC[task.intent?.analysis_type]||'#5b9cf6';
   const body=document.getElementById('dr-body');
-  body.innerHTML='';
-  const band=(txt)=>body.insertAdjacentHTML('beforeend',bandHTML(txt,color));
+  body.innerHTML=safeHTML('');
+  const band=(txt)=>body.insertAdjacentHTML('beforeend',safeHTML(bandHTML(txt,color)));
 
   // Verdetto — la risposta secca alla domanda, prima di tutto
   const vd=task.output?.verdict;
@@ -1172,15 +1174,15 @@ function renderDrawerBody(task){
     const VC={si:'#4ad68a',no:'#e05555',dipende:'#f0a030'};
     const vc=VC[vd.stance]||'#7a7a95';
     const vx=document.createElement('div');
-    vx.innerHTML=`<div class="section-lbl">${TT('verdetto')}</div>
+    vx.innerHTML=safeHTML(`<div class="section-lbl">${TT('verdetto')}</div>
     <div class="verdict-box" style="background:${vc}12;border:1px solid ${vc}30">
       <div class="verdict-top">
         <span class="verdict-pill" style="color:${vc};background:${vc}1a;border:1px solid ${vc}40">${vd.stance==='si'?TT('sì'):vd.stance==='dipende'?TT('dipende'):vd.stance||'—'}</span>
         ${vd.confidence?`<span class="verdict-conf">${TT('convinzione')} ${TT(vd.confidence)}</span>`:''}
       </div>
-      <div class="verdict-lbl">${vd.label}</div>
+      <div class="verdict-lbl">${esc(vd.label)}</div>
     </div>
-    <button class="watch-btn${watchFor(task.id)?' on':''}" id="watch-btn">${watchFor(task.id)?TT('✓ avviso attivo — ricontrollo ogni settimana'):TT('🔔 avvisami se il verdetto cambia')}</button>`;
+    <button class="watch-btn${watchFor(task.id)?' on':''}" id="watch-btn">${watchFor(task.id)?TT('✓ avviso attivo — ricontrollo ogni settimana'):TT('🔔 avvisami se il verdetto cambia')}</button>`);
     body.appendChild(vx);
     setTimeout(()=>{ const wb=document.getElementById('watch-btn'); if(wb) wb.addEventListener('click',()=>toggleWatch(task,wb)); },100);
   }
@@ -1189,41 +1191,41 @@ function renderDrawerBody(task){
   if(task.output?.insight||task.output?.takeaways?.length||task.output?.metrics?.length||task.output?.chart?.values?.length) band(TT('perché'));
   if(task.output?.insight){
     const ins=document.createElement('div');
-    ins.innerHTML=`<div class="section-lbl">${TT('il ragionamento')}</div><div class="insight-box">${task.output.insight}</div>`;
+    ins.innerHTML=safeHTML(`<div class="section-lbl">${TT('il ragionamento')}</div><div class="insight-box">${esc(task.output.insight)}</div>`);
     body.appendChild(ins);
   }
 
   // Punti chiave — i fatti che reggono la conclusione
   if(task.output?.takeaways?.length){
     const tk=document.createElement('div');
-    tk.innerHTML=`<div class="section-lbl">${TT('punti chiave')}</div><div class="tk-list">
+    tk.innerHTML=safeHTML(`<div class="section-lbl">${TT('punti chiave')}</div><div class="tk-list">
     ${task.output.takeaways.slice(0,3).map((t,i)=>`<div class="tk-row"><span class="tk-num" style="color:${color}">0${i+1}</span><span>${t}</span></div>`).join('')}
-    </div>`;
+    </div>`);
     body.appendChild(tk);
   }
 
   // Metrics
   if(task.output?.metrics?.length){
     const m=document.createElement('div');
-    m.innerHTML=`<div class="section-lbl">${TT('metriche chiave')}</div><div class="metrics-row">
+    m.innerHTML=safeHTML(`<div class="section-lbl">${TT('metriche chiave')}</div><div class="metrics-row">
     ${task.output.metrics.slice(0,3).map(x=>`
       <div class="metric-box" style="border-bottom:2px solid ${x.pos===true?'#1f4a33':x.pos===false?'#4a1f1f':'var(--border)'}">
-        <div class="metric-k">${x.k}</div>
-        <div class="metric-v" style="color:${x.pos===true?'var(--green)':x.pos===false?'var(--red)':'var(--text)'}">${x.pos===true?'<span style="font-size:11px">▲</span> ':x.pos===false?'<span style="font-size:11px">▼</span> ':''}${x.v}</div>
+        <div class="metric-k">${esc(x.k)}</div>
+        <div class="metric-v" style="color:${x.pos===true?'var(--green)':x.pos===false?'var(--red)':'var(--text)'}">${x.pos===true?'<span style="font-size:11px">▲</span> ':x.pos===false?'<span style="font-size:11px">▼</span> ':''}${esc(x.v)}</div>
       </div>`).join('')}
-    </div>`;
+    </div>`);
     body.appendChild(m);
   }
 
   // Chart
   if(task.output?.chart?.values?.length){
     const cc=document.createElement('div');
-    cc.innerHTML=`<div class="section-lbl">${TT('grafico')}</div>
+    cc.innerHTML=safeHTML(`<div class="section-lbl">${TT('grafico')}</div>
     <div class="chart-box">
       <div class="chart-lbl">${task.output.chart.label||''}</div>
       <canvas class="chart-canvas" id="dc-${task.id}"></canvas>
       ${task.output.chart.asof?`<div class="chart-asof">dati al ${new Date(task.output.chart.asof).toLocaleDateString('it',{day:'numeric',month:'short'})}, ${new Date(task.output.chart.asof).toLocaleTimeString('it',{hour:'2-digit',minute:'2-digit'})}</div>`:''}
-    </div>`;
+    </div>`);
     body.appendChild(cc);
     setTimeout(()=>drawChart('dc-'+task.id,task.output.chart,color),60);
   }
@@ -1233,28 +1235,28 @@ function renderDrawerBody(task){
   if(task.output?.scenarios?.length){
     const SCEN={bull:{c:'#4ad68a',l:'rialzista'},base:{c:'#5b9cf6',l:'base'},bear:{c:'#e05555',l:'ribassista'}};
     const sc=document.createElement('div');
-    sc.innerHTML=`<div class="section-lbl">${TT('scenari')}</div><div class="scen-grid">
+    sc.innerHTML=safeHTML(`<div class="section-lbl">${TT('scenari')}</div><div class="scen-grid">
     ${task.output.scenarios.slice(0,3).map(s=>{const m=SCEN[s.name]||{c:'#7a7a95',l:s.name||''};return `
       <div class="scen-cell" style="border-top-color:${m.c}66">
         <span class="scen-name" style="color:${m.c}">${m.l}</span>
         <span class="scen-prob">${s.prob||'—'}</span>
-        <span class="scen-trigger">se ${s.trigger||'—'}</span>
-        <span class="scen-outcome">→ ${s.outcome||''}</span>
+        <span class="scen-trigger">se ${esc(s.trigger||'—')}</span>
+        <span class="scen-outcome">→ ${esc(s.outcome||'')}</span>
       </div>`;}).join('')}
-    </div>`;
+    </div>`);
     body.appendChild(sc);
   }
 
   // Catalizzatori in arrivo — il "quando ricontrollare"
   if(task.output?.catalysts?.length){
     const ct=document.createElement('div');
-    ct.innerHTML=`<div class="section-lbl">${TT('catalizzatori in arrivo')}</div><div class="cat-list">
+    ct.innerHTML=safeHTML(`<div class="section-lbl">${TT('catalizzatori in arrivo')}</div><div class="cat-list">
     ${task.output.catalysts.slice(0,4).map(c=>`
       <div class="cat-row">
         <span class="cat-when">${c.when||''}</span>
-        <span><div class="cat-event">${c.event||''}</div>${c.why?`<div class="cat-why">${c.why}</div>`:''}</span>
+        <span><div class="cat-event">${esc(c.event||'')}</div>${c.why?`<div class="cat-why">${esc(c.why)}</div>`:''}</span>
       </div>`).join('')}
-    </div>`;
+    </div>`);
     body.appendChild(ct);
   }
 
@@ -1272,7 +1274,7 @@ function renderDrawerBody(task){
     else if(v.stance==='no') fx=`<span class="source-fx" style="color:var(--red)">↓ ${TT('la frena')} · no${v.confidence?' '+TT(v.confidence):''}</span>`;
     else fx=`<span class="source-fx" style="color:var(--text2)">→ ${TT('neutra')} · ${TT('dipende')}</span>`;
     const tw=document.createElement('div');
-    tw.innerHTML=`<div class="section-lbl">${TT('come muove le tue tesi')}</div>
+    tw.innerHTML=safeHTML(`<div class="section-lbl">${TT('come muove le tue tesi')}</div>
     <div style="display:flex;flex-direction:column;gap:6px">
     ${_inTheses.map((mn,i)=>`<div class="source-pill task-thesis-pill" data-tidx="${i}" style="cursor:pointer;border-color:${mn.color||'#a78bfa'}33">
       <span style="flex-shrink:0;color:${mn.color||'#a78bfa'}">◆</span>
@@ -1280,7 +1282,7 @@ function renderDrawerBody(task){
       ${fx}
       <span style="flex-shrink:0;color:var(--text3);font-size:10px">→</span>
     </div>`).join('')}
-    </div>`;
+    </div>`);
     body.appendChild(tw);
     setTimeout(()=>{ tw.querySelectorAll('.task-thesis-pill').forEach(el=>{
       el.addEventListener('click',()=>{ closeDrawer(); setTimeout(()=>openMemoryDrawer(_inTheses[+el.dataset.tidx]),150); });
@@ -1289,8 +1291,8 @@ function renderDrawerBody(task){
   // Collegamento al portafoglio — esposizione già presente al tema
   if(task.output?.portfolio_link?.note){
     const pf=document.createElement('div');
-    pf.innerHTML=`<div class="section-lbl">${TT('il tuo portafoglio')}</div>
-    <div class="pf-box"><span style="flex-shrink:0">◈</span><span>${task.output.portfolio_link.note}</span></div>`;
+    pf.innerHTML=safeHTML(`<div class="section-lbl">${TT('il tuo portafoglio')}</div>
+    <div class="pf-box"><span style="flex-shrink:0">◈</span><span>${esc(task.output.portfolio_link.note)}</span></div>`);
     body.appendChild(pf);
   }
 
@@ -1298,29 +1300,30 @@ function renderDrawerBody(task){
   // details chiuso di default. Wrappato in <div>: il selettore dello stagger
   // (#dr-body>div) non matcha <details>.
   const meta=document.createElement('div');
-  meta.innerHTML=`<details class="meta-fold"><summary>${TT('ipotesi e intent estratti')}</summary>
-    ${task.fingerprint?.hypothesis?`<div class="hyp-box">"${task.fingerprint.hypothesis}"</div>`:''}
+  meta.innerHTML=safeHTML(`<details class="meta-fold"><summary>${TT('ipotesi e intent estratti')}</summary>
+    ${task.fingerprint?.hypothesis?`<div class="hyp-box">"${esc(task.fingerprint.hypothesis)}"</div>`:''}
     <div class="intent-grid">
       <div class="icell"><span class="icell-k">assets</span><span class="icell-v">${(task.intent?.assets||[]).slice(0,3).join(', ')||'—'}</span></div>
       <div class="icell"><span class="icell-k">metriche</span><span class="icell-v">${(task.intent?.metrics||[]).slice(0,2).join(', ')||'—'}</span></div>
       <div class="icell"><span class="icell-k">periodo</span><span class="icell-v">${task.intent?.timeframe||'—'}</span></div>
       <div class="icell"><span class="icell-k">${TT('settore')}</span><span class="icell-v" style="color:${color}">${task.fingerprint?.sector||'—'}</span></div>
     </div>
-  </details>`;
+  </details>`);
   body.appendChild(meta);
 
   // Connections
   if(task.connections?.length){
     const co=document.createElement('div');
-    co.innerHTML=`<div class="section-lbl">connessioni nel grafo (${task.connections.length})</div>
+    co.innerHTML=safeHTML(`<div class="section-lbl">connessioni nel grafo (${task.connections.length})</div>
     <div class="conns-list">
     ${task.connections.map(c=>`
-      <div class="conn-pill" onclick="jumpToNode('${c.task_id}')">
+      <div class="conn-pill" data-jump="${esc(c.task_id)}">
         <span class="conn-pct">${Math.round(c.score*100)}%</span>
         <span class="conn-type" style="color:${({contradiction:'#e05555',supports:'#4ad68a'})[c.type]||'inherit'}">${({contradiction:TT('⚡ contraddice'),supports:TT('✓ rafforza'),same_hypothesis:TT('stessa ipotesi'),complementary_data:TT('dato complementare'),same_question_type:TT('stesso tipo')})[c.type]||c.type.replace(/_/g,' ')}</span>
-        <span class="conn-q">${c.query}</span>
+        <span class="conn-q">${esc(c.query)}</span>
       </div>`).join('')}
-    </div>`;
+    </div>`);
+    co.querySelectorAll('[data-jump]').forEach(el=>el.addEventListener('click',()=>jumpToNode(el.dataset.jump)));
     body.appendChild(co);
   }
 
@@ -1331,14 +1334,14 @@ function renderDrawerBody(task){
     const title=String((s&&s.title)||s||'').slice(0,80).replace(/[<>"]/g,'');
     if(!url) return `<span style="font-size:10px;padding:3px 10px;border-radius:20px;background:var(--bg4);color:var(--text3);border:1px solid var(--border)">${title}</span>`;
     let host='';try{host=new URL(url).hostname.replace('www.','')}catch(e){}
-    return `<a href="${url}" target="_blank" rel="noopener" style="font-size:10px;padding:3px 10px;border-radius:20px;background:var(--bg4);color:var(--blue);border:1px solid var(--border2);text-decoration:none;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle">${host?host+' · ':''}${title}</a>`;
+    return `<a href="${esc(/^https?:\/\//i.test(url)?url:'#')}" target="_blank" rel="noopener" style="font-size:10px;padding:3px 10px;border-radius:20px;background:var(--bg4);color:var(--blue);border:1px solid var(--border2);text-decoration:none;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle">${host?host+' · ':''}${title}</a>`;
   }
   if(task.output?.sources?.length){
     const src=document.createElement('div');
-    src.innerHTML=`<div class="section-lbl">${TT('fonti')}</div>
+    src.innerHTML=safeHTML(`<div class="section-lbl">${TT('fonti')}</div>
     <div style="display:flex;flex-wrap:wrap;gap:6px">
     ${task.output.sources.map(renderSourcePill).join('')}
-    </div>`;
+    </div>`);
     body.appendChild(src);
   }
 
@@ -1346,19 +1349,19 @@ function renderDrawerBody(task){
   band(TT('esplora'));
   const sqSection = document.createElement('div');
   sqSection.id = 'sq-section';
-  sqSection.innerHTML = `
+  sqSection.innerHTML = safeHTML(`
     <div class="section-lbl">${TT('tocca una domanda per esplorarla →')}</div>
     <div id="sq-loading" style="display:flex;align-items:center;gap:8px;padding:10px 0;color:var(--text3);font-size:11px">
       <div class="spinner"></div><span>${TT('Symnaps sta leggendo il tuo grafo...')}</span>
     </div>
-    <div id="sq-list" style="display:none;flex-direction:column;gap:6px"></div>`;
+    <div id="sq-list" style="display:none;flex-direction:column;gap:6px"></div>`);
   body.appendChild(sqSection);
   setTimeout(()=>loadSuggestedQuestions(task), 200);
 
   // Delete task button
   const delSection = document.createElement('div');
   delSection.style.cssText = 'margin-top:8px;padding-top:16px;border-top:1px solid var(--border)';
-  delSection.innerHTML = `<button id="del-task-btn" style="width:100%;background:none;border:1px solid #3a1a1a;border-radius:10px;padding:11px;color:#c0506a;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;transition:all .2s">${TT('elimina questa task')}</button>`;
+  delSection.innerHTML = safeHTML(`<button id="del-task-btn" style="width:100%;background:none;border:1px solid #3a1a1a;border-radius:10px;padding:11px;color:#c0506a;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;transition:all .2s">${TT('elimina questa task')}</button>`);
   body.appendChild(delSection);
   setTimeout(()=>{
     const db=document.getElementById('del-task-btn');
@@ -1457,7 +1460,7 @@ function openActionDrawer(an){
   badge.textContent=TT('portafoglio tesi');
   badge.style.background=color+'22';badge.style.color=color;
   tintDrawer(color);
-  document.getElementById('dr-query').innerHTML=`<span style="font-size:13px;display:block;margin-bottom:4px;opacity:.6">${TT('▤ nodo azione')}</span>${an.title||TT('Portafoglio della tesi')}`;
+  document.getElementById('dr-query').innerHTML=safeHTML(`<span style="font-size:13px;display:block;margin-bottom:4px;opacity:.6">${TT('▤ nodo azione')}</span>${esc(an.title||TT('Portafoglio della tesi'))}`);
 
   const perf=an.performance;
   const perfMap={};
@@ -1498,7 +1501,7 @@ function openActionDrawer(an){
       </div>
     </div>`:'';
 
-  body.innerHTML=`
+  body.innerHTML=safeHTML(`
     <div>
       <div class="section-lbl">${TT('logica del portafoglio')}</div>
       <div style="background:var(--bg3);border-left:2px solid ${color};border-radius:0 12px 12px 0;padding:14px 18px;font-family:'Fraunces',serif;font-size:14px;font-weight:300;color:var(--text);line-height:1.6">${an.summary||''}</div>
@@ -1512,7 +1515,7 @@ function openActionDrawer(an){
     <div style="background:#1a1505;border:1px solid #3a2800;border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start">
       <span style="color:#f0a030;font-size:14px;flex-shrink:0">⚠</span>
       <span style="font-size:10px;color:#9a8a6a;line-height:1.5">${an.caveat||'Contenuto puramente educativo e illustrativo. Non costituisce consulenza finanziaria né raccomandazione personalizzata. Valuta sempre in autonomia e, se necessario, consulta un professionista abilitato.'}</span>
-    </div>`;
+    </div>`);
 
   document.getElementById('backdrop').classList.add('open');
   document.getElementById('drawer').classList.add('open');
@@ -1531,10 +1534,10 @@ function openMemoryDrawer(mn){
   else{badge.textContent=TT('tesi emergente');badge.style.background=color+'22';badge.style.color=color;}
   tintDrawer(color);
   const impAuthor=mn.imported_from_author||null;
-  const impBadge=impAuthor?`<span style="font-size:10px;color:#a78bfa;background:#241a3a;border-radius:6px;padding:2px 8px;margin-left:8px;vertical-align:middle">${TT('⑂ evoluta')} · #${impAuthor}</span>`:'';
+  const impBadge=impAuthor?`<span style="font-size:10px;color:#a78bfa;background:#241a3a;border-radius:6px;padding:2px 8px;margin-left:8px;vertical-align:middle">${TT('⑂ evoluta')} · #${esc(impAuthor)}</span>`:'';
   // Header compatto: il testo completo della tesi vive solo nell'hero
   // (prima era duplicato qui e nell'hero).
-  document.getElementById('dr-query').innerHTML=`<span style="font-size:13px;opacity:.6">${TT('◆ tesi')}</span>${mn.sector?`<span style="font-size:10px;color:var(--text2);background:var(--bg4);border-radius:6px;padding:2px 8px;margin-left:8px;vertical-align:middle">${mn.sector}</span>`:''}${impBadge}`;
+  document.getElementById('dr-query').innerHTML=safeHTML(`<span style="font-size:13px;opacity:.6">${TT('◆ tesi')}</span>${mn.sector?`<span style="font-size:10px;color:var(--text2);background:var(--bg4);border-radius:6px;padding:2px 8px;margin-left:8px;vertical-align:middle">${esc(mn.sector)}</span>`:''}${impBadge}`);
 
   // Timeline della history (senza wrapper/label: vive dentro la sezione
   // "evoluzione della tesi" insieme alle stats).
@@ -1554,7 +1557,7 @@ function openMemoryDrawer(mn){
             </div>
             <div style="flex:1">
               ${isLatest?`<div style="font-size:9px;color:${color};text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">ora</div>`:''}
-              <div style="font-size:${isLatest?13:11}px;color:${isLatest?'var(--text)':'var(--text2)'};font-family:'Fraunces',serif;font-weight:300;font-style:italic;line-height:1.4">"${h.thesis}"</div>
+              <div style="font-size:${isLatest?13:11}px;color:${isLatest?'var(--text)':'var(--text2)'};font-family:'Fraunces',serif;font-weight:300;font-style:italic;line-height:1.4">"${esc(h.thesis)}"</div>
               ${!isLatest&&h.thesis!==mn.history[i+1]?.thesis?`<div style="font-size:9px;color:var(--text3);margin-top:4px">→ riformulata</div>`:''}
             </div>
           </div>`;
@@ -1605,7 +1608,7 @@ function openMemoryDrawer(mn){
   let trackNote='';
   if(denom===0) trackNote='Nessun segnale misurabile su dati di mercato: questa tesi non ha un track record automatico.';
   else if(!evaluated) trackNote=TT('Segnali non ancora valutati — vengono controllati sui dati reali alla prossima apertura.');
-  else if(mn.accuracy==null) trackNote=TT('Servono almeno 2 segnali scattati per un verdetto e una percentuale di accuratezza.');
+  else if(mn.accuracy==null) trackNote=TT('Servono almeno 2 segnali scattati per un verdetto e una percentuale di allineamento.');
   const badgeLabel=mn.status==='confirmed'?TT('tesi confermata'):mn.status==='invalidated'?TT('tesi invalidata'):TT('tesi emergente');
   // "Cosa la conferma": primo segnale di conferma leggibile — il punto d'aggancio
   // più utile a colpo d'occhio.
@@ -1614,12 +1617,12 @@ function openMemoryDrawer(mn){
   const heroHTML=`
     <div class="thesis-hero" style="--c:${color};--p:${mn.confidence||0}">
       <div class="hero-top"><span class="hero-badge">◆ ${badgeLabel}</span></div>
-      <div class="hero-thesis">"${mn.thesis}"</div>
+      <div class="hero-thesis">"${esc(mn.thesis)}"</div>
       <div class="hero-metrics">
         <div class="hero-ring"><b>${mn.confidence||0}%</b></div>
         <div class="hero-track">
           <div class="hero-stato" style="color:${stt.c}">${stt.l}</div>
-          <div class="hero-sub">accuratezza ${accStr} · ${mn.signals_hit||0}/${denom} segnali scattati</div>
+          <div class="hero-sub">${TT('allineamento segnali')} ${accStr} · ${mn.signals_hit||0}/${denom} segnali scattati</div>
           ${firstConfirm?`<div class="hero-confirm">→ <b>la conferma:</b> ${firstConfirm}</div>`:''}
           ${trackNote?`<div class="hero-note">${trackNote}</div>`:''}
         </div>
@@ -1633,7 +1636,7 @@ function openMemoryDrawer(mn){
   const publishHTML=`
     <div>
       <div class="section-lbl">marketplace</div>
-      ${imported?`<div style="font-size:11px;color:var(--text2);line-height:1.6;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:8px">${TT('⑂ Evoluta dal marketplace')}${impAuthor?`${TT(' da #')}${impAuthor}`:''}${TT(' — il track record è azzerato e si ricostruisce sui dati da oggi in poi. Modificala per ripubblicarla come evoluzione.')}</div>`:''}
+      ${imported?`<div style="font-size:11px;color:var(--text2);line-height:1.6;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:8px">${TT('⑂ Evoluta dal marketplace')}${impAuthor?`${TT(' da #')}${esc(impAuthor)}`:''}${TT(' — il track record è azzerato e si ricostruisce sui dati da oggi in poi. Modificala per ripubblicarla come evoluzione.')}</div>`:''}
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg3);border:1px solid ${pub?color+'55':'var(--border)'};border-radius:10px;padding:10px 14px">
         <div id="mem-publish-msg-${mn.id}" style="font-size:11px;color:var(--text2);line-height:1.5">${pub?TT('Pubblica: altri possono trovarla ed evolverla'):TT('Privata: visibile solo a te')}</div>
         <button id="mem-publish-${mn.id}" data-cluster="${mn.clusterId}" style="flex-shrink:0;background:${pub?color:'transparent'};color:${pub?'#08080a':'var(--text2)'};border:1px solid ${pub?color:'var(--border)'};border-radius:8px;padding:6px 12px;font-size:11px;font-weight:500;cursor:pointer">${pub?TT('pubblicata ✓'):TT('pubblica')}</button>
@@ -1655,7 +1658,7 @@ function openMemoryDrawer(mn){
     else if(o.fired) st=`<span class="sig-status" style="color:${c}">${TT('● scattato')}</span>`;
     else if(o.checked_at) st=`<span class="sig-status">${TT('○ non ancora')}</span>`;
     else st=`<span class="sig-status">${TT('○ in attesa')}</span>`;
-    return `<div class="sig-row"${tip}><span class="sig-mark" style="color:${c}">${side==='confirm'?'✓':'✗'}</span><span class="sig-txt">${o.text||''}</span>${st}</div>`;
+    return `<div class="sig-row"${tip}><span class="sig-mark" style="color:${c}">${side==='confirm'?'✓':'✗'}</span><span class="sig-txt">${esc(o.text||'')}</span>${st}</div>`;
   };
   const signalsHTML=(sg&&(((sg.confirm||[]).length)||((sg.invalidate||[]).length)))?`
     <div>
@@ -1675,15 +1678,15 @@ function openMemoryDrawer(mn){
   const whyHTML=(mn.explanation||mn.pattern)?`
     <div>
       ${mn.explanation?`<div class="section-lbl">${TT('perché questa tesi')}</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.7">${mn.explanation}</div>`:''}
+      <div style="font-size:12px;color:var(--text2);line-height:1.7">${esc(mn.explanation)}</div>`:''}
       ${mn.pattern?`<details class="meta-fold"${mn.explanation?' style="margin-top:14px"':''}><summary>pattern rilevato</summary>
-        <div style="background:var(--bg3);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--text2);line-height:1.7;font-family:'Fraunces',serif;font-weight:300">${mn.pattern}</div>
+        <div style="background:var(--bg3);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--text2);line-height:1.7;font-family:'Fraunces',serif;font-weight:300">${esc(mn.pattern)}</div>
       </details>`:''}
     </div>`:'';
 
   // Gerarchia di lettura: la tesi → le prove → evoluzione → metti alla prova
   // → contesto. Stessa grammatica a bande della scheda task.
-  body.innerHTML=`
+  body.innerHTML=safeHTML(`
     ${bandHTML(TT('la tesi'),color)}
     ${heroHTML}
     ${(signalsHTML||whyHTML)?bandHTML(TT('le prove'),color):''}
@@ -1703,7 +1706,7 @@ function openMemoryDrawer(mn){
     ${mn.suggested_question?`<div>
       <div class="section-lbl">${TT('prossimo passo suggerito')}</div>
       <div id="mem-suggested-q-${mn.id}" style="background:${color}11;border:1px dashed ${color}44;border-radius:12px;padding:14px 16px;font-size:12px;color:${color};cursor:pointer;line-height:1.5">
-        → ${mn.suggested_question}
+        → ${esc(mn.suggested_question)}
       </div>
     </div>`:''}
     ${bandHTML(TT('contesto'),color)}
@@ -1731,8 +1734,9 @@ function openMemoryDrawer(mn){
         }).join('')}
       </div>
     </div>`:''}
-    ${publishHTML}`;
+    ${publishHTML}`);
 
+  if(window.__synMountThesisCard) window.__synMountThesisCard(body,mn,window.__SYN_LANG||'it',()=>openMemoryDrawer(mn));
   setTimeout(()=>{
     const sq=document.getElementById(`mem-suggested-q-${mn.id}`);
     if(sq&&mn.suggested_question)sq.addEventListener('click',()=>setQAndClose(mn.suggested_question, mn.clusterId));
@@ -1773,14 +1777,14 @@ function renderPortfolioArea(mn){
   const exists=ACTION_NODES.find(a=>a.clusterId===mn.clusterId);
   const inFlight=window.__synActionInFlight && window.__synActionInFlight[mn.clusterId];
   if(exists){
-    area.innerHTML=`<div style="background:#34d39911;border:1px solid #34d39944;border-radius:12px;padding:14px 16px;font-size:12px;color:#34d399;line-height:1.5">▤ portafoglio già generato — lo trovi come quadrato verde collegato a questa tesi sul grafo</div>`;
+    area.innerHTML=safeHTML(`<div style="background:#34d39911;border:1px solid #34d39944;border-radius:12px;padding:14px 16px;font-size:12px;color:#34d399;line-height:1.5">▤ portafoglio già generato — lo trovi come quadrato verde collegato a questa tesi sul grafo</div>`);
   } else if(inFlight){
-    area.innerHTML=`<div style="background:var(--bg3);border-radius:12px;padding:14px 16px;font-size:12px;color:var(--text3)">${TT(TT('generazione in corso…'))}</div>`;
+    area.innerHTML=safeHTML(`<div style="background:var(--bg3);border-radius:12px;padding:14px 16px;font-size:12px;color:var(--text3)">${TT(TT('generazione in corso…'))}</div>`);
   } else if(mn.confidence<75){
-    area.innerHTML=`<div style="background:var(--bg3);border-radius:12px;padding:14px 16px;font-size:12px;color:var(--text3);line-height:1.5">Il portafoglio si può generare quando la tesi raggiunge il 75% di confidenza (ora ${mn.confidence}%). Continua a fare domande sul tema per rafforzarla.</div>`;
+    area.innerHTML=safeHTML(`<div style="background:var(--bg3);border-radius:12px;padding:14px 16px;font-size:12px;color:var(--text3);line-height:1.5">Il portafoglio si può generare quando la tesi raggiunge il 75% di confidenza (ora ${mn.confidence}%). Continua a fare domande sul tema per rafforzarla.</div>`);
   } else {
-    area.innerHTML=`<button id="gen-portfolio-${mn.id}" style="width:100%;background:#34d39915;border:1px solid #34d39955;border-radius:12px;padding:14px 16px;font-size:13px;color:#34d399;cursor:pointer;font-family:inherit;transition:background .2s">${TT('⊞ genera portafoglio da questa tesi')}</button>
-    <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.5">${TT('Traduce la tesi in categorie di asset e strumenti, con taglio educativo.')}</div>`;
+    area.innerHTML=safeHTML(`<button id="gen-portfolio-${mn.id}" style="width:100%;background:#34d39915;border:1px solid #34d39955;border-radius:12px;padding:14px 16px;font-size:13px;color:#34d399;cursor:pointer;font-family:inherit;transition:background .2s">${TT('⊞ genera portafoglio da questa tesi')}</button>
+    <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.5">${TT('Traduce la tesi in categorie di asset e strumenti, con taglio educativo.')}</div>`);
     const btn=document.getElementById(`gen-portfolio-${mn.id}`);
     if(btn){
       btn.addEventListener('mouseenter',()=>btn.style.background='#34d39925');
@@ -1805,7 +1809,7 @@ function renderChallengeArea(mn){
   const ch=mn.challenge;
   const inFlight=window.__synChallengeInFlight && window.__synChallengeInFlight[mn.clusterId];
   if(ch){
-    area.innerHTML=`
+    area.innerHTML=safeHTML(`
       <div style="background:#e0557711;border-left:2px solid #e05577;border-radius:0 12px 12px 0;padding:14px 18px;font-family:'Fraunces',serif;font-size:14px;font-weight:300;font-style:italic;color:#f0a0b8;line-height:1.6">"${ch.counter_thesis}"</div>
       <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
         ${(ch.arguments||[]).map(a=>`<div style="background:var(--bg3);border:1px solid #e0557722;border-radius:10px;padding:10px 14px">
@@ -1814,12 +1818,12 @@ function renderChallengeArea(mn){
         </div>`).join('')}
       </div>
       ${(ch.weak_spots||[]).length?`<div style="margin-top:10px;font-size:11px;color:var(--text3);line-height:1.6">punti deboli: ${(ch.weak_spots||[]).join(' · ')}</div>`:''}
-      ${ch.what_would_confirm?`<div style="margin-top:8px;font-size:11px;color:var(--green);line-height:1.6">✓ ti darebbe ragione: ${ch.what_would_confirm}</div>`:''}`;
+      ${ch.what_would_confirm?`<div style="margin-top:8px;font-size:11px;color:var(--green);line-height:1.6">✓ ti darebbe ragione: ${ch.what_would_confirm}</div>`:''}`);
   } else if(inFlight){
-    area.innerHTML=`<div style="background:var(--bg3);border-radius:12px;padding:14px 16px;font-size:12px;color:var(--text3)">costruzione del caso contrario…</div>`;
+    area.innerHTML=safeHTML(`<div style="background:var(--bg3);border-radius:12px;padding:14px 16px;font-size:12px;color:var(--text3)">costruzione del caso contrario…</div>`);
   } else {
-    area.innerHTML=`<button id="gen-challenge-${mn.id}" style="width:100%;background:#e0557715;border:1px solid #e0557755;border-radius:12px;padding:14px 16px;font-size:13px;color:#e05577;cursor:pointer;font-family:inherit;transition:background .2s">${TT('⚔ sfida questa tesi')}</button>
-    <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.5">Costruisce il miglior caso contrario con dati aggiornati — per testare la solidità della tesi.</div>`;
+    area.innerHTML=safeHTML(`<button id="gen-challenge-${mn.id}" style="width:100%;background:#e0557715;border:1px solid #e0557755;border-radius:12px;padding:14px 16px;font-size:13px;color:#e05577;cursor:pointer;font-family:inherit;transition:background .2s">${TT('⚔ sfida questa tesi')}</button>
+    <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.5">Costruisce il miglior caso contrario con dati aggiornati — per testare la solidità della tesi.</div>`);
     const btn=document.getElementById(`gen-challenge-${mn.id}`);
     if(btn){
       btn.addEventListener('mouseenter',()=>btn.style.background='#e0557725');
@@ -2017,7 +2021,8 @@ function renderProtoTheses(){
       panel.classList.add('show');
       const cntS=document.getElementById('proto-count'); if(cntS) cntS.textContent=SEED_SPUNTI.length;
       const bS=document.getElementById('proto-body');
-      if(bS) bS.innerHTML=SEED_SPUNTI.map((q,i)=>'<div class="proto-row"><div class="proto-thesis">'+(q.q||'').replace(/</g,'&lt;')+'</div><div class="proto-meta" style="color:var(--text3);line-height:1.4">'+(q.reason||'').replace(/</g,'&lt;')+'</div><button class="proto-dev" onclick="runSpunto('+i+')">'+TT('esplora →')+'</button></div>').join('');
+      if(bS) bS.innerHTML=safeHTML(SEED_SPUNTI.map((q,i)=>'<div class="proto-row"><div class="proto-thesis">'+(q.q||'').replace(/</g,'&lt;')+'</div><div class="proto-meta" style="color:var(--text3);line-height:1.4">'+(q.reason||'').replace(/</g,'&lt;')+'</div><button class="proto-dev" data-spunto="'+i+'">'+TT('esplora →')+'</button></div>').join(''));
+      if(bS) bS.querySelectorAll('[data-spunto]').forEach(el=>el.addEventListener('click',()=>runSpunto(+el.dataset.spunto)));
       return;
     }
     // Cold start: poche domande e nessuna tesi ancora → trasforma il vuoto in
@@ -2027,7 +2032,7 @@ function renderProtoTheses(){
       panel.classList.add('show');
       const cnt0=document.getElementById('proto-count'); if(cnt0) cnt0.textContent='0';
       const b0=document.getElementById('proto-body');
-      if(b0) b0.innerHTML='<div style="font-size:11px;color:var(--text2);line-height:1.6;padding:4px 2px">'+TT('Ancora poche domande. Le tesi emergono da ~5 domande collegate: continua a esplorare e qui vedrai quelle che stanno maturando.')+'</div>';
+      if(b0) b0.innerHTML=safeHTML('<div style="font-size:11px;color:var(--text2);line-height:1.6;padding:4px 2px">'+TT('Ancora poche domande. Le tesi emergono da ~5 domande collegate: continua a esplorare e qui vedrai quelle che stanno maturando.')+'</div>');
       return;
     }
     panel.classList.remove('show'); return;
@@ -2035,7 +2040,7 @@ function renderProtoTheses(){
   panel.classList.add('show');
   const cnt=document.getElementById('proto-count'); if(cnt) cnt.textContent=list.length;
   const body=document.getElementById('proto-body'); if(!body) return;
-  body.innerHTML=list.map(p=>{
+  body.innerHTML=safeHTML(list.map(p=>{
     const t=(p.thesis||'').replace(/"/g,'&quot;');
     const sq=(p.suggested_question||'').replace(/"/g,'&quot;');
     const ex=(p.explanation||'').replace(/"/g,'&quot;');
@@ -2045,7 +2050,7 @@ function renderProtoTheses(){
       '<div class="proto-meta"><span class="proto-bar"><i style="width:'+Math.min(100,p.confidence)+'%"></i></span><span class="proto-need">'+need+'</span></div>'+
       (sq?'<button class="proto-dev" data-q="'+sq+'">'+TT('sviluppa →')+'</button>':'')+
     '</div>';
-  }).join('');
+  }).join(''));
   body.querySelectorAll('.proto-dev').forEach(el=>el.addEventListener('click',()=>developProto(el.dataset.q)));
 }
 async function checkMemoryNode(){
@@ -2187,17 +2192,17 @@ function renderSuggestedQuestions(questions,originId){
   if(!loading||!list)return;
   loading.style.display='none';
   list.style.display='flex';
-  list.innerHTML=questions.map((q,i)=>`
+  list.innerHTML=safeHTML(questions.map((q,i)=>`
     <div class="sq-pill" data-q="${q.q.replace(/"/g,'&quot;')}">
       <div style="display:flex;align-items:flex-start;gap:10px">
         <span style="color:var(--teal);font-size:10px;margin-top:1px;flex-shrink:0">${i+1}</span>
         <div>
-          <div class="sq-q">${q.q}</div>
-          <div class="sq-reason">${q.reason}</div>
+          <div class="sq-q">${esc(q.q)}</div>
+          <div class="sq-reason">${esc(q.reason)}</div>
         </div>
         <span class="sq-arrow">\u2192</span>
       </div>
-    </div>`).join('');
+    </div>`).join(''));
   list.querySelectorAll('.sq-pill').forEach(el=>{
     el.addEventListener('click',()=>{
       pendingOrigin=originId?{kind:'task',ref:originId,q:el.dataset.q}:null;
@@ -2223,11 +2228,11 @@ async function loadSuggestedQuestions(task){
 
   try{
     // Build context: this task + its connections + memory node if exists
-    const connContext=task.connections.map(c=>`- "${c.query}" (${c.type.replace(/_/g,' ')})`).join('\n')||'nessuna';
+    const connContext=task.connections.map(c=>`- "${esc(c.query)}" (${c.type.replace(/_/g,' ')})`).join('\n')||'nessuna';
     const memContext=MEMORY_NODES.length?`\nTesi emergenti: ${MEMORY_NODES.map(mn=>mn.thesis).join('; ')}`:'';
     const graphContext=TASKS.length>1?`\nAltre task nel grafo: ${TASKS.filter(t=>t.id!==task.id).map(t=>`"${t.raw_query}"`).slice(0,6).join(', ')}`:'';
 
-    const userMsg=`Task analizzata: "${task.raw_query}"
+    const userMsg=`Task analizzata: "${esc(task.raw_query)}"
 Ipotesi implicita: "${task.fingerprint?.hypothesis||''}"
 Assets: ${(task.intent?.assets||[]).join(', ')}
 Tipo: ${task.intent?.analysis_type||''}
@@ -2250,7 +2255,7 @@ ${connContext}${memContext}${graphContext}`;
     renderSuggestedQuestions(parsed.questions, task.id);
 
   }catch(e){
-    if(loading)loading.innerHTML='<span style="color:var(--text3);font-size:11px">\u2014</span>';
+    if(loading)loading.innerHTML=safeHTML('<span style="color:var(--text3);font-size:11px">\u2014</span>');
   }
 }
 
@@ -2270,7 +2275,7 @@ function drawLineLWC(canvas,chart,color,vals,labels,fmt){
     const head=document.createElement('div');
     head.style.cssText='display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px';
     const lFirst=labels[0]||'', lLast=labels[labels.length-1]||'';
-    head.innerHTML='<span style="font-size:16px;color:'+(last>=0?'var(--green)':'var(--red)')+'">'+fmt(last)+'</span>'+(lFirst&&lLast?'<span style="font-size:9px;color:var(--text3)">'+lFirst+' → '+lLast+'</span>':'');
+    head.innerHTML=safeHTML('<span style="font-size:16px;color:'+(last>=0?'var(--green)':'var(--red)')+'">'+fmt(last)+'</span>'+(lFirst&&lLast?'<span style="font-size:9px;color:var(--text3)">'+lFirst+' → '+lLast+'</span>':''));
     host.appendChild(head);
     const wrap=document.createElement('div');
     wrap.style.cssText='position:relative;height:150px';
@@ -2670,7 +2675,7 @@ document.getElementById('qi').addEventListener('input',function(){this.style.hei
 (function(){
   try{
     const pre = window.__SYN_PRELOAD;
-    if(pre && pre.tasks.length){
+    if(pre && (pre.tasks.length || (pre.theses||[]).length || (pre.actions||[]).length)){
       const W = canvas.width/(window.devicePixelRatio||1), graphH = (canvas.height/(window.devicePixelRatio||1))-110;
       pre.tasks.forEach((t,i)=>{
         const task={id:t.id,raw_query:t.raw_query,intent:t.intent,fingerprint:t.fingerprint,output:t.output,created_at:new Date(t.created_at),connections:[],originKind:t.origin_kind||null,originRef:t.origin_ref||null};
@@ -2708,7 +2713,7 @@ document.getElementById('qi').addEventListener('input',function(){this.style.hei
         const fallbackY=graphH/2+Math.sin(ang)*ringR;
         const px = isMobile ? fallbackX : (th.pos_x||fallbackX);
         const py = isMobile ? fallbackY : (th.pos_y||fallbackY);
-        MEMORY_NODES.push({id:th.id,clusterId:th.cluster_id,thesis:th.thesis,confidence:th.confidence,explanation:th.explanation,pattern:th.pattern,suggested_question:th.suggested_question,sector:th.sector||null,source_ids:th.source_task_ids||[],history:th.history||[],challenge:th.challenge||null,signals:th.signals||null,status:th.status||'active',accuracy:(th.accuracy==null?null:th.accuracy),signals_hit:th.signals_hit||0,signals_total:th.signals_total||0,is_public:th.is_public||false,imported_from_author:th.imported_from_author||null,created_at:th.created_at?new Date(th.created_at):null,color:th.color||'#a78bfa',phaseOffset:Math.random()*Math.PI*2,x:px,y:py});
+        MEMORY_NODES.push({id:th.id,revision:th.revision,clusterId:th.cluster_id,thesis:th.thesis,confidence:th.confidence,explanation:th.explanation,pattern:th.pattern,suggested_question:th.suggested_question,sector:th.sector||null,source_ids:th.source_task_ids||[],history:th.history||[],challenge:th.challenge||null,signals:th.signals||null,status:th.status||'active',accuracy:(th.accuracy==null?null:th.accuracy),signals_hit:th.signals_hit||0,signals_total:th.signals_total||0,is_public:th.is_public||false,imported_from_author:th.imported_from_author||null,created_at:th.created_at?new Date(th.created_at):null,color:th.color||'#a78bfa',phaseOffset:Math.random()*Math.PI*2,x:px,y:py});
       });
       MEMORY_NODES.forEach(computeConfDelta);
       computeMemEdges();
@@ -2744,7 +2749,7 @@ document.getElementById('qi').addEventListener('input',function(){this.style.hei
     window.NODES=NODES; window.EDGES=EDGES; window.TASKS=TASKS; window.MEMORY_NODES=MEMORY_NODES; window.ACTION_NODES=ACTION_NODES;
     // First-time onboarding: show the swipeable tutorial if the user has no tasks yet.
     // Deferred so window.startTutorial (defined later in the file) already exists.
-    if(TASKS.length===0){
+    if(TASKS.length===0 && MEMORY_NODES.length===0){
       const _hold=Array.isArray(window.__SYN_PORTFOLIO)?window.__SYN_PORTFOLIO:[];
       // Con un portafoglio ma grafo vuoto: seed dai titoli posseduti (grafo non
       // vuoto dal primo secondo). Altrimenti il tutorial classico.
@@ -2808,7 +2813,7 @@ window.startTutorial = function(){
   if(!ov) return;
   // build dots
   const dots=document.getElementById('tut-dots');
-  if(dots) dots.innerHTML = Array.from({length:window.__tutTotal},(_,i)=>`<div class="tut-dot${i===0?' active':''}"></div>`).join('');
+  if(dots) dots.innerHTML = safeHTML(Array.from({length:window.__tutTotal},(_,i)=>`<div class="tut-dot${i===0?' active':''}"></div>`).join(''));
   ov.style.display='flex';
   window.__showTutStep(0);
 };

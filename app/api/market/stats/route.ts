@@ -61,7 +61,7 @@ export async function GET() {
   if (topUserIds.length) {
     const [{ data: profs }, { data: repRows }] = await Promise.all([
       admin.from('profiles').select('id, display_name').in('id', topUserIds),
-      admin.from('theses').select('user_id, status, accuracy').in('user_id', topUserIds),
+      admin.from('theses').select('user_id, status, accuracy').eq('is_public', true).in('user_id', topUserIds),
     ]);
     for (const p of profs || []) if (p.display_name) nameByUser.set(p.id, p.display_name);
     for (const t of repRows || []) {

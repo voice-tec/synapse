@@ -1,3 +1,4 @@
+import { signalPredicates } from '@/lib/thesis-card';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
@@ -54,25 +55,17 @@ export async function POST(req: NextRequest) {
   if (dup) return NextResponse.json({ duplicate: true, thesis_id: dup.id });
 
   // Segnali freschi: si copia solo il predicato, mai lo stato di valutazione.
-  const stripDir = (arr: any[]) =>
-    (arr || []).map((s: any) => ({
-      text: s.text ?? null,
-      kind: s.kind ?? 'manual',
-      metric: s.metric ?? null,
-      op: s.op ?? null,
-      threshold: s.threshold ?? null,
-    }));
-  const signals = src.signals
-    ? { confirm: stripDir(src.signals.confirm), invalidate: stripDir(src.signals.invalidate) }
-    : null;
+  const signals = src.signals ? signalPredicates(src.signals) : null;
 
-  const { data: inserted, error } = await supabase
+  const { data: inserted, error } = await admin
     .from('theses')
     .insert({
       user_id: user.id,
+      revision_reason: 'import',
       cluster_id: 'imp_' + randomBytes(6).toString('base64url'),
       thesis: src.thesis,
       confidence: src.confidence ?? 50,
+      conviction_base: Math.max(0, Math.min(100, src.confidence ?? 50)),
       explanation: src.explanation ?? null,
       sector: src.sector ?? null,
       signals,

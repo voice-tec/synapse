@@ -62,7 +62,7 @@ export async function GET() {
   const uids = Array.from(new Set(matched.map((x) => x.t.user_id)));
   const ids = matched.map((x) => x.t.id);
   const [{ data: repRows }, { data: profs }, { data: clones }] = await Promise.all([
-    admin.from('theses').select('user_id, status, accuracy').in('user_id', uids),
+    admin.from('theses').select('user_id, status, accuracy').eq('is_public', true).in('user_id', uids),
     admin.from('profiles').select('id, display_name').in('id', uids),
     admin.from('theses').select('imported_from_thesis, is_public').in('imported_from_thesis', ids),
   ]);
