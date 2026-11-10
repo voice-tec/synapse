@@ -1,3 +1,5 @@
+import { signThesisEvidence } from '@/lib/thesis-evidence';
+import { safeRoute, readBody } from '@/lib/api-security';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { askClaudeJSON } from '@/lib/anthropic';
@@ -94,17 +96,17 @@ Il "text" è SEMPRE presente e leggibile. Preferisci segnali fred/ticker quando 
 SETTORE — "sector" DEVE essere ESATTAMENTE uno tra: ${SECTOR_KEYS}. Scegli il più pertinente al tema della tesi; se nessuno calza bene usa "Altro".
 Se non ci sono cluster con confidenza >= 50, rispondi {"clusters":[]}. Massimo 4 cluster.`;
 
-export async function POST(req: NextRequest) {
+export const POST = safeRoute(async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
 
+  const { summary, taskCount, theses, lang: rawLang } = await readBody(req, 'memory');
   const gate = await checkAiCall(supabase, user.id);
   if (!gate.allowed) {
     return NextResponse.json({ error: 'limit_reached', plan: gate.plan, limit: gate.limit }, { status: 429 });
   }
 
-  const { summary, taskCount, theses, lang: rawLang } = await req.json();
   const lang = normLang(rawLang);
 
   const thesesBlock = (theses || []).length
@@ -129,12 +131,13 @@ export async function POST(req: NextRequest) {
       try { await validateSignals(parsed.clusters); }
       catch (e: any) { console.error('[api/memory] validateSignals skipped:', e?.message); }
     }
+    for (const cluster of parsed?.clusters || []) cluster.evidence = signThesisEvidence(user.id, cluster);
     return NextResponse.json({ result: parsed });
   } catch (err: any) {
     // Il clustering è arricchimento di background: un suo fallimento NON deve mai
     // mostrare un 500 all'utente. Logghiamo per diagnosi e ritorniamo cluster vuoti
     // (il frontend gestisce già clusters: []). Rete di sicurezza oltre al token bump.
     console.error('[api/memory] failed:', err?.message, err);
-    return NextResponse.json({ result: { clusters: [] }, error: err?.message }, { status: 200 });
+    return NextResponse.json({ result: { clusters: [] }, error: 'internal_error' }, { status: 200 });
   }
-}
+});

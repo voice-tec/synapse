@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/api-security';
 import { createAdminClient } from '@/lib/supabase-admin';
 // Metering per le chiamate AI "accessorie" (memory, suggest, portfolio, challenge).
 // Contatore separato da tasks_this_month: queste chiamate partono anche in
@@ -11,7 +12,8 @@ export const AI_CALL_LIMITS: Record<string, number> = {
 
 export async function reserveUsage(userId: string, kind: 'analysis' | 'ai') {
   const { data, error } = await createAdminClient().rpc('reserve_usage', { p_user: userId, p_kind: kind });
-  if (error || !data) throw new Error('usage_unavailable');
+  if (error || !data) throw new ApiError(503, 'usage_unavailable');
+  if (data.reason === 'rate_limited') throw new ApiError(429, 'rate_limited', Math.max(1, Math.min(60, Number(data.retry_after) || 60)));
   return data as { allowed: boolean; used: number; limit: number; plan: string };
 }
 export async function checkAiCall(_supabase: any, userId: string) {

@@ -1,3 +1,4 @@
+import { safeRoute } from '@/lib/api-security';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { authorRep, authorRef } from '@/lib/reputation';
@@ -18,7 +19,7 @@ import { extractTickers } from '@/lib/market-tickers';
 // e il dataset è bounded (max 20 pubbliche/autore). La CDN Vercel usa l'URL
 // completo (query string inclusa) come chiave: ogni pagina/sort è una entry
 // di cache distinta, s-maxage continua a funzionare.
-export async function GET(req: NextRequest) {
+export const GET = safeRoute(async function GET(req: NextRequest) {
   const admin = createAdminClient();
   const params = req.nextUrl.searchParams;
   const sectorFilter = params.get('sector')?.trim() || '';
@@ -126,4 +127,4 @@ export async function GET(req: NextRequest) {
     { items, total: all.length, hasMore: offset + limit < all.length, offset, limit },
     { headers: { 'Cache-Control': 'public, s-maxage=20, stale-while-revalidate=60' } },
   );
-}
+});

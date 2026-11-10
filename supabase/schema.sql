@@ -268,3 +268,5 @@ create trigger on_auth_user_created
 -- V2: per nuove installazioni applicare successivamente
 -- supabase/migrations/001_v2_security_and_versions.sql.
 -- I permessi legacy qui sopra NON sono sufficienti per il rilascio V2.
+
+-- Security sprint 1: applicare anche 002_security_hardening.sql dopo 001.

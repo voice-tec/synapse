@@ -1,3 +1,4 @@
+import { safeRoute } from '@/lib/api-security';
 import { authorizedCron } from '@/lib/cron-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase-admin';
@@ -23,7 +24,7 @@ Return ONLY valid JSON, no extra text:
 
 Write "label" and "changed_because" in the SAME LANGUAGE as the previous verdict label quoted in the user message (Italian stays Italian, English stays English).`;
 
-export async function GET(req: NextRequest) {
+export const GET = safeRoute(async function GET(req: NextRequest) {
   if (!authorizedCron(req.headers.get('authorization'), process.env.CRON_SECRET)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
     .lt('last_checked_at', staleBefore)
     .order('last_checked_at', { ascending: true })
     .limit(BATCH);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'internal_error' }, { status: 500 });
   if (!watches?.length) return NextResponse.json({ ok: true, checked: 0 });
 
   const macro = await macroSnapshot();
@@ -97,4 +98,4 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({ ok: true, checked, flips });
-}
+});

@@ -1,3 +1,4 @@
+import { safeRoute } from '@/lib/api-security';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
@@ -13,7 +14,7 @@ import { normalizeSector } from '@/lib/sectors';
 // Dato personale: mai in cache.
 const MAX_ITEMS = 12;
 
-export async function GET() {
+export const GET = safeRoute(async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
@@ -103,4 +104,4 @@ export async function GET() {
   }));
 
   return NextResponse.json({ items }, { headers: noStore });
-}
+});

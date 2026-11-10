@@ -1,3 +1,4 @@
+import { safeRoute } from '@/lib/api-security';
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { authorRep, authorRef } from '@/lib/reputation';
@@ -12,7 +13,7 @@ import { pickTrending } from '@/lib/trending';
 // statica e congelerebbe le stats al build. La cache vive nell'header CDN.
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export const GET = safeRoute(async function GET() {
   const admin = createAdminClient();
 
   const { data: pub, error: pubErr } = await admin
@@ -97,4 +98,4 @@ export async function GET() {
     // pubblicazione in secondi, non minuti (prima 60+300 → fino a ~6 min stale).
     { headers: { 'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=60' } },
   );
-}
+});

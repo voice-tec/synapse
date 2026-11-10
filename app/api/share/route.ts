@@ -1,3 +1,5 @@
+import { safeRoute } from '@/lib/api-security';
+import { createAdminClient } from '@/lib/supabase-admin';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { randomBytes } from 'crypto';
@@ -5,7 +7,7 @@ import { randomBytes } from 'crypto';
 // Crea/aggiorna lo snapshot pubblico del grafo dell'utente.
 // Un solo link per utente (stabile): ri-condividere aggiorna la fotografia.
 // Lo snapshot è costruito QUI dai dati in DB, non fidandosi del client.
-export async function POST(req: NextRequest) {
+export const POST = safeRoute(async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
@@ -76,11 +78,11 @@ export async function POST(req: NextRequest) {
     .maybeSingle();
   const token = existing?.token || randomBytes(9).toString('base64url');
 
-  const { error } = await supabase.from('shared_graphs').upsert(
+  const { error } = await createAdminClient().from('shared_graphs').upsert(
     { user_id: user.id, token, snapshot, updated_at: new Date().toISOString() },
     { onConflict: 'user_id' }
   );
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'internal_error' }, { status: 500 });
 
   return NextResponse.json({ path: `/g/${token}` });
-}
+});

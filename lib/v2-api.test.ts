@@ -15,6 +15,7 @@ async function query(sql:string,values:any[]=[]){
 beforeAll(async()=>{
  db=new PGlite();await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create table auth.users(id uuid primary key,email text);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to authenticated;alter default privileges in schema public grant all on tables to authenticated,service_role;`);
  await db.exec(readFileSync('supabase/schema.sql','utf8'));await db.exec(readFileSync('supabase/migrations/001_v2_security_and_versions.sql','utf8'));
+ await db.exec(readFileSync('supabase/migrations/002_security_hardening.sql','utf8'));
  await db.exec(`insert into auth.users values('${owner}','a@local'),('${other}','b@local');insert into theses(id,user_id,cluster_id,thesis) values('${id}','${owner}','owned','Original');`);
  state.client={auth:{getUser:async()=>({data:{user:state.user?{id:state.user}:null}})},
  from:(table:string)=>{

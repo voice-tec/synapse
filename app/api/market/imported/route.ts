@@ -1,10 +1,11 @@
+import { safeRoute } from '@/lib/api-security';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 
 // Id delle tesi del marketplace già importate dal chiamante: alimenta il
 // badge "già nel tuo grafo" sulle card. Solo righe proprie → client RLS,
 // niente admin. Dato personale: mai in cache.
-export async function GET() {
+export const GET = safeRoute(async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
@@ -18,4 +19,4 @@ export async function GET() {
 
   const ids = Array.from(new Set((data || []).map((r) => r.imported_from_thesis).filter(Boolean)));
   return NextResponse.json({ ids }, { headers: { 'Cache-Control': 'private, no-store' } });
-}
+});

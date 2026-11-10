@@ -1,3 +1,4 @@
+import { safeRoute, readBody } from '@/lib/api-security';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { askClaudeJSON } from '@/lib/anthropic';
@@ -34,17 +35,17 @@ Rispondi SOLO con JSON valido, nessun testo extra:
 }
 Massimo 5 categorie, massimo 3 esempi per categoria.`;
 
-export async function POST(req: NextRequest) {
+export const POST = safeRoute(async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
 
+  const { thesis, pattern, lang: rawLang } = await readBody(req, 'portfolio');
   const gate = await checkAiCall(supabase, user.id);
   if (!gate.allowed) {
     return NextResponse.json({ error: 'limit_reached', plan: gate.plan, limit: gate.limit }, { status: 429 });
   }
 
-  const { thesis, pattern, lang: rawLang } = await req.json();
   const lang = normLang(rawLang);
 
   // Holdings reali: il portafoglio generato segnala cosa è già coperto
@@ -73,6 +74,6 @@ export async function POST(req: NextRequest) {
     await bumpAiCall(supabase, user.id, gate.used);
     return NextResponse.json({ result: parsed });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: 'internal_error' }, { status: 500 });
   }
-}
+});

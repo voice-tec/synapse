@@ -1,3 +1,4 @@
+import { safeRoute } from '@/lib/api-security';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
@@ -8,7 +9,7 @@ import { normalizeSector } from '@/lib/sectors';
 // ricevuti. Confine RLS/admin: le proprie tesi si leggono come utente (RLS),
 // ma i CLONI appartengono ad altri utenti e RLS li nasconderebbe — solo quel
 // conteggio passa dal service role. Dati personali: mai in cache CDN.
-export async function GET() {
+export const GET = safeRoute(async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
@@ -68,4 +69,4 @@ export async function GET() {
     },
     { headers: { 'Cache-Control': 'private, no-store' } },
   );
-}
+});

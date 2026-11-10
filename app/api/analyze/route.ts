@@ -1,3 +1,4 @@
+import { safeRoute, readBody } from '@/lib/api-security';
 import { reserveUsage } from '@/lib/ai-usage';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
@@ -68,7 +69,7 @@ scenarios: EXACTLY 3 (bull, base, bear in this order) when the question implies 
 catalysts: 2-4 UPCOMING events (central bank meetings, CPI/jobs releases, earnings, deadlines) relevant to the question, ordered by date, all AFTER today's date given below. Only events you are reasonably confident about; use period granularity ('metà lug') when unsure of the exact day. null when nothing relevant.
 portfolio_link: ONLY when a USER REAL PORTFOLIO block is provided below AND the question meaningfully touches it. Estimate look-through exposure from the declared weights and the typical composition of each instrument; mark estimates with '~'. "exposed" false (with note explaining the gap) when the portfolio has NO meaningful exposure to the theme. null when no portfolio block or no meaningful relation. NEVER invent holdings not in the block.`;
 
-export async function POST(req: NextRequest) {
+export const POST = safeRoute(async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -83,10 +84,10 @@ export async function POST(req: NextRequest) {
     .eq('id', user.id)
     .single();
 
+  const { query, priorContext, lang: rawLang } = await readBody(req, 'analyze');
   const { allowed, plan, used, limit } = await reserveUsage(user.id, 'analysis');
   if (!allowed) return NextResponse.json({ error: 'limit_reached', plan, limit }, { status: 429 });
 
-  const { query, priorContext, lang: rawLang } = await req.json();
   const lang = normLang(rawLang);
 
   // Quality stays as before: ALWAYS Sonnet + web search available.
@@ -168,6 +169,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ result: parsed, usage: { used, limit, plan } });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: 'internal_error' }, { status: 500 });
   }
-}
+});
