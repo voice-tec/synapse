@@ -1,3 +1,4 @@
+import { safeRoute } from '@/lib/api-security';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { authorRep, authorRef } from '@/lib/reputation';
@@ -54,7 +55,7 @@ function treeIds(n: ForkNode, acc: string[]) {
   for (const c of n.children) treeIds(c, acc);
 }
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = safeRoute(async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const id = ((await params).id || '').trim();
   if (!id) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 
@@ -138,4 +139,4 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     },
     { headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60' } },
   );
-}
+});

@@ -1,10 +1,11 @@
+import { safeRoute } from '@/lib/api-security';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase-admin';
 
 // Lettura pubblica dello snapshot per token. Passa dal service role
 // (la tabella non ha policy di lettura anonima: i token non sono enumerabili,
 // chi non ha il link non legge niente).
-export async function GET(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+export const GET = safeRoute(async function GET(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const token = (await params).token;
   if (!token || token.length > 64) {
     return NextResponse.json({ error: 'not_found' }, { status: 404 });
@@ -23,4 +24,4 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
     { snapshot: data.snapshot, title: data.title, updated_at: data.updated_at },
     { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' } }
   );
-}
+});

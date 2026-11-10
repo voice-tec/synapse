@@ -1,3 +1,4 @@
+import { safeRoute } from '@/lib/api-security';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { authorRep, authorRef } from '@/lib/reputation';
@@ -8,7 +9,7 @@ import { normalizeSector } from '@/lib/sectors';
 // Privacy: l'hash si risolve SOLO tra gli autori con almeno una tesi pubblica —
 // l'hash di un utente che non ha mai pubblicato non è risolvibile (404), e lo
 // user_id non compare mai nel payload.
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ ref: string }> }) {
+export const GET = safeRoute(async function GET(_req: NextRequest, { params }: { params: Promise<{ ref: string }> }) {
   const ref = ((await params).ref || '').toLowerCase();
   if (!/^[0-9a-f]{8}$/.test(ref)) return NextResponse.json({ error: 'bad_ref' }, { status: 400 });
 
@@ -79,4 +80,4 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ ref
     },
     { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } },
   );
-}
+});

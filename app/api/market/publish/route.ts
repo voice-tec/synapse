@@ -1,3 +1,4 @@
+import { safeRoute, readBody } from '@/lib/api-security';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
@@ -15,12 +16,12 @@ import { signalsPredicatesEqual } from '@/lib/fork';
 const MIN_PUBLISH_CONF = 60;
 const MAX_PUBLIC = 20;
 
-export async function POST(req: NextRequest) {
+export const POST = safeRoute(async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
 
-  const { clusterId, public: isPublic } = await req.json();
+  const { clusterId, public: isPublic } = await readBody(req, 'publish');
   if (!clusterId || typeof isPublic !== 'boolean') {
     return NextResponse.json({ error: 'bad_request' }, { status: 400 });
   }
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
     .eq('user_id', user.id)
     .eq('cluster_id', clusterId)
     .maybeSingle();
-  if (thErr) return NextResponse.json({ error: thErr.message }, { status: 500 });
+  if (thErr) return NextResponse.json({ error: 'internal_error' }, { status: 500 });
   if (!th) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 
   if (isPublic) {
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
     // Handle obbligatorio: niente tesi pubbliche anonime senza nome pubblico.
     const { data: prof, error: profErr } = await supabase
       .from('profiles').select('display_name').eq('id', user.id).maybeSingle();
-    if (profErr) return NextResponse.json({ error: profErr.message }, { status: 500 });
+    if (profErr) return NextResponse.json({ error: 'internal_error' }, { status: 500 });
     if (!prof?.display_name || !prof.display_name.trim()) {
       return NextResponse.json({ error: 'no_handle' }, { status: 400 });
     }
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('is_public', true);
-      if (cntErr) return NextResponse.json({ error: cntErr.message }, { status: 500 });
+      if (cntErr) return NextResponse.json({ error: 'internal_error' }, { status: 500 });
       if ((count ?? 0) >= MAX_PUBLIC) {
         return NextResponse.json({ error: 'limit_reached', max: MAX_PUBLIC }, { status: 400 });
       }
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
   const { error } = await createAdminClient()
     .from('theses').update({ is_public: isPublic })
     .eq('id', th.id).eq('user_id', user.id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'internal_error' }, { status: 500 });
 
   return NextResponse.json({ ok: true, public: isPublic });
-}
+});

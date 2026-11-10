@@ -2121,6 +2121,7 @@ async function checkMemoryNode(){
           }
           existing.thesis=cluster.thesis;
           existing.confidence=cluster.confidence;
+          existing.evidence=cluster.evidence;
           existing.explanation=cluster.explanation;
           existing.pattern=cluster.pattern;
           if(cluster.sector) existing.sector=cluster.sector;
@@ -2152,6 +2153,7 @@ async function checkMemoryNode(){
           phaseOffset:Math.random()*Math.PI*2,
           thesis:cluster.thesis,
           confidence:cluster.confidence,
+          evidence:cluster.evidence,
           explanation:cluster.explanation,
           pattern:cluster.pattern,
           sector:cluster.sector||null,

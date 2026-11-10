@@ -1,3 +1,4 @@
+import { safeRoute, readBody } from '@/lib/api-security';
 import { reserveUsage } from '@/lib/ai-usage';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { NextRequest, NextResponse } from 'next/server';
@@ -33,12 +34,12 @@ Rispondi SOLO con JSON valido:
   "note": "una frase italiana concisa: cosa è cambiato di recente e in che direzione spinge la tesi (rafforza / indebolisce / tiene)"
 }`;
 
-export async function POST(req: NextRequest) {
+export const POST = safeRoute(async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
   const admin = createAdminClient();
-  const reqLang = normLang((await req.json().catch(() => ({} as any)))?.lang);
+  const reqLang = normLang((await readBody(req, 'refresh'))?.lang);
 
   const staleCutoff = new Date(Date.now() - STALE_MS).toISOString();
   const updatedTheses: any[] = [];
@@ -225,4 +226,4 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ status, updatedTheses, updatedActions });
-}
+});

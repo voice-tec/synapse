@@ -1,3 +1,4 @@
+import { safeRoute } from '@/lib/api-security';
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchSeries } from '@/lib/quotes';
 
@@ -5,7 +6,7 @@ import { fetchSeries } from '@/lib/quotes';
 // chiusure per un simbolo. Cache CDN dura (1h + SWR 24h): protegge il free
 // tier TwelveData — al massimo una chiamata per simbolo l'ora, condivisa da
 // tutti gli utenti. Errore o simbolo ignoto → 404 silenzioso (la UI nasconde).
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ symbol: string }> }) {
+export const GET = safeRoute(async function GET(_req: NextRequest, { params }: { params: Promise<{ symbol: string }> }) {
   const symbol = ((await params).symbol || '').trim().toUpperCase();
   if (!/^[A-Z0-9.\-]{1,12}$/.test(symbol)) {
     return NextResponse.json({ error: 'bad_symbol' }, { status: 404 });
@@ -26,4 +27,4 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ sym
   } catch {
     return NextResponse.json({ error: 'no_data' }, { status: 404 });
   }
-}
+});

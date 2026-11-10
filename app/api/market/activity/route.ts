@@ -1,3 +1,4 @@
+import { safeRoute } from '@/lib/api-security';
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { authorRef } from '@/lib/reputation';
@@ -18,7 +19,7 @@ type Ev = {
 const MAX_EVENTS = 12;
 const snip = (s: string | null) => (s || '').slice(0, 80);
 
-export async function GET() {
+export const GET = safeRoute(async function GET() {
   const admin = createAdminClient();
 
   const [{ data: pub }, { data: closed }, { data: clones }] = await Promise.all([
@@ -83,4 +84,4 @@ export async function GET() {
     { events: top },
     { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } },
   );
-}
+});

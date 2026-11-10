@@ -17,6 +17,7 @@ beforeAll(async()=>{
  insert into tasks(id,user_id,raw_query) values('${task}','${u2}','private');
  insert into theses(id,user_id,cluster_id,thesis,confidence) values('${th}','${u1}','legacy','Original',75);`);
  await db.exec(readFileSync('supabase/migrations/001_v2_security_and_versions.sql','utf8'));
+ await db.exec(readFileSync('supabase/migrations/002_security_hardening.sql','utf8'));
 },20000);
 afterAll(async()=>{await db?.close();});
 async function asUser(sql: string, user=u1) {

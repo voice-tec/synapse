@@ -1,3 +1,4 @@
+import { safeRoute, readBody } from '@/lib/api-security';
 import { signalPredicates } from '@/lib/thesis-card';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
@@ -13,12 +14,12 @@ import { randomBytes } from 'crypto';
 // fuorviante). Due sorgenti:
 //  - { thesisId }        → una tesi pubblica del marketplace
 //  - { token, clusterId} → una tesi vista in un grafo condiviso /g/[token]
-export async function POST(req: NextRequest) {
+export const POST = safeRoute(async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
 
-  const { token, clusterId, thesisId } = await req.json();
+  const { token, clusterId, thesisId } = await readBody(req, 'import');
   const admin = createAdminClient();
 
   // Risolvi la tesi sorgente + il suo proprietario.
@@ -86,7 +87,7 @@ export async function POST(req: NextRequest) {
     })
     .select('id')
     .single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'internal_error' }, { status: 500 });
 
   return NextResponse.json({ imported: true, thesis_id: inserted.id });
-}
+});
